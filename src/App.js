@@ -1,5 +1,8 @@
+// Glory Store v1.0
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import './App.css'
+
+
 
 // Pages (we'll create these next)
 import HomePage from './pages/HomePage'
