@@ -14,8 +14,8 @@ const HomePage = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const { data } = await getProducts()
-        setProducts(data)
+       const { data } = await getProducts()
+             setProducts(Array.isArray(data) ? data : [])
       } catch (error) {
         console.log(error)
       } finally {
