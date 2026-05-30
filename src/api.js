@@ -13,6 +13,20 @@ API.interceptors.request.use((config) => {
   return config
 })
 
+// Handle expired tokens automatically
+API.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      // Token expired or invalid — log user out
+      localStorage.removeItem('gloryUser')
+      localStorage.removeItem('gloryCart')
+      window.location.href = '/login'
+    }
+    return Promise.reject(error)
+  }
+)
+
 // USERS
 export const registerUser = (data) => API.post('/users/register', data)
 export const loginUser = (data) => API.post('/users/login', data)
