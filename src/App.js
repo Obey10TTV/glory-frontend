@@ -16,6 +16,7 @@ import AccountPage from './pages/AccountPage'
 import SellerDashboardPage from './pages/SellerDashboardPage'
 import AdminDashboardPage from './pages/AdminDashboardPage'
 import AboutPage from './pages/AboutPage'
+import ChatBot from './components/ChatBot'
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
         <Route path='/admin' element={<AdminDashboardPage />} />
         <Route path='/about' element={<AboutPage />} />
       </Routes>
+      <ChatBot />
     </Router>
   )
 }
