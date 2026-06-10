@@ -67,7 +67,7 @@ const ChatBot = () => {
         style={{
           position: 'fixed', bottom: '28px', right: '28px',
           width: '56px', height: '56px',
-          background: '#fca3da', borderRadius: '16px',
+          background: '#fa9ad5', borderRadius: '16px',
           display: 'flex', alignItems: 'center',
           justifyContent: 'center', cursor: 'pointer',
           zIndex: 9999, boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
@@ -85,7 +85,7 @@ const ChatBot = () => {
           <div style={{
             position: 'absolute', top: '12px', right: '12px',
             width: '12px', height: '12px',
-            background: '#f92f80', borderRadius: '50%',
+            background: '#ff0066', borderRadius: '50%',
             border: '2px solid #fff'
           }} />
         )}
@@ -120,7 +120,7 @@ const ChatBot = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <div style={{
                 width: '36px', height: '36px',
-                background: '#c97a9a', borderRadius: '50%',
+                background: '#ff4e95', borderRadius: '50%',
                 display: 'flex', alignItems: 'center',
                 justifyContent: 'center', flexShrink: 0
               }}>
@@ -337,17 +337,16 @@ const ChatBot = () => {
           {/* SUPPORT TAB */}
           {activeTab === 'support' && (
             <div style={{
-              flex: 1, display: 'flex', flexDirection: 'column',
-              alignItems: 'center', justifyContent: 'center',
-              padding: '24px', textAlign: 'center', gap: '16px'
+              flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column',
+              alignItems: 'center', padding: '20px 24px 16px', textAlign: 'center', gap: '14px'
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <FaUserTie size={40} color="#111" />
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '4px' }}>
+                <FaUserTie size={36} color="#111" />
               </div>
-              <div style={{ fontSize: '16px', fontWeight: '700', color: '#111' }}>
+              <div style={{ fontSize: '15px', fontWeight: '700', color: '#111' }}>
                 Talk to a human
               </div>
-              <div style={{ fontSize: '13px', color: '#888', lineHeight: '1.6' }}>
+              <div style={{ fontSize: '12px', color: '#888', lineHeight: '1.5' }}>
                 Our support team is available Monday to Friday, 9am - 6pm WAT.
               </div>
 
@@ -359,7 +358,7 @@ const ChatBot = () => {
                 <a key={i} href={item.href} style={{
                   width: '100%', display: 'flex',
                   alignItems: 'center', gap: '12px',
-                  padding: '14px 16px', border: '1px solid #eee',
+                  padding: '12px 16px', border: '1px solid #eee',
                   borderRadius: '12px', textDecoration: 'none',
                   transition: 'background 0.2s', background: '#fff'
                 }}
@@ -380,7 +379,7 @@ const ChatBot = () => {
 
               <div style={{
                 fontSize: '11px', color: '#aaa',
-                marginTop: '8px'
+                marginTop: '4px'
               }}>
                 Average response time: 2 hours
               </div>
