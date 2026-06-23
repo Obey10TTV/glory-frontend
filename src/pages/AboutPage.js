@@ -6,37 +6,6 @@ import { FiInstagram, FiTwitter, FiLinkedin } from 'react-icons/fi'
 const AboutPage = () => {
   const navigate = useNavigate()
 
-  const values = [
-    {
-      icon: '01',
-      title: 'Made for Sellers',
-      text: 'We designed Glory from the ground up for Nigerian beauty entrepreneurs - not as an afterthought, but as the entire point.'
-    },
-    {
-      icon: '02',
-      title: 'Safe & Secure',
-      text: 'Every transaction on Glory is protected. Escrow payments, Paystack integration, and crypto options mean sellers always get paid.'
-    },
-    {
-      icon: '03',
-      title: 'Proudly Nigerian',
-      text: 'Built in Nigeria, for Nigeria. Naira pricing, local delivery, and a community that understands the market.'
-    },
-  ]
-
-  const socials = [
-    { icon: <FiInstagram size={16} />, href: '#', label: 'Instagram' },
-    { icon: <FiTwitter size={16} />, href: '#', label: 'Twitter' },
-    { icon: <FiLinkedin size={16} />, href: 'https://linkedin.com/in/obioma-ajoku', label: 'LinkedIn' },
-  ]
-
-  const stats = [
-    { num: '500+', label: 'Products Listed' },
-    { num: '12K+', label: 'Happy Customers' },
-    { num: '4.8/5', label: 'Average Rating' },
-    { num: '100%', label: 'Authentic Products' },
-  ]
-
   return (
     <div style={{ background: '#fafaf9', minHeight: '100vh' }}>
       <Navbar />
@@ -65,15 +34,15 @@ const AboutPage = () => {
             color: '#fff', lineHeight: '1.1',
             marginBottom: '20px', letterSpacing: '-1px'
           }}>
-            Built for Nigerian<br />
-            <span style={{ color: '#c97a9a' }}>women in beauty.</span>
+            Built for beauty,<br />
+            <span style={{ color: '#c97a9a' }}>made in Canada.</span>
           </h1>
           <p style={{
             fontSize: '16px', color: 'rgba(255,255,255,0.6)',
             maxWidth: '560px', margin: '0 auto',
             lineHeight: '1.8'
           }}>
-            Glory was born out of frustration. Too many talented Nigerian women
+            Glory was born out of frustration. Too many talented beauty entrepreneurs
             were selling in DMs, chasing payments manually, and building brands
             on borrowed platforms. We built something better.
           </p>
@@ -103,9 +72,10 @@ const AboutPage = () => {
           fontSize: '15px', color: '#666',
           lineHeight: '1.85', maxWidth: '680px', margin: '0 auto'
         }}>
-          Every Nigerian woman with a beauty brand deserves a professional storefront,
-          seamless payments, and real analytics. Glory gives small beauty businesses the
-          same tools that big brands have - without the complexity or cost.
+          Every beauty entrepreneur deserves a professional storefront,
+          seamless payments, and real analytics. Glory gives independent beauty
+          businesses across Canada the same tools that big brands have — without
+          the complexity or cost.
         </p>
       </div>
 
@@ -116,20 +86,31 @@ const AboutPage = () => {
       }}>
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+          gridTemplateColumns: 'repeat(3, 1fr)',
           gap: '20px'
         }}>
-          {values.map((val, i) => (
+          {[
+            {
+              icon: '💄',
+              title: 'Made for Sellers',
+              text: 'We designed Glory from the ground up for beauty entrepreneurs — not as an afterthought, but as the entire point.'
+            },
+            {
+              icon: '🔒',
+              title: 'Safe & Secure',
+              text: 'Every transaction on Glory is protected. Secure card payments through Stripe and crypto options mean sellers always get paid.'
+            },
+            {
+              icon: '🌍',
+              title: 'Globally Inspired',
+              text: 'Built in Canada, for everyone. CAD pricing, fast shipping, and a marketplace that celebrates every shade and tradition.'
+            },
+          ].map((val, i) => (
             <div key={i} style={{
               background: '#fff', borderRadius: '20px',
               padding: '36px', border: '0.5px solid #eee'
             }}>
-              <div style={{
-                fontSize: '16px', fontWeight: '800',
-                color: '#c97a9a', marginBottom: '16px'
-              }}>
-                {val.icon}
-              </div>
+              <div style={{ fontSize: '36px', marginBottom: '16px' }}>{val.icon}</div>
               <div style={{
                 fontSize: '18px', fontWeight: '700',
                 color: '#111', marginBottom: '12px'
@@ -164,7 +145,7 @@ const AboutPage = () => {
             }}>
               <img
                 src='https://res.cloudinary.com/dd8y3dijs/image/upload/v1777771736/glory-store/e0ej2dulr0zdnvper1oz.jpg'
-                alt='Obioma Ajoku - Founder of Glory'
+                alt='Obioma Ajoku — Founder of Glory'
                 style={{
                   width: '100%', height: '100%',
                   objectFit: 'cover', display: 'block'
@@ -204,15 +185,19 @@ const AboutPage = () => {
               fontSize: '14px', color: '#666',
               lineHeight: '1.85', marginBottom: '28px'
             }}>
-              Glory is his vision of what Nigerian ecommerce should look like -
-              premium, purposeful, and built with the seller in mind.
+              Glory is her vision of what beauty ecommerce should look like —
+              premium, purposeful, and built with the seller in mind, for shoppers
+              everywhere from Toronto to anywhere in the world.
             </p>
             <div style={{ display: 'flex', gap: '12px' }}>
-              {socials.map((social, i) => (
-                <a
+              {[
+                { icon: <FiInstagram size={16} />, href: '#' },
+                { icon: <FiTwitter size={16} />, href: '#' },
+                { icon: <FiLinkedin size={16} />, href: 'https://linkedin.com/in/obioma-ajoku' },
+              ].map((social, i) => (
+                
                   key={i}
                   href={social.href}
-                  aria-label={social.label}
                   style={{
                     width: '40px', height: '40px',
                     borderRadius: '50%', background: '#fafaf9',
@@ -242,10 +227,15 @@ const AboutPage = () => {
       <div style={{ padding: '80px 40px' }}>
         <div style={{
           maxWidth: '900px', margin: '0 auto',
-          display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+          display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)',
           gap: '20px', textAlign: 'center'
         }}>
-          {stats.map((stat, i) => (
+          {[
+            { num: '500+', label: 'Products Listed' },
+            { num: '12K+', label: 'Happy Customers' },
+            { num: '4.8★', label: 'Average Rating' },
+            { num: '100%', label: 'Authentic Products' },
+          ].map((stat, i) => (
             <div key={i} style={{
               background: '#fff', borderRadius: '16px',
               padding: '32px 20px', border: '0.5px solid #eee'
@@ -287,7 +277,7 @@ const AboutPage = () => {
             fontSize: '15px', color: 'rgba(255,255,255,0.6)',
             marginBottom: '32px'
           }}>
-            Join thousands of Nigerian women already selling on Glory.
+            Join sellers across Canada already building their business on Glory.
           </p>
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
             <button
