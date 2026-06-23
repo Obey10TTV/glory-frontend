@@ -25,17 +25,17 @@ const ProductsPage = () => {
 
   const priceRanges = [
     { label: 'All Prices', value: 'all' },
-    { label: 'Under ₦5,000', value: '0-5000' },
-    { label: '₦5,000 - ₦15,000', value: '5000-15000' },
-    { label: '₦15,000 - ₦30,000', value: '15000-30000' },
-    { label: 'Above ₦30,000', value: '30000-999999' },
+    { label: 'Under $25', value: '0-25' },
+    { label: '$25 - $50', value: '25-50' },
+    { label: '$50 - $100', value: '50-100' },
+    { label: 'Above $100', value: '100-999999' },
   ]
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-       const { data } = await getProducts()
-              setProducts(Array.isArray(data) ? data : [])
+        const { data } = await getProducts()
+        setProducts(Array.isArray(data) ? data : [])
       } catch (error) {
         console.log(error)
       } finally {

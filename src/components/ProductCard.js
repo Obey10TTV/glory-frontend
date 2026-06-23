@@ -8,6 +8,7 @@ const ProductCard = ({ product }) => {
   const { addToCart } = useCart()
   const [wished, setWished] = useState(false)
   const [added, setAdded] = useState(false)
+  const [hovered, setHovered] = useState(false)
 
   const handleAddToCart = (e) => {
     e.stopPropagation()
@@ -31,18 +32,8 @@ const ProductCard = ({ product }) => {
         borderRadius: '12px',
         overflow: 'hidden',
         border: '0.5px solid #f0f0f0',
-        transition: 'transform 0.25s, box-shadow 0.25s'
-      }}
-      onMouseEnter={e => {
-        e.currentTarget.style.transform = 'translateY(-4px)'
-        e.currentTarget.style.boxShadow = '0 12px 40px rgba(0,0,0,0.1)'
-      }}
-      onMouseLeave={e => {
-        e.currentTarget.style.transform = 'translateY(0)'
-        e.currentTarget.style.boxShadow = 'none'
       }}
     >
-      {/* IMAGE */}
       <div style={{
         width: '100%', aspectRatio: '3/4',
         background: '#fdf0f5', overflow: 'hidden',
@@ -56,8 +47,6 @@ const ProductCard = ({ product }) => {
             objectFit: 'cover', display: 'block'
           }}
         />
-
-        {/* WISHLIST BUTTON */}
         <button
           onClick={handleWishlist}
           style={{
@@ -71,31 +60,33 @@ const ProductCard = ({ product }) => {
         >
           <FiHeart
             size={14}
-            style={{ color: wished ? '#e74c3c' : '#aaa', fill: wished ? '#e74c3c' : 'none' }}
+            style={{
+              color: wished ? '#e74c3c' : '#aaa',
+              fill: wished ? '#e74c3c' : 'none'
+            }}
           />
         </button>
-
-        {/* ADD TO CART OVERLAY */}
         <button
           onClick={handleAddToCart}
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
           style={{
             position: 'absolute', bottom: '10px',
             left: '10px', right: '10px',
-            background: added ? '#2ecc71' : '#111',
+            background: added ? '#2ecc71' : hovered ? '#2ecc71' : '#111',
             color: '#fff', border: 'none',
             borderRadius: '999px', padding: '10px',
             fontSize: '11px', fontWeight: '600',
-            cursor: 'pointer', transition: 'background 0.3s',
+            cursor: 'pointer', fontFamily: 'inherit',
             display: 'flex', alignItems: 'center',
-            justifyContent: 'center', gap: '6px'
+            justifyContent: 'center', gap: '6px',
+            transition: 'background 0.25s ease'
           }}
         >
           <FiShoppingBag size={13} />
           {added ? 'Added!' : 'Add to Bag'}
         </button>
       </div>
-
-      {/* INFO */}
       <div style={{ padding: '12px 14px' }}>
         <div style={{
           fontSize: '9px', color: '#aaa',
@@ -124,10 +115,9 @@ const ProductCard = ({ product }) => {
           <div style={{
             fontSize: '14px', fontWeight: '700', color: '#111'
           }}>
-            ₦{product.price.toLocaleString()}
+            ${product.price.toLocaleString()}
           </div>
           <div style={{
-            display: 'flex', alignItems: 'center', gap: '3px',
             fontSize: '11px', color: '#999'
           }}>
             ★ {product.rating.toFixed(1)}

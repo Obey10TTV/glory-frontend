@@ -8,7 +8,7 @@ const CartPage = () => {
   const navigate = useNavigate()
   const { cartItems, removeFromCart, updateQuantity, clearCart, totalItems, totalPrice } = useCart()
 
-  const shippingPrice = totalPrice >= 30000 ? 0 : 2000
+  const shippingPrice = totalPrice >= 75 ? 0 : 8
 
   return (
     <div style={{ background: '#fafaf9', minHeight: '100vh' }}>
@@ -16,7 +16,6 @@ const CartPage = () => {
 
       <div style={{ padding: '40px', maxWidth: '1100px', margin: '0 auto' }}>
 
-        {/* HEADER */}
         <div style={{
           display: 'flex', alignItems: 'center',
           gap: '16px', marginBottom: '32px'
@@ -74,28 +73,26 @@ const CartPage = () => {
             gap: '32px', alignItems: 'start'
           }}>
 
-            {/* CART ITEMS */}
             <div style={{
               background: '#fff', borderRadius: '16px',
               border: '0.5px solid #eee', overflow: 'hidden'
             }}>
-              {/* FREE DELIVERY BANNER */}
-              {totalPrice < 30000 && (
+              {totalPrice < 75 && (
                 <div style={{
                   background: '#fdf0f5', padding: '12px 24px',
                   fontSize: '12px', color: '#c97a9a',
                   fontWeight: '500', textAlign: 'center'
                 }}>
-                  You're ₦{(30000 - totalPrice).toLocaleString()} away from free delivery! 🎉
+                  You're ${(75 - totalPrice).toLocaleString()} away from free shipping! 🎉
                 </div>
               )}
-              {totalPrice >= 30000 && (
+              {totalPrice >= 75 && (
                 <div style={{
                   background: '#f0fdf4', padding: '12px 24px',
                   fontSize: '12px', color: '#2ecc71',
                   fontWeight: '500', textAlign: 'center'
                 }}>
-                  ✓ You've unlocked free delivery!
+                  ✓ You've unlocked free shipping!
                 </div>
               )}
 
@@ -106,7 +103,6 @@ const CartPage = () => {
                   borderBottom: i < cartItems.length - 1 ? '0.5px solid #eee' : 'none',
                   alignItems: 'center'
                 }}>
-                  {/* IMAGE */}
                   <div style={{
                     width: '90px', height: '90px',
                     borderRadius: '12px', overflow: 'hidden',
@@ -122,7 +118,6 @@ const CartPage = () => {
                     />
                   </div>
 
-                  {/* DETAILS */}
                   <div style={{ flex: 1 }}>
                     <div style={{
                       fontSize: '10px', color: '#c97a9a',
@@ -145,7 +140,6 @@ const CartPage = () => {
                     </div>
                   </div>
 
-                  {/* QUANTITY */}
                   <div style={{
                     display: 'flex', alignItems: 'center',
                     gap: '0', border: '0.5px solid #eee',
@@ -185,16 +179,14 @@ const CartPage = () => {
                     >+</button>
                   </div>
 
-                  {/* PRICE */}
                   <div style={{
                     fontSize: '15px', fontWeight: '700',
                     color: '#111', minWidth: '100px',
                     textAlign: 'right'
                   }}>
-                    ₦{(item.price * item.quantity).toLocaleString()}
+                    ${(item.price * item.quantity).toLocaleString()}
                   </div>
 
-                  {/* DELETE */}
                   <button
                     onClick={() => removeFromCart(item._id)}
                     style={{
@@ -211,7 +203,6 @@ const CartPage = () => {
                 </div>
               ))}
 
-              {/* CLEAR CART */}
               <div style={{
                 padding: '16px 24px',
                 borderTop: '0.5px solid #eee',
@@ -231,7 +222,6 @@ const CartPage = () => {
               </div>
             </div>
 
-            {/* ORDER SUMMARY */}
             <div style={{
               background: '#fff', borderRadius: '16px',
               border: '0.5px solid #eee', padding: '24px',
@@ -253,7 +243,7 @@ const CartPage = () => {
                   fontSize: '13px', color: '#666'
                 }}>
                   <span>Subtotal ({totalItems} items)</span>
-                  <span>₦{totalPrice.toLocaleString()}</span>
+                  <span>${totalPrice.toLocaleString()}</span>
                 </div>
                 <div style={{
                   display: 'flex', justifyContent: 'space-between',
@@ -261,7 +251,7 @@ const CartPage = () => {
                 }}>
                   <span>Shipping</span>
                   <span style={{ color: shippingPrice === 0 ? '#2ecc71' : '#111' }}>
-                    {shippingPrice === 0 ? 'FREE' : `₦${shippingPrice.toLocaleString()}`}
+                    {shippingPrice === 0 ? 'FREE' : `$${shippingPrice.toLocaleString()}`}
                   </span>
                 </div>
                 <div style={{
@@ -273,7 +263,7 @@ const CartPage = () => {
                   fontSize: '16px', fontWeight: '700', color: '#111'
                 }}>
                   <span>Total</span>
-                  <span>₦{(totalPrice + shippingPrice).toLocaleString()}</span>
+                  <span>${(totalPrice + shippingPrice).toLocaleString()}</span>
                 </div>
               </div>
 
@@ -302,7 +292,6 @@ const CartPage = () => {
                 Continue Shopping
               </button>
 
-              {/* TRUST */}
               <div style={{
                 marginTop: '20px', padding: '16px',
                 background: '#fafaf9', borderRadius: '10px',

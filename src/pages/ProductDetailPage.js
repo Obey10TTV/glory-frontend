@@ -27,7 +27,6 @@ const ProductDetailPage = () => {
   const [reviewError, setReviewError] = useState('')
   const [reviewSuccess, setReviewSuccess] = useState('')
   const [activeTab, setActiveTab] = useState('description')
-  const [buyNowHovered, setBuyNowHovered] = useState(false)
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -86,7 +85,6 @@ const ProductDetailPage = () => {
 
       <div style={{ padding: '40px', maxWidth: '1200px', margin: '0 auto' }}>
 
-        {/* BREADCRUMB */}
         <div style={{
           fontSize: '12px', color: '#999',
           marginBottom: '32px', display: 'flex',
@@ -99,14 +97,12 @@ const ProductDetailPage = () => {
           <span style={{ color: '#111' }}>{product.name}</span>
         </div>
 
-        {/* PRODUCT MAIN */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: '1fr 1fr',
           gap: '60px', marginBottom: '60px'
         }}>
 
-          {/* IMAGE */}
           <div style={{
             borderRadius: '20px', overflow: 'hidden',
             background: '#fdf0f5', aspectRatio: '1',
@@ -138,10 +134,8 @@ const ProductDetailPage = () => {
             </button>
           </div>
 
-          {/* DETAILS */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
-            {/* BRAND & NAME */}
             <div>
               <div style={{
                 fontSize: '11px', color: '#c97a9a',
@@ -158,7 +152,6 @@ const ProductDetailPage = () => {
                 {product.name}
               </h1>
 
-              {/* RATING */}
               <div style={{
                 display: 'flex', alignItems: 'center',
                 gap: '8px', marginBottom: '4px'
@@ -181,14 +174,12 @@ const ProductDetailPage = () => {
               </div>
             </div>
 
-            {/* PRICE */}
             <div style={{
               fontSize: '32px', fontWeight: '700', color: '#111'
             }}>
-              ₦{product.price.toLocaleString()}
+              ${product.price.toLocaleString()}
             </div>
 
-            {/* CATEGORY */}
             <div style={{
               display: 'inline-flex', alignItems: 'center',
               background: '#fdf0f5', borderRadius: '999px',
@@ -199,7 +190,6 @@ const ProductDetailPage = () => {
               </span>
             </div>
 
-            {/* STOCK */}
             <div style={{
               fontSize: '13px',
               color: product.countInStock > 0 ? '#2ecc71' : '#e74c3c',
@@ -208,7 +198,6 @@ const ProductDetailPage = () => {
               {product.countInStock > 0 ? `✓ In Stock (${product.countInStock} available)` : '✗ Out of Stock'}
             </div>
 
-            {/* QUANTITY */}
             {product.countInStock > 0 && (
               <div>
                 <div style={{
@@ -253,7 +242,6 @@ const ProductDetailPage = () => {
               </div>
             )}
 
-            {/* BUTTONS */}
             <div style={{ display: 'flex', gap: '12px' }}>
               <button
                 onClick={handleAddToCart}
@@ -273,30 +261,20 @@ const ProductDetailPage = () => {
               <button
                 onClick={handleBuyNow}
                 disabled={product.countInStock === 0}
-                onMouseEnter={() => setBuyNowHovered(true)}
-                onMouseLeave={() => setBuyNowHovered(false)}
                 style={{
-                  flex: 1,
-                  padding: '15px',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  border: buyNowHovered ? '1.5px solid #D9A8B8' : '1.5px solid #111',
+                  flex: 1, padding: '15px',
+                  fontSize: '14px', fontWeight: '600',
+                  border: '1.5px solid #111',
                   borderRadius: '999px',
-                  background: buyNowHovered ? '#F8EDEF' : '#fff',
-                  color: '#111',
-                  cursor: product.countInStock === 0 ? 'not-allowed' : 'pointer',
-                  fontFamily: 'inherit',
-                  transition: 'all 0.25s ease',
-                  boxShadow: buyNowHovered
-                    ? '0 8px 20px rgba(217, 168, 184, 0.18)'
-                    : 'none'
+                  background: '#fff', color: '#111',
+                  cursor: 'pointer', fontFamily: 'inherit',
+                  transition: 'all 0.2s'
                 }}
               >
                 Buy Now
               </button>
             </div>
 
-            {/* TRUST */}
             <div style={{
               display: 'flex', flexDirection: 'column',
               gap: '10px', padding: '20px',
@@ -304,7 +282,7 @@ const ProductDetailPage = () => {
               border: '0.5px solid #eee'
             }}>
               {[
-                { icon: <FiTruck size={15} />, text: 'Free delivery on orders over ₦30,000' },
+                { icon: <FiTruck size={15} />, text: 'Free shipping on orders over $75' },
                 { icon: <FiShield size={15} />, text: '100% authentic products guaranteed' },
                 { icon: <FiRefreshCw size={15} />, text: 'Easy returns within 30 days' },
               ].map((item, i) => (
@@ -320,7 +298,6 @@ const ProductDetailPage = () => {
           </div>
         </div>
 
-        {/* TABS */}
         <div style={{ marginBottom: '40px' }}>
           <div style={{
             display: 'flex', gap: '0',
@@ -348,7 +325,6 @@ const ProductDetailPage = () => {
             ))}
           </div>
 
-          {/* DESCRIPTION TAB */}
           {activeTab === 'description' && (
             <div style={{
               fontSize: '14px', color: '#555',
@@ -358,11 +334,9 @@ const ProductDetailPage = () => {
             </div>
           )}
 
-          {/* REVIEWS TAB */}
           {activeTab === 'reviews' && (
             <div style={{ maxWidth: '680px' }}>
 
-              {/* ADD REVIEW */}
               <div style={{
                 background: '#fff', borderRadius: '16px',
                 padding: '24px', border: '0.5px solid #eee',
@@ -378,7 +352,6 @@ const ProductDetailPage = () => {
                 {reviewError && <Message type='error' text={reviewError} />}
                 {reviewSuccess && <Message type='success' text={reviewSuccess} />}
 
-                {/* STAR RATING */}
                 <div style={{ marginBottom: '16px' }}>
                   <div style={{
                     fontSize: '12px', fontWeight: '600',
@@ -440,7 +413,6 @@ const ProductDetailPage = () => {
                 </button>
               </div>
 
-              {/* REVIEWS LIST */}
               {reviews.length === 0 ? (
                 <div style={{
                   textAlign: 'center', padding: '40px',
@@ -466,7 +438,7 @@ const ProductDetailPage = () => {
                             {review.name}
                           </div>
                           <div style={{ fontSize: '11px', color: '#aaa', marginTop: '2px' }}>
-                            {new Date(review.createdAt).toLocaleDateString('en-NG', {
+                            {new Date(review.createdAt).toLocaleDateString('en-CA', {
                               year: 'numeric', month: 'long', day: 'numeric'
                             })}
                           </div>
