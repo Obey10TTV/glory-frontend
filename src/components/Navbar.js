@@ -109,7 +109,7 @@ const Navbar = () => {
         letterSpacing: '0.08em', fontFamily: "'Inter', sans-serif",
         fontWeight: '500'
       }}>
-        <b style={{ color: '#fff' }}>FREE DELIVERY</b> on orders over ₦30,000 &nbsp;·&nbsp;
+        <b style={{ color: '#fff' }}>FREE SHIPPING</b> on orders over $75 &nbsp;·&nbsp;
         <b style={{ color: '#fff' }}>100% AUTHENTIC</b> products only &nbsp;·&nbsp;
         <b style={{ color: '#fff' }}>SELL ON GLORY</b> — Start your store today
       </div>
@@ -141,12 +141,12 @@ const Navbar = () => {
               background: '#f5f5f5', borderRadius: '999px',
               padding: '3px 10px'
             }}>
-              <span style={{ fontSize: '13px' }}>🇳🇬</span>
+              <span style={{ fontSize: '13px' }}>🇨🇦</span>
               <span style={{
                 fontSize: '10px', fontWeight: '600',
                 color: '#555', letterSpacing: '0.04em',
                 fontFamily: "'Inter', sans-serif"
-              }}>NGN</span>
+              }}>CAD</span>
             </div>
           </Link>
 
@@ -227,7 +227,7 @@ const Navbar = () => {
                       </div>
                     </div>
                     <div style={{ fontSize: '14px', fontWeight: '700', color: '#111' }}>
-                      ₦{product.price.toLocaleString()}
+                      ${product.price.toLocaleString()}
                     </div>
                   </div>
                 ))}
@@ -247,9 +247,6 @@ const Navbar = () => {
                 </div>
               </div>
             )}
-            
-
-            
           </div>
 
           {/* RIGHT ICONS */}
@@ -349,13 +346,13 @@ const Navbar = () => {
         </div>
 
         {/* BOTTOM NAV ROW */}
-                  <div style={{
-                  display: 'flex', alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: '0 40px',
-                  borderTop: '1px solid #f0f0f0',
-                  height: '44px', gap: '0'
-            }}>
+        <div style={{
+          display: 'flex', alignItems: 'center',
+          justifyContent: 'center',
+          padding: '0 40px',
+          borderTop: '1px solid #f0f0f0',
+          height: '44px', gap: '0'
+        }}>
           {['NEW IN', 'SKINCARE', 'HAIRCARE', 'MAKEUP', 'NAILS', 'LASHES', 'BODY CARE', 'FRAGRANCE', 'CANDLES', 'ABOUT', 'SELL ON GLORY'].map(item => (
             <div
               key={item}
