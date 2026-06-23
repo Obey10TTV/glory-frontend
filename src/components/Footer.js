@@ -84,7 +84,7 @@ const Footer = () => {
               maxWidth: '260px', marginBottom: '24px',
               color: 'rgba(255,255,255,0.5)'
             }}>
-              Africa's beauty marketplace. Discover, shop and sell authentic beauty products with confidence.
+              Canada's home for global beauty. Discover, shop and sell authentic beauty products for every shade and tradition.
             </p>
             <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
               {[
@@ -119,8 +119,8 @@ const Footer = () => {
               display: 'flex', alignItems: 'center', gap: '8px',
               fontSize: '12px', color: 'rgba(255,255,255,0.5)'
             }}>
-              <span>🇳🇬</span>
-              <span>Shopping from Nigeria</span>
+              <span>🇨🇦</span>
+              <span>Shipping across Canada</span>
               <span style={{
                 fontSize: '10px', color: '#c97a9a',
                 fontWeight: '600', cursor: 'pointer',
@@ -196,10 +196,9 @@ const Footer = () => {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
 
-            {/* PAYSTACK */}
+            {/* STRIPE */}
             <div style={payBadgeStyle}>
-              <span style={{ fontSize: '11px', fontWeight: '800', color: '#00C3F7' }}>PAY</span>
-              <span style={{ fontSize: '11px', fontWeight: '800', color: '#fff' }}>STACK</span>
+              <span style={{ fontSize: '13px', fontWeight: '800', color: '#635BFF' }}>stripe</span>
             </div>
 
             {/* VISA */}
@@ -211,6 +210,11 @@ const Footer = () => {
             <div style={{ ...payBadgeStyle, display: 'flex', gap: '0', padding: '6px 10px', overflow: 'hidden' }}>
               <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: '#EB001B', opacity: 0.9 }} />
               <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: '#F79E1B', marginLeft: '-8px', opacity: 0.9 }} />
+            </div>
+
+            {/* AMEX */}
+            <div style={payBadgeStyle}>
+              <span style={{ fontSize: '11px', fontWeight: '800', color: '#2E77BC' }}>AMEX</span>
             </div>
 
             {/* BITCOIN */}
@@ -263,11 +267,6 @@ const Footer = () => {
               }}>✕</div>
               <span style={{ fontSize: '11px', fontWeight: '700', color: '#346AA9' }}>XRP</span>
             </div>
-
-            {/* PAY ON DELIVERY */}
-            <div style={payBadgeStyle}>
-              <span style={{ fontSize: '10px', fontWeight: '700', color: 'rgba(255,255,255,0.6)' }}>PAY ON DELIVERY</span>
-            </div>
           </div>
         </div>
 
@@ -279,7 +278,7 @@ const Footer = () => {
           alignItems: 'center', flexWrap: 'wrap', gap: '12px'
         }}>
           <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>
-            © 2026 GLORY. All rights reserved. Built in Nigeria 🇳🇬
+            © 2026 GLORY. All rights reserved. Made for Canada 🇨🇦
           </div>
           <div style={{ display: 'flex', gap: '24px' }}>
             {['Privacy Policy', 'Terms & Conditions', 'Cookie Policy', 'Accessibility'].map(item => (
