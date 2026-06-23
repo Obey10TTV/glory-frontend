@@ -18,21 +18,20 @@ const CheckoutPage = () => {
   const [address, setAddress] = useState('')
   const [city, setCity] = useState('')
   const [state, setState] = useState('')
+  const [postalCode, setPostalCode] = useState('')
   const [phone, setPhone] = useState('')
   const [paymentMethod, setPaymentMethod] = useState('Paystack')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const shippingPrice = totalPrice >= 30000 ? 0 : 2000
+  const shippingPrice = totalPrice >= 75 ? 0 : 8
   const totalAmount = totalPrice + shippingPrice
 
-  const nigerianStates = [
-    'Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa',
-    'Benue', 'Borno', 'Cross River', 'Delta', 'Ebonyi', 'Edo',
-    'Ekiti', 'Enugu', 'FCT', 'Gombe', 'Imo', 'Jigawa', 'Kaduna',
-    'Kano', 'Katsina', 'Kebbi', 'Kogi', 'Kwara', 'Lagos', 'Nasarawa',
-    'Niger', 'Ogun', 'Ondo', 'Osun', 'Oyo', 'Plateau', 'Rivers',
-    'Sokoto', 'Taraba', 'Yobe', 'Zamfara'
+  const canadianProvinces = [
+    'Alberta', 'British Columbia', 'Manitoba', 'New Brunswick',
+    'Newfoundland and Labrador', 'Northwest Territories', 'Nova Scotia',
+    'Nunavut', 'Ontario', 'Prince Edward Island', 'Quebec',
+    'Saskatchewan', 'Yukon'
   ]
 
   const handlePlaceOrder = async () => {
@@ -51,7 +50,7 @@ const CheckoutPage = () => {
           price: item.price,
           product: item._id
         })),
-        shippingAddress: { fullName, address, city, state, phone },
+        shippingAddress: { fullName, address, city, state, postalCode, phone },
         paymentMethod,
         itemsPrice: totalPrice,
         shippingPrice,
@@ -178,7 +177,7 @@ const CheckoutPage = () => {
                     <input
                       value={phone}
                       onChange={e => setPhone(e.target.value)}
-                      placeholder='08012345678'
+                      placeholder='(416) 555-0123'
                       style={inputStyle}
                     />
                   </div>
@@ -187,7 +186,7 @@ const CheckoutPage = () => {
                     <input
                       value={address}
                       onChange={e => setAddress(e.target.value)}
-                      placeholder='House number, street name'
+                      placeholder='Street number and name'
                       style={inputStyle}
                     />
                   </div>
@@ -202,24 +201,33 @@ const CheckoutPage = () => {
                       />
                     </div>
                     <div>
-                      <label style={labelStyle}>State</label>
+                      <label style={labelStyle}>Province</label>
                       <select
                         value={state}
                         onChange={e => setState(e.target.value)}
                         style={{ ...inputStyle, cursor: 'pointer' }}
                       >
-                        <option value=''>Select state</option>
-                        {nigerianStates.map(s => (
+                        <option value=''>Select province</option>
+                        {canadianProvinces.map(s => (
                           <option key={s} value={s}>{s}</option>
                         ))}
                       </select>
                     </div>
                   </div>
+                  <div>
+                    <label style={labelStyle}>Postal Code</label>
+                    <input
+                      value={postalCode}
+                      onChange={e => setPostalCode(e.target.value.toUpperCase())}
+                      placeholder='A1A 1A1'
+                      style={inputStyle}
+                    />
+                  </div>
                 </div>
 
                 <button
                   onClick={() => {
-                    if (!fullName || !address || !city || !state || !phone) {
+                    if (!fullName || !address || !city || !state || !postalCode || !phone) {
                       setError('Please fill in all shipping details')
                       return
                     }
@@ -251,8 +259,8 @@ const CheckoutPage = () => {
                   {[
                     {
                       value: 'Paystack',
-                      label: 'Pay with Paystack',
-                      sub: 'Card, Bank Transfer, USSD',
+                      label: 'Pay by Card',
+                      sub: 'Visa, Mastercard, Amex',
                       icon: '💳'
                     },
                     {
@@ -260,12 +268,6 @@ const CheckoutPage = () => {
                       label: 'Pay with Crypto',
                       sub: 'USDT, Bitcoin via MetaMask',
                       icon: '🔐'
-                    },
-                    {
-                      value: 'PayOnDelivery',
-                      label: 'Pay on Delivery',
-                      sub: 'Cash on delivery — Lagos only',
-                      icon: '🚚'
                     },
                   ].map(method => (
                     <div
@@ -370,7 +372,7 @@ const CheckoutPage = () => {
                   </div>
                   <div style={{ fontSize: '13px', color: '#555', lineHeight: '1.6' }}>
                     {fullName} · {phone}<br />
-                    {address}, {city}, {state}
+                    {address}, {city}, {state} {postalCode}
                   </div>
                 </div>
 
@@ -398,8 +400,7 @@ const CheckoutPage = () => {
                     </span>
                   </div>
                   <div style={{ fontSize: '13px', color: '#555' }}>
-                    {paymentMethod === 'Paystack' ? '💳 Paystack' :
-                     paymentMethod === 'Crypto' ? '🔐 Crypto' : '🚚 Pay on Delivery'}
+                    {paymentMethod === 'Paystack' ? '💳 Card Payment' : '🔐 Crypto'}
                   </div>
                 </div>
 
@@ -434,7 +435,7 @@ const CheckoutPage = () => {
                         </div>
                       </div>
                       <div style={{ fontSize: '13px', fontWeight: '600', color: '#111' }}>
-                        ₦{(item.price * item.quantity).toLocaleString()}
+                        ${(item.price * item.quantity).toLocaleString()}
                       </div>
                     </div>
                   ))}
@@ -463,7 +464,7 @@ const CheckoutPage = () => {
                       opacity: loading ? 0.7 : 1
                     }}
                   >
-                    {loading ? 'Processing...' : `Place Order — ₦${totalAmount.toLocaleString()}`}
+                    {loading ? 'Processing...' : `Place Order — $${totalAmount.toLocaleString()}`}
                   </button>
                 </div>
               </div>
@@ -490,7 +491,7 @@ const CheckoutPage = () => {
                 marginBottom: '8px'
               }}>
                 <span>{item.name} × {item.quantity}</span>
-                <span>₦{(item.price * item.quantity).toLocaleString()}</span>
+                <span>${(item.price * item.quantity).toLocaleString()}</span>
               </div>
             ))}
 
@@ -502,7 +503,7 @@ const CheckoutPage = () => {
             }}>
               <span>Shipping</span>
               <span style={{ color: shippingPrice === 0 ? '#2ecc71' : '#111' }}>
-                {shippingPrice === 0 ? 'FREE' : `₦${shippingPrice.toLocaleString()}`}
+                {shippingPrice === 0 ? 'FREE' : `$${shippingPrice.toLocaleString()}`}
               </span>
             </div>
 
@@ -513,7 +514,7 @@ const CheckoutPage = () => {
               fontSize: '16px', fontWeight: '700', color: '#111'
             }}>
               <span>Total</span>
-              <span>₦{totalAmount.toLocaleString()}</span>
+              <span>${totalAmount.toLocaleString()}</span>
             </div>
 
             <div style={{
