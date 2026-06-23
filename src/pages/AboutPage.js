@@ -1,3 +1,4 @@
+﻿import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
@@ -74,7 +75,7 @@ const AboutPage = () => {
         }}>
           Every beauty entrepreneur deserves a professional storefront,
           seamless payments, and real analytics. Glory gives independent beauty
-          businesses across Canada the same tools that big brands have — without
+          businesses across Canada the same tools that big brands have without
           the complexity or cost.
         </p>
       </div>
@@ -93,7 +94,7 @@ const AboutPage = () => {
             {
               icon: '💄',
               title: 'Made for Sellers',
-              text: 'We designed Glory from the ground up for beauty entrepreneurs — not as an afterthought, but as the entire point.'
+              text: 'We designed Glory from the ground up for beauty entrepreneurs, not as an afterthought, but as the entire point.'
             },
             {
               icon: '🔒',
@@ -145,7 +146,7 @@ const AboutPage = () => {
             }}>
               <img
                 src='https://res.cloudinary.com/dd8y3dijs/image/upload/v1777771736/glory-store/e0ej2dulr0zdnvper1oz.jpg'
-                alt='Obioma Ajoku — Founder of Glory'
+                alt='Obioma Ajoku, Founder of Glory'
                 style={{
                   width: '100%', height: '100%',
                   objectFit: 'cover', display: 'block'
@@ -185,40 +186,11 @@ const AboutPage = () => {
               fontSize: '14px', color: '#666',
               lineHeight: '1.85', marginBottom: '28px'
             }}>
-              Glory is her vision of what beauty ecommerce should look like —
+              Glory is her vision of what beauty ecommerce should look like,
               premium, purposeful, and built with the seller in mind, for shoppers
               everywhere from Toronto to anywhere in the world.
             </p>
-            <div style={{ display: 'flex', gap: '12px' }}>
-              {[
-                { icon: <FiInstagram size={16} />, href: '#' },
-                { icon: <FiTwitter size={16} />, href: '#' },
-                { icon: <FiLinkedin size={16} />, href: 'https://linkedin.com/in/obioma-ajoku' },
-              ].map((social, i) => (
-                
-                  key={i}
-                  href={social.href}
-                  style={{
-                    width: '40px', height: '40px',
-                    borderRadius: '50%', background: '#fafaf9',
-                    border: '0.5px solid #eee',
-                    display: 'flex', alignItems: 'center',
-                    justifyContent: 'center', color: '#555',
-                    textDecoration: 'none', transition: 'all 0.2s'
-                  }}
-                  onMouseEnter={e => {
-                    e.currentTarget.style.background = '#111'
-                    e.currentTarget.style.color = '#fff'
-                  }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.background = '#fafaf9'
-                    e.currentTarget.style.color = '#555'
-                  }}
-                >
-                  {social.icon}
-                </a>
-              ))}
-            </div>
+            <SocialLinks />
           </div>
         </div>
       </div>
@@ -233,7 +205,7 @@ const AboutPage = () => {
           {[
             { num: '500+', label: 'Products Listed' },
             { num: '12K+', label: 'Happy Customers' },
-            { num: '4.8★', label: 'Average Rating' },
+            { num: '4.8 stars', label: 'Average Rating' },
             { num: '100%', label: 'Authentic Products' },
           ].map((stat, i) => (
             <div key={i} style={{
@@ -309,6 +281,47 @@ const AboutPage = () => {
       </div>
 
       <Footer />
+    </div>
+  )
+}
+
+const socialList = [
+  { icon: <FiInstagram size={16} />, href: '#' },
+  { icon: <FiTwitter size={16} />, href: '#' },
+  { icon: <FiLinkedin size={16} />, href: 'https://linkedin.com/in/obioma-ajoku' },
+]
+
+function SocialLinks() {
+  const linkStyle = {
+    width: '40px', height: '40px',
+    borderRadius: '50%', background: '#fafaf9',
+    border: '0.5px solid #eee',
+    display: 'flex', alignItems: 'center',
+    justifyContent: 'center', color: '#555',
+    textDecoration: 'none', transition: 'all 0.2s'
+  }
+  return (
+    <div style={{ display: 'flex', gap: '12px' }}>
+      {socialList.map((social, i) => {
+        const tag = React.createElement(
+          'a',
+          {
+            key: i,
+            href: social.href,
+            style: linkStyle,
+            onMouseEnter: e => {
+              e.currentTarget.style.background = '#111'
+              e.currentTarget.style.color = '#fff'
+            },
+            onMouseLeave: e => {
+              e.currentTarget.style.background = '#fafaf9'
+              e.currentTarget.style.color = '#555'
+            }
+          },
+          social.icon
+        )
+        return tag
+      })}
     </div>
   )
 }
