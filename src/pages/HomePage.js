@@ -38,128 +38,125 @@ const HomePage = () => {
     <div style={{ background: '#fff', minHeight: '100vh', fontFamily: "'Inter', sans-serif" }}>
       <Navbar />
 
-    {/* HERO */}
-<div style={{
-  position: 'relative', width: '100%',
-  height: '90vh', overflow: 'hidden',
-  background: '#111'
-}}>
-  {/* 4K VIDEO BACKGROUND */}
-  <video
-  autoPlay
-  muted
-  loop
-  playsInline
-  style={{
-    position: 'absolute', top: '50%', left: '50%',
-    transform: 'translate(-50%, -50%)',
-    minWidth: '100%', minHeight: '100%',
-    width: 'auto', height: 'auto',
-    objectFit: 'cover', opacity: 0.6,
-    objectPosition: 'center top'
-  }}
->
-    <source src='https://res.cloudinary.com/dd8y3dijs/video/upload/v1780042517/5937414-uhd_2160_3840_24fps_i28m6z.mp4' type='video/mp4' />
-  </video>
+      {/* HERO */}
+      <div style={{
+        position: 'relative', width: '100%',
+        height: '90vh', overflow: 'hidden',
+        background: '#111'
+      }}>
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          style={{
+            position: 'absolute', top: '50%', left: '50%',
+            transform: 'translate(-50%, -50%)',
+            minWidth: '100%', minHeight: '100%',
+            width: 'auto', height: 'auto',
+            objectFit: 'cover', opacity: 0.6,
+            objectPosition: 'center top'
+          }}
+        >
+          <source src='https://res.cloudinary.com/dd8y3dijs/video/upload/v1780042517/5937414-uhd_2160_3840_24fps_i28m6z.mp4' type='video/mp4' />
+        </video>
 
-  {/* DARK OVERLAY */}
-  <div style={{
-    position: 'absolute', inset: 0,
-    background: 'rgba(0,0,0,0.35)'
-  }} />
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'rgba(0,0,0,0.35)'
+        }} />
 
- {/* HERO CONTENT */}
-<div style={{
-  position: 'absolute', inset: 0,
-  display: 'flex', flexDirection: 'column',
-  alignItems: 'center', justifyContent: 'center',
-  textAlign: 'center', padding: '0 20px',
-  paddingBottom: '80px'
-}}>
-    <div style={{
-      fontSize: '12px', fontWeight: '700',
-      color: 'rgba(255,255,255,0.7)',
-      letterSpacing: '0.3em', marginBottom: '20px',
-      textTransform: 'uppercase'
-    }}>
-      African Beauty Marketplace
-    </div>
-    <h1 style={{
-      fontSize: '72px', fontWeight: '900',
-      color: '#fff', lineHeight: '1',
-      letterSpacing: '-2px', marginBottom: '20px',
-      textTransform: 'uppercase'
-    }}>
-      GLOW.<br />SHINE.<br />GLORY.
-    </h1>
-    <p style={{
-      fontSize: '16px', color: 'rgba(255,255,255,0.8)',
-      maxWidth: '480px', lineHeight: '1.7',
-      marginBottom: '36px', fontWeight: '400'
-    }}>
-      Discover authentic beauty products from the best Nigerian and international brands.
-    </p>
-    <div style={{ display: 'flex', gap: '14px' }}>
-      <button
-        onClick={() => navigate('/products')}
-        style={{
-          background: '#fff', color: '#111',
-          border: 'none', padding: '16px 36px',
-          fontSize: '13px', fontWeight: '800',
-          cursor: 'pointer', letterSpacing: '0.08em',
-          textTransform: 'uppercase',
-          transition: 'all 0.2s',
-          fontFamily: "'Inter', sans-serif"
-        }}
-        onMouseEnter={e => {
-          e.currentTarget.style.background = '#111'
-          e.currentTarget.style.color = '#fff'
-        }}
-        onMouseLeave={e => {
-          e.currentTarget.style.background = '#fff'
-          e.currentTarget.style.color = '#111'
-        }}
-      >
-        Shop Now
-      </button>
-      <button
-        onClick={() => navigate('/seller')}
-        style={{
-          background: 'transparent', color: '#fff',
-          border: '2px solid rgba(255,255,255,0.6)',
-          padding: '16px 36px', fontSize: '13px',
-          fontWeight: '800', cursor: 'pointer',
-          letterSpacing: '0.08em', textTransform: 'uppercase',
-          transition: 'all 0.2s',
-          fontFamily: "'Inter', sans-serif"
-        }}
-        onMouseEnter={e => {
-          e.currentTarget.style.borderColor = '#fff'
-          e.currentTarget.style.background = 'rgba(255,255,255,0.1)'
-        }}
-        onMouseLeave={e => {
-          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.6)'
-          e.currentTarget.style.background = 'transparent'
-        }}
-      >
-        Sell on Glory
-      </button>
-    </div>
-  </div>
+        <div style={{
+          position: 'absolute', inset: 0,
+          display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center',
+          textAlign: 'center', padding: '0 20px',
+          paddingBottom: '80px'
+        }}>
+          <div style={{
+            fontSize: '12px', fontWeight: '700',
+            color: 'rgba(255,255,255,0.7)',
+            letterSpacing: '0.3em', marginBottom: '20px',
+            textTransform: 'uppercase'
+          }}>
+            Canada's Home for Global Beauty
+          </div>
+          <h1 style={{
+            fontSize: '72px', fontWeight: '900',
+            color: '#fff', lineHeight: '1',
+            letterSpacing: '-2px', marginBottom: '20px',
+            textTransform: 'uppercase'
+          }}>
+            GLOW.<br />SHINE.<br />GLORY.
+          </h1>
+          <p style={{
+            fontSize: '16px', color: 'rgba(255,255,255,0.8)',
+            maxWidth: '480px', lineHeight: '1.7',
+            marginBottom: '36px', fontWeight: '400'
+          }}>
+            Discover authentic beauty products from the best brands — curated for every shade, texture and tradition, shipped across Canada.
+          </p>
+          <div style={{ display: 'flex', gap: '14px' }}>
+            <button
+              onClick={() => navigate('/products')}
+              style={{
+                background: '#fff', color: '#111',
+                border: 'none', padding: '16px 36px',
+                fontSize: '13px', fontWeight: '800',
+                cursor: 'pointer', letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                transition: 'all 0.2s',
+                fontFamily: "'Inter', sans-serif"
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.background = '#111'
+                e.currentTarget.style.color = '#fff'
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.background = '#fff'
+                e.currentTarget.style.color = '#111'
+              }}
+            >
+              Shop Now
+            </button>
+            <button
+              onClick={() => navigate('/seller')}
+              style={{
+                background: 'transparent', color: '#fff',
+                border: '2px solid rgba(255,255,255,0.6)',
+                padding: '16px 36px', fontSize: '13px',
+                fontWeight: '800', cursor: 'pointer',
+                letterSpacing: '0.08em', textTransform: 'uppercase',
+                transition: 'all 0.2s',
+                fontFamily: "'Inter', sans-serif"
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.borderColor = '#fff'
+                e.currentTarget.style.background = 'rgba(255,255,255,0.1)'
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.6)'
+                e.currentTarget.style.background = 'transparent'
+              }}
+            >
+              Sell on Glory
+            </button>
+          </div>
+        </div>
 
-  {/* SCROLL INDICATOR */}
-  <div style={{
-    position: 'absolute', bottom: '30px',
-    left: '50%', transform: 'translateX(-50%)',
-    display: 'flex', flexDirection: 'column',
-    alignItems: 'center', gap: '6px',
-    animation: 'bounce 2s ease-in-out infinite'
-  }}>
-    <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', letterSpacing: '0.15em' }}>SCROLL</div>
-    <div style={{ width: '1px', height: '40px', background: 'rgba(255,255,255,0.3)' }} />
-  </div>
-  <style>{`@keyframes bounce { 0%,100%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(8px)} }`}</style>
-</div>
+        {/* SCROLL INDICATOR */}
+        <div style={{
+          position: 'absolute', bottom: '30px',
+          left: '50%', transform: 'translateX(-50%)',
+          display: 'flex', flexDirection: 'column',
+          alignItems: 'center', gap: '6px',
+          animation: 'bounce 2s ease-in-out infinite'
+        }}>
+          <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', letterSpacing: '0.15em' }}>SCROLL</div>
+          <div style={{ width: '1px', height: '40px', background: 'rgba(255,255,255,0.3)' }} />
+        </div>
+        <style>{`@keyframes bounce { 0%,100%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(8px)} }`}</style>
+      </div>
 
       {/* MARQUEE */}
       <div style={{
@@ -172,13 +169,13 @@ const HomePage = () => {
         }}>
           {[...Array(3)].map((_, i) => (
             <span key={i} style={{ display: 'inline-flex', gap: '48px', alignItems: 'center' }}>
-              <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', letterSpacing: '0.15em', fontWeight: '600' }}>FREE DELIVERY OVER ₦30,000</span>
+              <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', letterSpacing: '0.15em', fontWeight: '600' }}>FREE SHIPPING OVER $75</span>
               <span style={{ color: '#c97a9a', fontSize: '16px' }}>✦</span>
               <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', letterSpacing: '0.15em', fontWeight: '600' }}>100% AUTHENTIC PRODUCTS</span>
               <span style={{ color: '#c97a9a', fontSize: '16px' }}>✦</span>
               <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', letterSpacing: '0.15em', fontWeight: '600' }}>SELL YOUR BEAUTY BRAND ON GLORY</span>
               <span style={{ color: '#c97a9a', fontSize: '16px' }}>✦</span>
-              <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', letterSpacing: '0.15em', fontWeight: '600' }}>PAY WITH CRYPTO OR PAYSTACK</span>
+              <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', letterSpacing: '0.15em', fontWeight: '600' }}>PAY WITH CARD OR CRYPTO</span>
               <span style={{ color: '#c97a9a', fontSize: '16px' }}>✦</span>
             </span>
           ))}
@@ -316,7 +313,7 @@ const HomePage = () => {
             color: '#c97a9a', letterSpacing: '0.3em',
             marginBottom: '20px'
           }}>
-            FOR AFRICAN BEAUTY BRANDS
+            FOR INDEPENDENT BEAUTY BRANDS
           </div>
           <h2 style={{
             fontSize: '56px', fontWeight: '900',
@@ -331,7 +328,7 @@ const HomePage = () => {
             maxWidth: '520px', margin: '0 auto 36px',
             lineHeight: '1.7'
           }}>
-            Turn your Instagram beauty brand into a real store. Join thousands of African women selling on Glory.
+            Turn your Instagram beauty brand into a real store. Join sellers across Canada building their business on Glory.
           </p>
           <button
             onClick={() => navigate('/register')}
@@ -412,8 +409,8 @@ const HomePage = () => {
         padding: '0 40px'
       }}>
         {[
-          { icon: '🚚', title: 'FAST DELIVERY', sub: 'Across all 36 states' },
-          { icon: '🔒', title: 'SECURE PAYMENTS', sub: 'Paystack + Crypto' },
+          { icon: '🚚', title: 'FAST SHIPPING', sub: 'Across Canada' },
+          { icon: '🔒', title: 'SECURE PAYMENTS', sub: 'Stripe + Crypto' },
           { icon: '✓', title: '100% AUTHENTIC', sub: 'Verified sellers only' },
           { icon: '↩️', title: 'EASY RETURNS', sub: '30-day return policy' },
         ].map((item, i) => (
