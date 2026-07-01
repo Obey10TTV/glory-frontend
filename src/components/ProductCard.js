@@ -26,6 +26,13 @@ const ProductCard = ({ product }) => {
     <div
       className='glory-product-card'
       onClick={() => navigate(`/products/${product._id}`)}
+      onKeyDown={(e) => {
+        if (e.target !== e.currentTarget) return
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          navigate(`/products/${product._id}`)
+        }
+      }}
       role='button'
       tabIndex={0}
       style={{
@@ -45,6 +52,7 @@ const ProductCard = ({ product }) => {
         <img
           src={product.image}
           alt={product.name}
+          loading='lazy'
           style={{
             width: '100%', height: '100%',
             objectFit: 'cover', display: 'block'
@@ -127,7 +135,7 @@ const ProductCard = ({ product }) => {
           <div style={{
             fontSize: '11px', color: '#999'
           }}>
-            ★ {product.rating.toFixed(1)}
+            Rated {product.rating.toFixed(1)}
           </div>
         </div>
       </div>

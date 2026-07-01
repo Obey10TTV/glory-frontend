@@ -5,7 +5,116 @@ import Footer from '../components/Footer'
 import ProductCard from '../components/ProductCard'
 import Loader from '../components/Loader'
 import { getProducts } from '../api'
-import { FiCheckCircle, FiRefreshCw, FiShield, FiTruck } from 'react-icons/fi'
+import {
+  FiArrowRight,
+  FiCheckCircle,
+  FiHeart,
+  FiRefreshCw,
+  FiSearch,
+  FiShield,
+  FiShoppingBag,
+  FiTruck,
+} from 'react-icons/fi'
+
+const categoryTiles = [
+  {
+    name: 'Skincare',
+    kicker: 'Barrier, glow, SPF',
+    copy: 'Cleansers, serums, masks and daily essentials for every routine.',
+    image: 'https://images.pexels.com/photos/3762879/pexels-photo-3762879.jpeg?auto=compress&cs=tinysrgb&w=900',
+  },
+  {
+    name: 'Makeup',
+    kicker: 'Complexion to lip',
+    copy: 'Pigment, finish and shade range for soft glam or full beat.',
+    image: 'https://images.pexels.com/photos/2113855/pexels-photo-2113855.jpeg?auto=compress&cs=tinysrgb&w=900',
+  },
+  {
+    name: 'Haircare',
+    kicker: 'Wash day ready',
+    copy: 'Moisture, scalp care, styling and protective-hair favorites.',
+    image: 'https://images.pexels.com/photos/3065209/pexels-photo-3065209.jpeg?auto=compress&cs=tinysrgb&w=900',
+  },
+  {
+    name: 'Nails',
+    kicker: 'Salon finish',
+    copy: 'Polish, press-ons, nail care and sets made for clean detail.',
+    image: 'https://images.pexels.com/photos/3997391/pexels-photo-3997391.jpeg?auto=compress&cs=tinysrgb&w=900',
+  },
+  {
+    name: 'Lashes',
+    kicker: 'Soft to dramatic',
+    copy: 'Everyday clusters, strips and lash tools with a lifted finish.',
+    image: 'https://images.pexels.com/photos/3373738/pexels-photo-3373738.jpeg?auto=compress&cs=tinysrgb&w=900',
+  },
+  {
+    name: 'Fragrance',
+    kicker: 'Signature scents',
+    copy: 'Perfume oils, sprays and body mists that linger beautifully.',
+    image: 'https://images.pexels.com/photos/965989/pexels-photo-965989.jpeg?auto=compress&cs=tinysrgb&w=900',
+  },
+]
+
+const editorialArrivals = [
+  {
+    name: 'Barrier Repair Serum',
+    category: 'Skincare',
+    brand: 'GLORY Select',
+    price: 'From $28',
+    image: 'https://images.pexels.com/photos/5069609/pexels-photo-5069609.jpeg?auto=compress&cs=tinysrgb&w=900',
+  },
+  {
+    name: 'Soft Sculpt Lip Duo',
+    category: 'Makeup',
+    brand: 'New Season',
+    price: 'From $22',
+    image: 'https://images.pexels.com/photos/2688991/pexels-photo-2688991.jpeg?auto=compress&cs=tinysrgb&w=900',
+  },
+  {
+    name: 'Hydration Wash Day Kit',
+    category: 'Haircare',
+    brand: 'Texture Edit',
+    price: 'From $36',
+    image: 'https://images.pexels.com/photos/3993449/pexels-photo-3993449.jpeg?auto=compress&cs=tinysrgb&w=900',
+  },
+  {
+    name: 'Clean Girl Nail Set',
+    category: 'Nails',
+    brand: 'Studio Drop',
+    price: 'From $18',
+    image: 'https://images.pexels.com/photos/3997379/pexels-photo-3997379.jpeg?auto=compress&cs=tinysrgb&w=900',
+  },
+]
+
+const routineSteps = [
+  {
+    title: 'Prep the skin',
+    category: 'Skincare',
+    copy: 'Start with gentle cleansing, barrier support and daily moisture.',
+    image: 'https://images.pexels.com/photos/6724440/pexels-photo-6724440.jpeg?auto=compress&cs=tinysrgb&w=900',
+  },
+  {
+    title: 'Build the look',
+    category: 'Makeup',
+    copy: 'Layer complexion, lip color, lashes and detail without heaviness.',
+    image: 'https://images.pexels.com/photos/2253833/pexels-photo-2253833.jpeg?auto=compress&cs=tinysrgb&w=900',
+  },
+  {
+    title: 'Finish with scent',
+    category: 'Fragrance',
+    copy: 'Choose a soft mist, perfume oil or statement fragrance to close it.',
+    image: 'https://images.pexels.com/photos/4110337/pexels-photo-4110337.jpeg?auto=compress&cs=tinysrgb&w=900',
+  },
+]
+
+const concernTiles = [
+  { label: 'Hydration', category: 'Skincare', color: '#f7e5d2' },
+  { label: 'Glow makeup', category: 'Makeup', color: '#f7dce8' },
+  { label: 'Scalp care', category: 'Haircare', color: '#dde9df' },
+  { label: 'Press-on sets', category: 'Nails', color: '#e7def6' },
+  { label: 'Everyday lashes', category: 'Lashes', color: '#f3e1d6' },
+  { label: 'Warm fragrance', category: 'Fragrance', color: '#efe1cb' },
+]
 
 const HomePage = () => {
   const navigate = useNavigate()
@@ -26,452 +135,268 @@ const HomePage = () => {
     fetchProducts()
   }, [])
 
-  const categories = [
-    { name: 'Skincare', image: 'https://images.pexels.com/photos/3762879/pexels-photo-3762879.jpeg?w=400' },
-    { name: 'Makeup', image: 'https://images.pexels.com/photos/2113855/pexels-photo-2113855.jpeg?w=400' },
-    { name: 'Haircare', image: 'https://images.pexels.com/photos/3065209/pexels-photo-3065209.jpeg?w=400' },
-    { name: 'Nails', image: 'https://images.pexels.com/photos/3622613/pexels-photo-3622613.jpeg?w=400' },
-    { name: 'Lashes', image: 'https://images.pexels.com/photos/2253833/pexels-photo-2253833.jpeg?w=400' },
-    { name: 'Fragrance', image: 'https://images.pexels.com/photos/965989/pexels-photo-965989.jpeg?w=400' },
-  ]
+  const shopCategory = (category) => {
+    navigate(`/products?category=${encodeURIComponent(category)}`)
+  }
+
+  const latestProducts = products.slice(0, 4)
+  const bestsellerProducts = products.slice(0).reverse().slice(0, 4)
 
   return (
-    <div className='glory-page' style={{ background: '#fff', minHeight: '100vh', fontFamily: "'Inter', sans-serif" }}>
+    <div className='glory-page glory-home-page'>
       <Navbar />
 
-      {/* HERO */}
-      <div className='glory-hero' style={{
-        position: 'relative', width: '100%',
-        height: '90vh', overflow: 'hidden',
-        background: '#111'
-      }}>
+      <section className='glory-hero'>
         <video
           autoPlay
           muted
           loop
           playsInline
-          style={{
-            position: 'absolute', top: '50%', left: '50%',
-            transform: 'translate(-50%, -50%)',
-            minWidth: '100%', minHeight: '100%',
-            width: 'auto', height: 'auto',
-            objectFit: 'cover', opacity: 0.6,
-            objectPosition: 'center top'
-          }}
+          className='glory-hero-video'
         >
           <source src='https://res.cloudinary.com/dd8y3dijs/video/upload/v1780042517/5937414-uhd_2160_3840_24fps_i28m6z.mp4' type='video/mp4' />
         </video>
-
-        <div className='glory-hero-content' style={{
-          position: 'absolute', inset: 0,
-          background: 'rgba(0,0,0,0.35)'
-        }} />
-
-        <div style={{
-          position: 'absolute', inset: 0,
-          display: 'flex', flexDirection: 'column',
-          alignItems: 'center', justifyContent: 'center',
-          textAlign: 'center', padding: '0 20px',
-          paddingBottom: '80px'
-        }}>
-          <div style={{
-            fontSize: '12px', fontWeight: '700',
-            color: 'rgba(255,255,255,0.7)',
-            letterSpacing: '0.3em', marginBottom: '20px',
-            textTransform: 'uppercase'
-          }}>
-            Canada's Home for Global Beauty
-          </div>
-          <h1 className='glory-hero-title' style={{
-            fontSize: '72px', fontWeight: '900',
-            color: '#fff', lineHeight: '1',
-            letterSpacing: '-2px', marginBottom: '20px',
-            textTransform: 'uppercase'
-          }}>
-            GLOW.<br />SHINE.<br />GLORY.
-          </h1>
-          <p className='glory-hero-copy' style={{
-            fontSize: '16px', color: 'rgba(255,255,255,0.8)',
-            maxWidth: '480px', lineHeight: '1.7',
-            marginBottom: '36px', fontWeight: '400'
-          }}>
-            Discover authentic beauty products from the best brands — curated for every shade, texture and tradition, shipped across Canada.
+        <div className='glory-hero-scrim' />
+        <div className='glory-hero-content'>
+          <div className='glory-eyebrow glory-hero-kicker'>Canada's home for global beauty</div>
+          <h1 className='glory-hero-title'>Glow. Shine. Glory.</h1>
+          <p className='glory-hero-copy'>
+            Discover authentic beauty products from independent sellers and loved brands, curated for every shade, texture and tradition across Canada.
           </p>
-          <div className='glory-actions' style={{ display: 'flex', gap: '14px' }}>
-            <button
-              onClick={() => navigate('/products')}
-              style={{
-                background: '#fff', color: '#111',
-                border: 'none', padding: '16px 36px',
-                fontSize: '13px', fontWeight: '800',
-                cursor: 'pointer', letterSpacing: '0.08em',
-                textTransform: 'uppercase',
-                transition: 'all 0.2s',
-                fontFamily: "'Inter', sans-serif"
-              }}
-              onMouseEnter={e => {
-                e.currentTarget.style.background = '#111'
-                e.currentTarget.style.color = '#fff'
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.background = '#fff'
-                e.currentTarget.style.color = '#111'
-              }}
-            >
-              Shop Now
+          <div className='glory-actions'>
+            <button className='glory-hero-primary' onClick={() => navigate('/products')}>
+              <FiShoppingBag size={18} />
+              Shop now
             </button>
-            <button
-              onClick={() => navigate('/seller')}
-              style={{
-                background: 'transparent', color: '#fff',
-                border: '2px solid rgba(255,255,255,0.6)',
-                padding: '16px 36px', fontSize: '13px',
-                fontWeight: '800', cursor: 'pointer',
-                letterSpacing: '0.08em', textTransform: 'uppercase',
-                transition: 'all 0.2s',
-                fontFamily: "'Inter', sans-serif"
-              }}
-              onMouseEnter={e => {
-                e.currentTarget.style.borderColor = '#fff'
-                e.currentTarget.style.background = 'rgba(255,255,255,0.1)'
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.6)'
-                e.currentTarget.style.background = 'transparent'
-              }}
-            >
-              Sell on Glory
+            <button className='glory-hero-secondary' onClick={() => navigate('/seller')}>
+              Start selling
+              <FiArrowRight size={17} />
             </button>
           </div>
         </div>
+      </section>
 
-        {/* SCROLL INDICATOR */}
-        <div style={{
-          position: 'absolute', bottom: '30px',
-          left: '50%', transform: 'translateX(-50%)',
-          display: 'flex', flexDirection: 'column',
-          alignItems: 'center', gap: '6px',
-          animation: 'bounce 2s ease-in-out infinite'
-        }}>
-          <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', letterSpacing: '0.15em' }}>SCROLL</div>
-          <div style={{ width: '1px', height: '40px', background: 'rgba(255,255,255,0.3)' }} />
-        </div>
-        <style>{`@keyframes bounce { 0%,100%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(8px)} }`}</style>
-      </div>
-
-      {/* MARQUEE */}
-      <div style={{
-        background: '#111', padding: '14px 0',
-        overflow: 'hidden', whiteSpace: 'nowrap'
-      }}>
-        <div style={{
-          display: 'inline-flex', gap: '48px',
-          animation: 'marquee 25s linear infinite'
-        }}>
-          {[...Array(3)].map((_, i) => (
-            <span key={i} style={{ display: 'inline-flex', gap: '48px', alignItems: 'center' }}>
-              <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', letterSpacing: '0.15em', fontWeight: '600' }}>FREE SHIPPING OVER $75</span>
-              <span style={{ color: '#c97a9a', fontSize: '16px' }}>✦</span>
-              <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', letterSpacing: '0.15em', fontWeight: '600' }}>100% AUTHENTIC PRODUCTS</span>
-              <span style={{ color: '#c97a9a', fontSize: '16px' }}>✦</span>
-              <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', letterSpacing: '0.15em', fontWeight: '600' }}>SELL YOUR BEAUTY BRAND ON GLORY</span>
-              <span style={{ color: '#c97a9a', fontSize: '16px' }}>✦</span>
-              <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', letterSpacing: '0.15em', fontWeight: '600' }}>PAY WITH CARD OR CRYPTO</span>
-              <span style={{ color: '#c97a9a', fontSize: '16px' }}>✦</span>
+      <section className='glory-marquee' aria-label='Store benefits'>
+        <div className='glory-marquee-track'>
+          {[...Array(3)].map((_, index) => (
+            <span key={index} className='glory-marquee-group'>
+              <span>Free shipping over $75</span>
+              <span>Authentic beauty products</span>
+              <span>Verified sellers</span>
+              <span>Card and crypto checkout</span>
             </span>
           ))}
         </div>
-        <style>{`@keyframes marquee { from{transform:translateX(0)} to{transform:translateX(-33.33%)} }`}</style>
-      </div>
+      </section>
 
-      {/* CATEGORIES */}
-      <div className='glory-section' style={{ padding: '80px 40px' }}>
-        <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-          <div style={{
-            fontSize: '11px', fontWeight: '700',
-            color: '#999', letterSpacing: '0.2em',
-            marginBottom: '12px'
-          }}>
-            SHOP BY CATEGORY
+      <section className='glory-section glory-category-showcase'>
+        <div className='glory-section-inner'>
+          <div className='glory-home-heading'>
+            <span className='glory-eyebrow'>Shop by category</span>
+            <h2>Beauty departments that feel real.</h2>
+            <p>Every category has its own visual mood, clear link, and enough context to help shoppers move with intention.</p>
           </div>
-          <h2 style={{
-            fontSize: '40px', fontWeight: '900',
-            color: '#111', letterSpacing: '-1px'
-          }}>
-            FIND YOUR GLOW
-          </h2>
-        </div>
 
-        <div className='glory-category-grid' style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(6, 1fr)',
-          gap: '16px'
-        }}>
-          {categories.map((cat, i) => (
-            <div
-              className='glory-category-card'
-              key={i}
-              onClick={() => navigate(`/products?category=${cat.name}`)}
-              style={{
-                position: 'relative', cursor: 'pointer',
-                aspectRatio: '3/4', overflow: 'hidden',
-                background: '#f5f5f5'
-              }}
-              onMouseEnter={e => {
-                e.currentTarget.querySelector('img').style.transform = 'scale(1.05)'
-                e.currentTarget.querySelector('.cat-label').style.background = '#111'
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.querySelector('img').style.transform = 'scale(1)'
-                e.currentTarget.querySelector('.cat-label').style.background = 'rgba(0,0,0,0.6)'
-              }}
-            >
-              <img
-                src={cat.image}
-                alt={cat.name}
-                style={{
-                  width: '100%', height: '100%',
-                  objectFit: 'cover', display: 'block',
-                  transition: 'transform 0.4s ease'
-                }}
-              />
-              <div className='cat-label' style={{
-                position: 'absolute', bottom: 0, left: 0, right: 0,
-                background: 'rgba(0,0,0,0.6)',
-                padding: '16px', transition: 'background 0.3s'
-              }}>
-                <div style={{
-                  fontSize: '13px', fontWeight: '800',
-                  color: '#fff', letterSpacing: '0.1em'
-                }}>
-                  {cat.name.toUpperCase()}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* NEW IN */}
-      <div className='glory-section-tight' style={{ padding: '0 40px 80px' }}>
-        <div className='glory-section-header' style={{
-          display: 'flex', justifyContent: 'space-between',
-          alignItems: 'flex-end', marginBottom: '32px',
-          borderBottom: '2px solid #111', paddingBottom: '16px'
-        }}>
-          <div>
-            <div style={{
-              fontSize: '11px', fontWeight: '700',
-              color: '#999', letterSpacing: '0.2em', marginBottom: '8px'
-            }}>
-              JUST DROPPED
-            </div>
-            <h2 className='glory-section-title' style={{
-              fontSize: '36px', fontWeight: '900',
-              color: '#111', letterSpacing: '-1px'
-            }}>
-              NEW IN
-            </h2>
-          </div>
-          <span
-            onClick={() => navigate('/products')}
-            style={{
-              fontSize: '12px', fontWeight: '700',
-              color: '#111', cursor: 'pointer',
-              letterSpacing: '0.08em', textDecoration: 'underline'
-            }}
-          >
-            VIEW ALL →
-          </span>
-        </div>
-
-        {loading ? <Loader /> : (
-          <div className='glory-product-grid' style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '20px'
-          }}>
-            {products.slice(0, 4).map(product => (
-              <ProductCard key={product._id} product={product} />
+          <div className='glory-category-grid glory-category-grid-rich'>
+            {categoryTiles.map((category, index) => (
+              <button
+                key={category.name}
+                className={`glory-category-card glory-category-card-rich ${index < 2 ? 'glory-category-featured' : ''}`}
+                onClick={() => shopCategory(category.name)}
+                aria-label={`Shop ${category.name}`}
+              >
+                <img src={category.image} alt={`${category.name} beauty products`} loading='lazy' />
+                <span className='glory-category-gradient' />
+                <span className='glory-category-content'>
+                  <span className='glory-category-kicker'>{category.kicker}</span>
+                  <span className='glory-category-name'>{category.name}</span>
+                  <span className='glory-category-copy'>{category.copy}</span>
+                  <span className='glory-category-link'>
+                    Shop {category.name}
+                    <FiArrowRight size={16} />
+                  </span>
+                </span>
+              </button>
             ))}
           </div>
-        )}
-      </div>
+        </div>
+      </section>
 
-      {/* SELL BANNER */}
-      <div className='glory-sell-banner' style={{
-        background: '#111', padding: '100px 40px',
-        textAlign: 'center', position: 'relative',
-        overflow: 'hidden'
-      }}>
-        <div style={{
-          position: 'absolute', inset: 0,
-          background: 'radial-gradient(circle at 30% 50%, rgba(201,122,154,0.2), transparent 60%), radial-gradient(circle at 70% 50%, rgba(201,122,154,0.1), transparent 60%)',
-          pointerEvents: 'none'
-        }} />
-        <div style={{ position: 'relative', zIndex: 1 }}>
-          <div style={{
-            fontSize: '11px', fontWeight: '700',
-            color: '#c97a9a', letterSpacing: '0.3em',
-            marginBottom: '20px'
-          }}>
-            FOR INDEPENDENT BEAUTY BRANDS
+      <section className='glory-section-tight glory-arrivals-section'>
+        <div className='glory-section-inner'>
+          <div className='glory-section-header glory-section-header-rich'>
+            <div>
+              <span className='glory-eyebrow'>Just dropped</span>
+              <h2 className='glory-section-title'>New in</h2>
+            </div>
+            <button className='glory-text-link' onClick={() => navigate('/products')}>
+              View all
+              <FiArrowRight size={16} />
+            </button>
           </div>
-          <h2 style={{
-            fontSize: '56px', fontWeight: '900',
-            color: '#fff', lineHeight: '1',
-            letterSpacing: '-2px', marginBottom: '20px',
-            textTransform: 'uppercase'
-          }}>
-            STOP SELLING<br />IN DMS.
-          </h2>
-          <p style={{
-            fontSize: '16px', color: 'rgba(255,255,255,0.6)',
-            maxWidth: '520px', margin: '0 auto 36px',
-            lineHeight: '1.7'
-          }}>
+
+          <div className='glory-arrivals-layout'>
+            <div className='glory-arrivals-feature'>
+              <span className='glory-arrivals-label'>Fresh edit</span>
+              <h3>Curated arrivals for the week.</h3>
+              <p>Feature the newest beauty drops, seller launches and seasonal routines without leaving the homepage feeling empty.</p>
+              <button onClick={() => navigate('/products')}>
+                Explore the edit
+                <FiArrowRight size={17} />
+              </button>
+            </div>
+
+            {loading ? (
+              <Loader />
+            ) : latestProducts.length > 0 ? (
+              <div className='glory-product-grid'>
+                {latestProducts.map((product) => (
+                  <ProductCard key={product._id} product={product} />
+                ))}
+              </div>
+            ) : (
+              <div className='glory-editorial-grid'>
+                {editorialArrivals.map((item) => (
+                  <button
+                    className='glory-editorial-card'
+                    key={item.name}
+                    onClick={() => shopCategory(item.category)}
+                  >
+                    <span className='glory-editorial-media'>
+                      <img src={item.image} alt={item.name} loading='lazy' />
+                    </span>
+                    <span className='glory-editorial-body'>
+                      <span>{item.brand}</span>
+                      <strong>{item.name}</strong>
+                      <small>{item.category}</small>
+                      <b>{item.price}</b>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      <section className='glory-section glory-routine-section'>
+        <div className='glory-section-inner glory-routine-layout'>
+          <div className='glory-home-heading glory-routine-heading'>
+            <span className='glory-eyebrow'>Routine builder</span>
+            <h2>Build the whole beauty moment.</h2>
+            <p>Stack the homepage like a real store: discovery, routine, bestsellers, selling, and trust all working together.</p>
+            <button className='glory-outline-action' onClick={() => navigate('/products')}>
+              Shop all products
+              <FiArrowRight size={17} />
+            </button>
+          </div>
+          <div className='glory-routine-grid'>
+            {routineSteps.map((step) => (
+              <button className='glory-routine-card' key={step.title} onClick={() => shopCategory(step.category)}>
+                <img src={step.image} alt={step.title} loading='lazy' />
+                <span>
+                  <small>{step.category}</small>
+                  <strong>{step.title}</strong>
+                  <em>{step.copy}</em>
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className='glory-section-tight'>
+        <div className='glory-section-inner'>
+          <div className='glory-concern-panel'>
+            <div>
+              <span className='glory-eyebrow'>Shop by need</span>
+              <h2>Fast paths for shoppers who know what they want.</h2>
+            </div>
+            <div className='glory-concern-grid'>
+              {concernTiles.map((item) => (
+                <button
+                  key={item.label}
+                  style={{ background: item.color }}
+                  onClick={() => shopCategory(item.category)}
+                >
+                  <FiSearch size={17} />
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className='glory-sell-banner'>
+        <div className='glory-sell-banner-inner'>
+          <span className='glory-eyebrow'>For independent beauty brands</span>
+          <h2>Stop selling in DMs.</h2>
+          <p>
             Turn your Instagram beauty brand into a real store. Join sellers across Canada building their business on Glory.
           </p>
-          <button
-            onClick={() => navigate('/register')}
-            style={{
-              background: '#fff', color: '#111',
-              border: 'none', padding: '18px 48px',
-              borderRadius: '999px',
-              fontSize: '13px', fontWeight: '800',
-              cursor: 'pointer', letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-              transition: 'all 0.2s',
-              fontFamily: "'Inter', sans-serif"
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.background = '#c97a9a'
-              e.currentTarget.style.color = '#fff'
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.background = '#fff'
-              e.currentTarget.style.color = '#111'
-            }}
-          >
-            Start Selling Today →
+          <button onClick={() => navigate('/register')}>
+            Start selling today
+            <FiArrowRight size={17} />
           </button>
         </div>
-      </div>
+      </section>
 
-      {/* BESTSELLERS */}
-      <div className='glory-section' style={{ padding: '80px 40px' }}>
-        <div className='glory-section-header' style={{
-          display: 'flex', justifyContent: 'space-between',
-          alignItems: 'flex-end', marginBottom: '32px',
-          borderBottom: '2px solid #111', paddingBottom: '16px'
-        }}>
-          <div>
-            <div style={{
-              fontSize: '11px', fontWeight: '700',
-              color: '#999', letterSpacing: '0.2em', marginBottom: '8px'
-            }}>
-              MOST LOVED
+      <section className='glory-section'>
+        <div className='glory-section-inner'>
+          <div className='glory-section-header glory-section-header-rich'>
+            <div>
+              <span className='glory-eyebrow'>Most loved</span>
+              <h2 className='glory-section-title'>Bestsellers</h2>
             </div>
-            <h2 className='glory-section-title' style={{
-              fontSize: '36px', fontWeight: '900',
-              color: '#111', letterSpacing: '-1px'
-            }}>
-              BESTSELLERS
-            </h2>
+            <button className='glory-text-link' onClick={() => navigate('/products')}>
+              View all
+              <FiArrowRight size={16} />
+            </button>
           </div>
-          <span
-            onClick={() => navigate('/products')}
-            style={{
-              fontSize: '12px', fontWeight: '700',
-              color: '#111', cursor: 'pointer',
-              letterSpacing: '0.08em', textDecoration: 'underline'
-            }}
-          >
-            VIEW ALL →
-          </span>
+
+          {loading ? (
+            <Loader />
+          ) : bestsellerProducts.length > 0 ? (
+            <div className='glory-product-grid'>
+              {bestsellerProducts.map((product) => (
+                <ProductCard key={product._id} product={product} />
+              ))}
+            </div>
+          ) : (
+            <div className='glory-brand-strip'>
+              <div>
+                <FiHeart size={22} />
+                <strong>More products coming next.</strong>
+                <span>Once we add more database items, this section will automatically become a real bestseller grid.</span>
+              </div>
+              <button onClick={() => navigate('/products')}>
+                Browse current products
+                <FiArrowRight size={17} />
+              </button>
+            </div>
+          )}
         </div>
+      </section>
 
-        {loading ? <Loader /> : (
-          <div className='glory-product-grid' style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '20px'
-          }}>
-            {products.slice(0).reverse().slice(0, 4).map(product => (
-              <ProductCard key={product._id} product={product} />
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* TRUST STRIP */}
-      <div className='glory-trust-strip' style={{
-        borderTop: '1px solid #f0f0f0',
-        borderBottom: '1px solid #f0f0f0',
-        display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)',
-        padding: '0 40px'
-      }}>
+      <section className='glory-trust-strip'>
         {[
-          { Icon: FiTruck, title: 'FAST SHIPPING', sub: 'Across Canada' },
-          { Icon: FiShield, title: 'SECURE PAYMENTS', sub: 'Paystack + crypto' },
-          { Icon: FiCheckCircle, title: '100% AUTHENTIC', sub: 'Verified sellers only' },
-          { Icon: FiRefreshCw, title: 'EASY RETURNS', sub: '30-day return policy' },
-        ].map((item, i) => (
-          <div key={item.title} className='glory-trust-item' style={{
-            display: 'flex', alignItems: 'center', gap: '16px',
-            padding: '28px 20px',
-            borderRight: i < 3 ? '1px solid #f0f0f0' : 'none'
-          }}>
-            <span style={{
-              width: '44px', height: '44px',
-              borderRadius: '50%', background: '#f8e8ee',
-              color: '#b85f83', display: 'flex',
-              alignItems: 'center', justifyContent: 'center',
-              flexShrink: 0
-            }}>
+          { Icon: FiTruck, title: 'Fast shipping', sub: 'Across Canada' },
+          { Icon: FiShield, title: 'Secure payments', sub: 'Paystack and crypto' },
+          { Icon: FiCheckCircle, title: 'Authentic products', sub: 'Verified sellers only' },
+          { Icon: FiRefreshCw, title: 'Easy returns', sub: '30-day return policy' },
+        ].map((item) => (
+          <div key={item.title} className='glory-trust-item'>
+            <span>
               <item.Icon size={20} />
             </span>
             <div>
-              <div style={{
-                fontSize: '12px', fontWeight: '800',
-                color: '#111', letterSpacing: '0.06em',
-                marginBottom: '4px'
-              }}>
-                {item.title}
-              </div>
-              <div style={{ fontSize: '12px', color: '#888' }}>
-                {item.sub}
-              </div>
+              <strong>{item.title}</strong>
+              <small>{item.sub}</small>
             </div>
           </div>
         ))}
-        {false && [
-          { icon: '🚚', title: 'FAST SHIPPING', sub: 'Across Canada' },
-          { icon: '🔒', title: 'SECURE PAYMENTS', sub: 'Stripe + Crypto' },
-          { icon: '✓', title: '100% AUTHENTIC', sub: 'Verified sellers only' },
-          { icon: '↩️', title: 'EASY RETURNS', sub: '30-day return policy' },
-        ].map((item, i) => (
-          <div key={i} style={{
-            display: 'flex', alignItems: 'center', gap: '16px',
-            padding: '28px 20px',
-            borderRight: i < 3 ? '1px solid #f0f0f0' : 'none'
-          }}>
-            <span style={{ fontSize: '28px' }}>{item.icon}</span>
-            <div>
-              <div style={{
-                fontSize: '12px', fontWeight: '800',
-                color: '#111', letterSpacing: '0.06em',
-                marginBottom: '4px'
-              }}>
-                {item.title}
-              </div>
-              <div style={{ fontSize: '12px', color: '#888' }}>
-                {item.sub}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
+      </section>
 
       <Footer />
     </div>
