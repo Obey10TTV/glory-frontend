@@ -80,10 +80,10 @@ const ProductDetailPage = () => {
   if (!product) return <><Navbar /><Message type='error' text='Product not found' /></>
 
   return (
-    <div style={{ background: '#fafaf9', minHeight: '100vh' }}>
+    <div className='glory-page' style={{ background: '#fafaf9', minHeight: '100vh' }}>
       <Navbar />
 
-      <div style={{ padding: '40px', maxWidth: '1200px', margin: '0 auto' }}>
+      <div className='glory-container' style={{ padding: '40px', maxWidth: '1200px', margin: '0 auto' }}>
 
         <div style={{
           fontSize: '12px', color: '#999',
@@ -97,13 +97,13 @@ const ProductDetailPage = () => {
           <span style={{ color: '#111' }}>{product.name}</span>
         </div>
 
-        <div style={{
+        <div className='glory-product-detail-grid' style={{
           display: 'grid',
           gridTemplateColumns: '1fr 1fr',
           gap: '60px', marginBottom: '60px'
         }}>
 
-          <div style={{
+          <div className='glory-product-detail-media' style={{
             borderRadius: '20px', overflow: 'hidden',
             background: '#fdf0f5', aspectRatio: '1',
             position: 'relative'
@@ -206,7 +206,7 @@ const ProductDetailPage = () => {
                 }}>
                   Quantity
                 </div>
-                <div style={{
+                <div className='glory-stepper' style={{
                   display: 'flex', alignItems: 'center',
                   gap: '0', border: '1px solid #eee',
                   borderRadius: '999px', width: 'fit-content',
@@ -242,7 +242,7 @@ const ProductDetailPage = () => {
               </div>
             )}
 
-            <div style={{ display: 'flex', gap: '12px' }}>
+            <div className='glory-product-actions' style={{ display: 'flex', gap: '12px' }}>
               <button
                 onClick={handleAddToCart}
                 disabled={product.countInStock === 0}
@@ -275,7 +275,7 @@ const ProductDetailPage = () => {
               </button>
             </div>
 
-            <div style={{
+            <div className='glory-perks' style={{
               display: 'flex', flexDirection: 'column',
               gap: '10px', padding: '20px',
               background: '#fafaf9', borderRadius: '12px',
@@ -337,7 +337,7 @@ const ProductDetailPage = () => {
           {activeTab === 'reviews' && (
             <div style={{ maxWidth: '680px' }}>
 
-              <div style={{
+              <div className='glory-review-card' style={{
                 background: '#fff', borderRadius: '16px',
                 padding: '24px', border: '0.5px solid #eee',
                 marginBottom: '24px'

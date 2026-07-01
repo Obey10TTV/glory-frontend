@@ -84,10 +84,10 @@ const CheckoutPage = () => {
   }
 
   return (
-    <div style={{ background: '#fafaf9', minHeight: '100vh' }}>
+    <div className='glory-page' style={{ background: '#fafaf9', minHeight: '100vh' }}>
       <Navbar />
 
-      <div style={{ padding: '40px', maxWidth: '1000px', margin: '0 auto' }}>
+      <div className='glory-container' style={{ padding: '40px', maxWidth: '1000px', margin: '0 auto' }}>
         <h1 style={{
           fontSize: '28px', fontWeight: '700',
           color: '#111', marginBottom: '8px'
@@ -96,7 +96,7 @@ const CheckoutPage = () => {
         </h1>
 
         {/* PROGRESS STEPS */}
-        <div style={{
+        <div className='glory-checkout-progress' style={{
           display: 'flex', alignItems: 'center',
           gap: '0', marginBottom: '40px'
         }}>
@@ -140,14 +140,14 @@ const CheckoutPage = () => {
 
         {error && <Message type='error' text={error} />}
 
-        <div style={{
+        <div className='glory-checkout-layout' style={{
           display: 'grid',
           gridTemplateColumns: '1fr 340px',
           gap: '28px', alignItems: 'start'
         }}>
 
           {/* LEFT PANEL */}
-          <div style={{
+          <div className='glory-checkout-panel' style={{
             background: '#fff', borderRadius: '16px',
             padding: '28px', border: '0.5px solid #eee'
           }}>
@@ -166,6 +166,7 @@ const CheckoutPage = () => {
                   <div>
                     <label style={labelStyle}>Full Name</label>
                     <input
+                      className='glory-input'
                       value={fullName}
                       onChange={e => setFullName(e.target.value)}
                       placeholder='Your full name'
@@ -175,6 +176,7 @@ const CheckoutPage = () => {
                   <div>
                     <label style={labelStyle}>Phone Number</label>
                     <input
+                      className='glory-input'
                       value={phone}
                       onChange={e => setPhone(e.target.value)}
                       placeholder='(416) 555-0123'
@@ -184,16 +186,18 @@ const CheckoutPage = () => {
                   <div>
                     <label style={labelStyle}>Street Address</label>
                     <input
+                      className='glory-input'
                       value={address}
                       onChange={e => setAddress(e.target.value)}
                       placeholder='Street number and name'
                       style={inputStyle}
                     />
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                  <div className='glory-form-grid' style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                     <div>
                       <label style={labelStyle}>City</label>
                       <input
+                        className='glory-input'
                         value={city}
                         onChange={e => setCity(e.target.value)}
                         placeholder='Your city'
@@ -203,6 +207,7 @@ const CheckoutPage = () => {
                     <div>
                       <label style={labelStyle}>Province</label>
                       <select
+                        className='glory-input'
                         value={state}
                         onChange={e => setState(e.target.value)}
                         style={{ ...inputStyle, cursor: 'pointer' }}
@@ -217,6 +222,7 @@ const CheckoutPage = () => {
                   <div>
                     <label style={labelStyle}>Postal Code</label>
                     <input
+                      className='glory-input'
                       value={postalCode}
                       onChange={e => setPostalCode(e.target.value.toUpperCase())}
                       placeholder='A1A 1A1'
@@ -472,7 +478,7 @@ const CheckoutPage = () => {
           </div>
 
           {/* ORDER SUMMARY */}
-          <div style={{
+          <div className='glory-summary-card' style={{
             background: '#fff', borderRadius: '16px',
             padding: '24px', border: '0.5px solid #eee',
             position: 'sticky', top: '80px'

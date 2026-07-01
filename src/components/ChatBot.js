@@ -63,7 +63,11 @@ const ChatBot = () => {
     <>
       {/* CHAT BUBBLE BUTTON */}
       <div
+        className='glory-chat-button'
         onClick={() => setIsOpen(!isOpen)}
+        role='button'
+        tabIndex={0}
+        aria-label={isOpen ? 'Close chat' : 'Open chat'}
         style={{
           position: 'fixed', bottom: '28px', right: '28px',
           width: '56px', height: '56px',
@@ -93,7 +97,7 @@ const ChatBot = () => {
 
       {/* CHAT WINDOW */}
       {isOpen && (
-        <div style={{
+        <div className='glory-chat-window' style={{
           position: 'fixed', bottom: '96px', right: '28px',
           width: '360px', height: '520px',
           background: '#fff', borderRadius: '16px',

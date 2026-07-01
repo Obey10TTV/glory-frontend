@@ -24,7 +24,10 @@ const ProductCard = ({ product }) => {
 
   return (
     <div
+      className='glory-product-card'
       onClick={() => navigate(`/products/${product._id}`)}
+      role='button'
+      tabIndex={0}
       style={{
         cursor: 'pointer',
         position: 'relative',
@@ -34,7 +37,7 @@ const ProductCard = ({ product }) => {
         border: '0.5px solid #f0f0f0',
       }}
     >
-      <div style={{
+      <div className='glory-product-media' style={{
         width: '100%', aspectRatio: '3/4',
         background: '#fdf0f5', overflow: 'hidden',
         position: 'relative'
@@ -48,7 +51,9 @@ const ProductCard = ({ product }) => {
           }}
         />
         <button
+          className='glory-icon-button'
           onClick={handleWishlist}
+          aria-label={wished ? 'Remove from wishlist' : 'Add to wishlist'}
           style={{
             position: 'absolute', top: '10px', right: '10px',
             width: '32px', height: '32px',
@@ -67,7 +72,9 @@ const ProductCard = ({ product }) => {
           />
         </button>
         <button
+          className='glory-product-cta'
           onClick={handleAddToCart}
+          aria-label={`Add ${product.name} to bag`}
           onMouseEnter={() => setHovered(true)}
           onMouseLeave={() => setHovered(false)}
           style={{

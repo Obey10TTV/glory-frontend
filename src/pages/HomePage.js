@@ -5,6 +5,7 @@ import Footer from '../components/Footer'
 import ProductCard from '../components/ProductCard'
 import Loader from '../components/Loader'
 import { getProducts } from '../api'
+import { FiCheckCircle, FiRefreshCw, FiShield, FiTruck } from 'react-icons/fi'
 
 const HomePage = () => {
   const navigate = useNavigate()
@@ -35,11 +36,11 @@ const HomePage = () => {
   ]
 
   return (
-    <div style={{ background: '#fff', minHeight: '100vh', fontFamily: "'Inter', sans-serif" }}>
+    <div className='glory-page' style={{ background: '#fff', minHeight: '100vh', fontFamily: "'Inter', sans-serif" }}>
       <Navbar />
 
       {/* HERO */}
-      <div style={{
+      <div className='glory-hero' style={{
         position: 'relative', width: '100%',
         height: '90vh', overflow: 'hidden',
         background: '#111'
@@ -61,7 +62,7 @@ const HomePage = () => {
           <source src='https://res.cloudinary.com/dd8y3dijs/video/upload/v1780042517/5937414-uhd_2160_3840_24fps_i28m6z.mp4' type='video/mp4' />
         </video>
 
-        <div style={{
+        <div className='glory-hero-content' style={{
           position: 'absolute', inset: 0,
           background: 'rgba(0,0,0,0.35)'
         }} />
@@ -81,7 +82,7 @@ const HomePage = () => {
           }}>
             Canada's Home for Global Beauty
           </div>
-          <h1 style={{
+          <h1 className='glory-hero-title' style={{
             fontSize: '72px', fontWeight: '900',
             color: '#fff', lineHeight: '1',
             letterSpacing: '-2px', marginBottom: '20px',
@@ -89,14 +90,14 @@ const HomePage = () => {
           }}>
             GLOW.<br />SHINE.<br />GLORY.
           </h1>
-          <p style={{
+          <p className='glory-hero-copy' style={{
             fontSize: '16px', color: 'rgba(255,255,255,0.8)',
             maxWidth: '480px', lineHeight: '1.7',
             marginBottom: '36px', fontWeight: '400'
           }}>
             Discover authentic beauty products from the best brands — curated for every shade, texture and tradition, shipped across Canada.
           </p>
-          <div style={{ display: 'flex', gap: '14px' }}>
+          <div className='glory-actions' style={{ display: 'flex', gap: '14px' }}>
             <button
               onClick={() => navigate('/products')}
               style={{
@@ -184,7 +185,7 @@ const HomePage = () => {
       </div>
 
       {/* CATEGORIES */}
-      <div style={{ padding: '80px 40px' }}>
+      <div className='glory-section' style={{ padding: '80px 40px' }}>
         <div style={{ textAlign: 'center', marginBottom: '48px' }}>
           <div style={{
             fontSize: '11px', fontWeight: '700',
@@ -201,13 +202,14 @@ const HomePage = () => {
           </h2>
         </div>
 
-        <div style={{
+        <div className='glory-category-grid' style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(6, 1fr)',
           gap: '16px'
         }}>
           {categories.map((cat, i) => (
             <div
+              className='glory-category-card'
               key={i}
               onClick={() => navigate(`/products?category=${cat.name}`)}
               style={{
@@ -251,8 +253,8 @@ const HomePage = () => {
       </div>
 
       {/* NEW IN */}
-      <div style={{ padding: '0 40px 80px' }}>
-        <div style={{
+      <div className='glory-section-tight' style={{ padding: '0 40px 80px' }}>
+        <div className='glory-section-header' style={{
           display: 'flex', justifyContent: 'space-between',
           alignItems: 'flex-end', marginBottom: '32px',
           borderBottom: '2px solid #111', paddingBottom: '16px'
@@ -264,7 +266,7 @@ const HomePage = () => {
             }}>
               JUST DROPPED
             </div>
-            <h2 style={{
+            <h2 className='glory-section-title' style={{
               fontSize: '36px', fontWeight: '900',
               color: '#111', letterSpacing: '-1px'
             }}>
@@ -284,7 +286,7 @@ const HomePage = () => {
         </div>
 
         {loading ? <Loader /> : (
-          <div style={{
+          <div className='glory-product-grid' style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(4, 1fr)',
             gap: '20px'
@@ -297,7 +299,7 @@ const HomePage = () => {
       </div>
 
       {/* SELL BANNER */}
-      <div style={{
+      <div className='glory-sell-banner' style={{
         background: '#111', padding: '100px 40px',
         textAlign: 'center', position: 'relative',
         overflow: 'hidden'
@@ -356,8 +358,8 @@ const HomePage = () => {
       </div>
 
       {/* BESTSELLERS */}
-      <div style={{ padding: '80px 40px' }}>
-        <div style={{
+      <div className='glory-section' style={{ padding: '80px 40px' }}>
+        <div className='glory-section-header' style={{
           display: 'flex', justifyContent: 'space-between',
           alignItems: 'flex-end', marginBottom: '32px',
           borderBottom: '2px solid #111', paddingBottom: '16px'
@@ -369,7 +371,7 @@ const HomePage = () => {
             }}>
               MOST LOVED
             </div>
-            <h2 style={{
+            <h2 className='glory-section-title' style={{
               fontSize: '36px', fontWeight: '900',
               color: '#111', letterSpacing: '-1px'
             }}>
@@ -389,7 +391,7 @@ const HomePage = () => {
         </div>
 
         {loading ? <Loader /> : (
-          <div style={{
+          <div className='glory-product-grid' style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(4, 1fr)',
             gap: '20px'
@@ -402,13 +404,47 @@ const HomePage = () => {
       </div>
 
       {/* TRUST STRIP */}
-      <div style={{
+      <div className='glory-trust-strip' style={{
         borderTop: '1px solid #f0f0f0',
         borderBottom: '1px solid #f0f0f0',
         display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)',
         padding: '0 40px'
       }}>
         {[
+          { Icon: FiTruck, title: 'FAST SHIPPING', sub: 'Across Canada' },
+          { Icon: FiShield, title: 'SECURE PAYMENTS', sub: 'Paystack + crypto' },
+          { Icon: FiCheckCircle, title: '100% AUTHENTIC', sub: 'Verified sellers only' },
+          { Icon: FiRefreshCw, title: 'EASY RETURNS', sub: '30-day return policy' },
+        ].map((item, i) => (
+          <div key={item.title} className='glory-trust-item' style={{
+            display: 'flex', alignItems: 'center', gap: '16px',
+            padding: '28px 20px',
+            borderRight: i < 3 ? '1px solid #f0f0f0' : 'none'
+          }}>
+            <span style={{
+              width: '44px', height: '44px',
+              borderRadius: '50%', background: '#f8e8ee',
+              color: '#b85f83', display: 'flex',
+              alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0
+            }}>
+              <item.Icon size={20} />
+            </span>
+            <div>
+              <div style={{
+                fontSize: '12px', fontWeight: '800',
+                color: '#111', letterSpacing: '0.06em',
+                marginBottom: '4px'
+              }}>
+                {item.title}
+              </div>
+              <div style={{ fontSize: '12px', color: '#888' }}>
+                {item.sub}
+              </div>
+            </div>
+          </div>
+        ))}
+        {false && [
           { icon: '🚚', title: 'FAST SHIPPING', sub: 'Across Canada' },
           { icon: '🔒', title: 'SECURE PAYMENTS', sub: 'Stripe + Crypto' },
           { icon: '✓', title: '100% AUTHENTIC', sub: 'Verified sellers only' },

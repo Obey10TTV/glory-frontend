@@ -31,7 +31,7 @@ const Footer = () => {
           }}>
             New products, exclusive offers and beauty tips straight to your inbox.
           </p>
-          <div style={{
+          <div className='glory-newsletter-form' style={{
             display: 'flex', gap: '0',
             border: '1.5px solid #111'
           }}>
@@ -64,7 +64,7 @@ const Footer = () => {
         background: '#111', padding: '60px 40px 40px',
         color: 'rgba(255,255,255,0.7)'
       }}>
-        <div style={{
+        <div className='glory-footer-grid' style={{
           display: 'grid',
           gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr',
           gap: '40px', marginBottom: '48px'
@@ -115,7 +115,7 @@ const Footer = () => {
               ))}
             </div>
             {/* LOCATION */}
-            <div style={{
+            <div className='glory-drawer-location' style={{
               display: 'flex', alignItems: 'center', gap: '8px',
               fontSize: '12px', color: 'rgba(255,255,255,0.5)'
             }}>
@@ -183,7 +183,7 @@ const Footer = () => {
         </div>
 
         {/* PAYMENTS */}
-        <div style={{
+        <div className='glory-footer-bottom' style={{
           borderTop: '1px solid rgba(255,255,255,0.1)',
           paddingTop: '32px', marginBottom: '32px'
         }}>

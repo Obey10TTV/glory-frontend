@@ -10,7 +10,7 @@ const Navbar = () => {
   const { user, logout } = useUser()
   const { totalItems } = useCart()
   const navigate = useNavigate()
-  const isMobile = useIsMobile()
+  const isMobile = useIsMobile(1024)
 
   const [menuOpen, setMenuOpen] = useState(false)
   const [activeDrop, setActiveDrop] = useState(null)
@@ -45,6 +45,21 @@ const Navbar = () => {
     )
     setSearchResults(results.slice(0, 6))
   }, [searchQuery, allProducts])
+
+  useEffect(() => {
+    if (!isMobile) {
+      setDrawerOpen(false)
+      setMobileSearchOpen(false)
+    }
+  }, [isMobile])
+
+  useEffect(() => {
+    if (!isMobile) return
+    document.body.style.overflow = drawerOpen ? 'hidden' : ''
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [drawerOpen, isMobile])
 
   const handleLogout = () => {
     logout()
@@ -125,7 +140,11 @@ const Navbar = () => {
                 <div style={{ fontSize: '13px', fontWeight: '600', color: '#111' }}>
                   {product.name}
                 </div>
-                <div style={{ fontSize: '11px', color: '#888', marginTop: '2px' }}>
+                <div
+                  className='glory-search-meta'
+                  data-meta={`${product.brand} - ${product.category}`}
+                  style={{ fontSize: '11px', color: '#888', marginTop: '2px' }}
+                >
                   {product.brand} · {product.category}
                 </div>
               </div>
@@ -135,6 +154,8 @@ const Navbar = () => {
             </div>
           ))}
           <div
+            className='glory-search-all'
+            data-label={`SEE ALL RESULTS FOR "${searchQuery.toUpperCase()}" ->`}
             onClick={() => { navigate('/products'); setSearchQuery(''); setMobileSearchOpen(false) }}
             style={{
               padding: '12px 16px', fontSize: '12px',
@@ -163,6 +184,12 @@ const Navbar = () => {
       }}>
         <b style={{ color: '#fff' }}>FREE SHIPPING</b> on orders over $75
         {!isMobile && (
+          <span>
+            &nbsp;-&nbsp;<b style={{ color: '#fff' }}>100% AUTHENTIC</b> products only
+            &nbsp;-&nbsp;<b style={{ color: '#fff' }}>SELL ON GLORY</b> - Start your store today
+          </span>
+        )}
+        {false && !isMobile && (
           <>
             &nbsp;·&nbsp;<b style={{ color: '#fff' }}>100% AUTHENTIC</b> products only
             &nbsp;·&nbsp;<b style={{ color: '#fff' }}>SELL ON GLORY</b> — Start your store today
@@ -187,9 +214,12 @@ const Navbar = () => {
           {isMobile && (
             <button
               onClick={() => setDrawerOpen(true)}
+              aria-label='Open navigation menu'
+              aria-expanded={drawerOpen}
               style={{
                 background: 'none', border: 'none', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', padding: 0, flexShrink: 0
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                width: '44px', height: '44px', padding: 0, flexShrink: 0
               }}
             >
               <FiMenu size={22} color='#111' />
@@ -206,7 +236,7 @@ const Navbar = () => {
           }}>
             GLORY.
             {!isMobile && (
-              <div style={{
+              <div className='glory-currency-badge' style={{
                 display: 'flex', alignItems: 'center', gap: '5px',
                 background: '#f5f5f5', borderRadius: '999px',
                 padding: '3px 10px'
@@ -265,7 +295,13 @@ const Navbar = () => {
             {isMobile && (
               <button
                 onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                aria-label={mobileSearchOpen ? 'Close search' : 'Open search'}
+                aria-expanded={mobileSearchOpen}
+                style={{
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  width: '44px', height: '44px'
+                }}
               >
                 <FiSearch size={20} color='#111' />
               </button>
@@ -278,7 +314,15 @@ const Navbar = () => {
                 onMouseLeave={() => !isMobile && setMenuOpen(false)}
                 onClick={() => isMobile && setMenuOpen(!menuOpen)}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+                <div
+                  role='button'
+                  tabIndex={0}
+                  aria-label='Open account menu'
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    minWidth: '44px', minHeight: '44px', gap: '6px', cursor: 'pointer'
+                  }}
+                >
                   <FiUser size={20} style={{ color: '#111' }} />
                   {!isMobile && (
                     <span style={{ fontSize: '12px', fontWeight: '600', color: '#111' }}>
@@ -331,7 +375,13 @@ const Navbar = () => {
             ) : (
               <div
                 onClick={() => navigate('/login')}
-                style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}
+                role='button'
+                tabIndex={0}
+                aria-label='Sign in'
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  minWidth: '44px', minHeight: '44px', gap: '6px', cursor: 'pointer'
+                }}
               >
                 <FiUser size={20} style={{ color: '#111' }} />
                 {!isMobile && <span style={{ fontSize: '12px', fontWeight: '600', color: '#111' }}>Sign In</span>}
@@ -345,8 +395,15 @@ const Navbar = () => {
             )}
 
             <div
-              style={{ position: 'relative', cursor: 'pointer' }}
+              style={{
+                position: 'relative', cursor: 'pointer',
+                minWidth: '44px', minHeight: '44px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center'
+              }}
               onClick={() => navigate('/cart')}
+              role='button'
+              tabIndex={0}
+              aria-label={`Open cart with ${totalItems} items`}
             >
               <FiShoppingBag size={20} style={{ color: '#111' }} />
               {totalItems > 0 && (
@@ -497,8 +554,10 @@ const Navbar = () => {
                           {megaMenus[item].featured.sub}
                         </div>
                       </div>
-                      <Link
-                        to={megaMenus[item].featured.link}
+                        <Link
+                          className='glory-mega-shop'
+                          data-label='SHOP NOW ->'
+                          to={megaMenus[item].featured.link}
                         style={{
                           display: 'inline-block', marginTop: '20px',
                           background: '#111', color: '#fff',
@@ -525,12 +584,12 @@ const Navbar = () => {
             onClick={() => setDrawerOpen(false)}
             style={{
               position: 'fixed', inset: 0,
-              background: 'rgba(0,0,0,0.4)', zIndex: 1998
+              background: 'rgba(17,17,17,0.52)', zIndex: 1998
             }}
           />
           <div style={{
-            position: 'fixed', top: 0, left: 0, height: '100vh',
-            width: '78%', maxWidth: '300px', background: '#fff',
+            position: 'fixed', top: 0, left: 0, height: '100dvh',
+            width: '86%', maxWidth: '360px', background: '#fff',
             zIndex: 1999, overflowY: 'auto',
             boxShadow: '2px 0 24px rgba(0,0,0,0.15)',
             animation: 'slideInLeft 0.25s ease'
@@ -541,7 +600,15 @@ const Navbar = () => {
               borderBottom: '1px solid #f0f0f0'
             }}>
               <span style={{ fontWeight: '900', fontSize: '19px', letterSpacing: '-0.5px' }}>GLORY.</span>
-              <button onClick={() => setDrawerOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex' }}>
+              <button
+                onClick={() => setDrawerOpen(false)}
+                aria-label='Close navigation menu'
+                style={{
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  width: '44px', height: '44px'
+                }}
+              >
                 <FiX size={22} color='#111' />
               </button>
             </div>
@@ -564,7 +631,7 @@ const Navbar = () => {
                 </Link>
               ))}
             </div>
-            <div style={{
+            <div className='glory-drawer-location' style={{
               padding: '16px 20px', display: 'flex',
               alignItems: 'center', gap: '8px',
               borderTop: '1px solid #f0f0f0', marginTop: '8px'

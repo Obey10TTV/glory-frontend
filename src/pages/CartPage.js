@@ -11,10 +11,10 @@ const CartPage = () => {
   const shippingPrice = totalPrice >= 75 ? 0 : 8
 
   return (
-    <div style={{ background: '#fafaf9', minHeight: '100vh' }}>
+    <div className='glory-page' style={{ background: '#fafaf9', minHeight: '100vh' }}>
       <Navbar />
 
-      <div style={{ padding: '40px', maxWidth: '1100px', margin: '0 auto' }}>
+      <div className='glory-container' style={{ padding: '40px', maxWidth: '1100px', margin: '0 auto' }}>
 
         <div style={{
           display: 'flex', alignItems: 'center',
@@ -67,13 +67,13 @@ const CartPage = () => {
             </button>
           </div>
         ) : (
-          <div style={{
+          <div className='glory-cart-layout' style={{
             display: 'grid',
             gridTemplateColumns: '1fr 360px',
             gap: '32px', alignItems: 'start'
           }}>
 
-            <div style={{
+            <div className='glory-cart-card' style={{
               background: '#fff', borderRadius: '16px',
               border: '0.5px solid #eee', overflow: 'hidden'
             }}>
@@ -97,13 +97,13 @@ const CartPage = () => {
               )}
 
               {cartItems.map((item, i) => (
-                <div key={item._id} style={{
+                <div key={item._id} className='glory-cart-item' style={{
                   display: 'flex', gap: '16px',
                   padding: '20px 24px',
                   borderBottom: i < cartItems.length - 1 ? '0.5px solid #eee' : 'none',
                   alignItems: 'center'
                 }}>
-                  <div style={{
+                  <div className='glory-cart-item-media' style={{
                     width: '90px', height: '90px',
                     borderRadius: '12px', overflow: 'hidden',
                     background: '#fdf0f5', flexShrink: 0,
@@ -118,7 +118,7 @@ const CartPage = () => {
                     />
                   </div>
 
-                  <div style={{ flex: 1 }}>
+                  <div className='glory-cart-item-info' style={{ flex: 1 }}>
                     <div style={{
                       fontSize: '10px', color: '#c97a9a',
                       fontWeight: '600', letterSpacing: '0.08em',
@@ -140,7 +140,7 @@ const CartPage = () => {
                     </div>
                   </div>
 
-                  <div style={{
+                  <div className='glory-stepper' style={{
                     display: 'flex', alignItems: 'center',
                     gap: '0', border: '0.5px solid #eee',
                     borderRadius: '999px', overflow: 'hidden'
@@ -179,7 +179,7 @@ const CartPage = () => {
                     >+</button>
                   </div>
 
-                  <div style={{
+                  <div className='glory-cart-item-price' style={{
                     fontSize: '15px', fontWeight: '700',
                     color: '#111', minWidth: '100px',
                     textAlign: 'right'
@@ -188,7 +188,9 @@ const CartPage = () => {
                   </div>
 
                   <button
+                    className='glory-delete-button'
                     onClick={() => removeFromCart(item._id)}
+                    aria-label={`Remove ${item.name} from bag`}
                     style={{
                       background: 'none', border: 'none',
                       cursor: 'pointer', color: '#ccc',
@@ -222,7 +224,7 @@ const CartPage = () => {
               </div>
             </div>
 
-            <div style={{
+            <div className='glory-summary-card' style={{
               background: '#fff', borderRadius: '16px',
               border: '0.5px solid #eee', padding: '24px',
               position: 'sticky', top: '80px'

@@ -61,10 +61,10 @@ const ProductsPage = () => {
     })
 
   return (
-    <div style={{ background: '#fafaf9', minHeight: '100vh' }}>
+    <div className='glory-page' style={{ background: '#fafaf9', minHeight: '100vh' }}>
       <Navbar />
 
-      <div style={{
+      <div className='glory-products-heading' style={{
         padding: '40px 40px 0',
         borderBottom: '0.5px solid #eee',
         background: '#fff'
@@ -76,7 +76,7 @@ const ProductsPage = () => {
           {selectedCategory && selectedCategory !== 'All' ? selectedCategory : 'All Products'}
         </h1>
 
-        <div style={{
+        <div className='glory-category-tabs' style={{
           display: 'flex', gap: '0',
           overflowX: 'auto', paddingBottom: '0'
         }}>
@@ -104,14 +104,14 @@ const ProductsPage = () => {
         </div>
       </div>
 
-      <div style={{
+      <div className='glory-products-layout' style={{
         display: 'grid',
         gridTemplateColumns: '220px 1fr',
         gap: '32px',
         padding: '32px 40px'
       }}>
         <div>
-          <div style={{
+          <div className='glory-filter-panel' style={{
             background: '#fff', borderRadius: '14px',
             padding: '24px', border: '0.5px solid #eee',
             position: 'sticky', top: '80px'
@@ -235,7 +235,7 @@ const ProductsPage = () => {
               No products found in this category yet.
             </div>
           ) : (
-            <div style={{
+            <div className='glory-product-grid' style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(4, 1fr)',
               gap: '20px'
