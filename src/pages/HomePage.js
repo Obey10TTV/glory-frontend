@@ -337,6 +337,7 @@ const HomePage = () => {
             style={{
               background: '#fff', color: '#111',
               border: 'none', padding: '18px 48px',
+              borderRadius: '999px',
               fontSize: '13px', fontWeight: '800',
               cursor: 'pointer', letterSpacing: '0.1em',
               textTransform: 'uppercase',

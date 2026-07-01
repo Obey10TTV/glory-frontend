@@ -256,7 +256,7 @@ const Navbar = () => {
             <div style={{ flex: 1, maxWidth: '600px', position: 'relative' }}>
               <div style={{
                 display: 'flex', alignItems: 'center',
-                background: '#f5f5f5', borderRadius: '4px',
+                background: '#f5f5f5', borderRadius: '999px',
                 padding: '0 16px', height: '44px',
                 border: '1px solid transparent',
                 transition: 'border-color 0.2s'
@@ -427,7 +427,7 @@ const Navbar = () => {
           <div style={{ padding: '0 16px 14px', position: 'relative' }}>
             <div style={{
               display: 'flex', alignItems: 'center',
-              background: '#f5f5f5', borderRadius: '4px',
+              background: '#f5f5f5', borderRadius: '999px',
               padding: '0 14px', height: '42px'
             }}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2" style={{ flexShrink: 0 }}>

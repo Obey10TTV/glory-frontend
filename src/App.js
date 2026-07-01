@@ -17,8 +17,11 @@ import SellerDashboardPage from './pages/SellerDashboardPage'
 import AdminDashboardPage from './pages/AdminDashboardPage'
 import AboutPage from './pages/AboutPage'
 import ChatBot from './components/ChatBot'
+import { useUser } from './context/UserContext'
 
 function App() {
+  const { user } = useUser()
+
   return (
     <Router>
       <Routes>
@@ -34,7 +37,7 @@ function App() {
         <Route path='/admin' element={<AdminDashboardPage />} />
         <Route path='/about' element={<AboutPage />} />
       </Routes>
-      <ChatBot />
+      {user && <ChatBot />}
     </Router>
   )
 }
