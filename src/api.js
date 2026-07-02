@@ -1,7 +1,12 @@
 import axios from 'axios'
 
+const productionApiUrl = 'https://glory-store-production.up.railway.app/api'
+const localApiUrl = 'http://localhost:5000/api'
+
 const API = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api'
+  baseURL: process.env.REACT_APP_API_URL || (
+    process.env.NODE_ENV === 'production' ? productionApiUrl : localApiUrl
+  )
 })
 
 // Automatically add token to every request if user is logged in
