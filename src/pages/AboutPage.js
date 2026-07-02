@@ -1,8 +1,8 @@
-﻿import React from 'react'
+import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
-import { FiInstagram, FiTwitter, FiLinkedin } from 'react-icons/fi'
+import { FiGlobe, FiInstagram, FiLinkedin, FiShield, FiShoppingBag, FiTwitter } from 'react-icons/fi'
 
 const AboutPage = () => {
   const navigate = useNavigate()
@@ -92,17 +92,17 @@ const AboutPage = () => {
         }}>
           {[
             {
-              icon: '💄',
+              Icon: FiShoppingBag,
               title: 'Made for Sellers',
               text: 'We designed Glory from the ground up for beauty entrepreneurs, not as an afterthought, but as the entire point.'
             },
             {
-              icon: '🔒',
+              Icon: FiShield,
               title: 'Safe & Secure',
               text: 'Every transaction on Glory is protected. Secure card payments through Stripe and crypto options mean sellers always get paid.'
             },
             {
-              icon: '🌍',
+              Icon: FiGlobe,
               title: 'Globally Inspired',
               text: 'Built in Canada, for everyone. CAD pricing, fast shipping, and a marketplace that celebrates every shade and tradition.'
             },
@@ -111,7 +111,15 @@ const AboutPage = () => {
               background: '#fff', borderRadius: '20px',
               padding: '36px', border: '0.5px solid #eee'
             }}>
-              <div style={{ fontSize: '36px', marginBottom: '16px' }}>{val.icon}</div>
+              <div style={{
+                width: '48px', height: '48px',
+                borderRadius: '50%', background: '#f8e8ee',
+                color: '#b85f83', display: 'flex',
+                alignItems: 'center', justifyContent: 'center',
+                marginBottom: '16px'
+              }}>
+                <val.Icon size={24} />
+              </div>
               <div style={{
                 fontSize: '18px', fontWeight: '700',
                 color: '#111', marginBottom: '12px'
@@ -286,8 +294,8 @@ const AboutPage = () => {
 }
 
 const socialList = [
-  { icon: <FiInstagram size={16} />, href: '#' },
-  { icon: <FiTwitter size={16} />, href: '#' },
+  { icon: <FiInstagram size={16} />, href: '/community' },
+  { icon: <FiTwitter size={16} />, href: '/press' },
   { icon: <FiLinkedin size={16} />, href: 'https://linkedin.com/in/obioma-ajoku' },
 ]
 

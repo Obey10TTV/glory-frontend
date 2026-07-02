@@ -45,6 +45,10 @@ const ProductsPage = () => {
     fetchProducts()
   }, [])
 
+  useEffect(() => {
+    setSelectedCategory(categoryParam)
+  }, [categoryParam])
+
   const filteredProducts = products
     .filter(p => !selectedCategory || selectedCategory === 'All' ? true : p.category === selectedCategory)
     .filter(p => {

@@ -4,7 +4,7 @@ import './App.css'
 
 
 
-// Pages (we'll create these next)
+// Pages
 import HomePage from './pages/HomePage'
 import ProductsPage from './pages/ProductsPage'
 import ProductDetailPage from './pages/ProductDetailPage'
@@ -16,8 +16,10 @@ import AccountPage from './pages/AccountPage'
 import SellerDashboardPage from './pages/SellerDashboardPage'
 import AdminDashboardPage from './pages/AdminDashboardPage'
 import AboutPage from './pages/AboutPage'
+import InfoPage from './pages/InfoPage'
 import ChatBot from './components/ChatBot'
 import { useUser } from './context/UserContext'
+import { infoPageRoutes } from './data/infoPages'
 
 function App() {
   const { user } = useUser()
@@ -36,6 +38,9 @@ function App() {
         <Route path='/seller' element={<SellerDashboardPage />} />
         <Route path='/admin' element={<AdminDashboardPage />} />
         <Route path='/about' element={<AboutPage />} />
+        {infoPageRoutes.map((slug) => (
+          <Route key={slug} path={`/${slug}`} element={<InfoPage slug={slug} />} />
+        ))}
       </Routes>
       {user && <ChatBot />}
     </Router>

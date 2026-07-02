@@ -168,7 +168,7 @@ const HomePage = () => {
               <FiShoppingBag size={18} />
               Shop now
             </button>
-            <button className='glory-hero-secondary' onClick={() => navigate('/seller')}>
+            <button className='glory-hero-secondary' onClick={() => navigate('/sell-on-glory')}>
               Start selling
               <FiArrowRight size={17} />
             </button>

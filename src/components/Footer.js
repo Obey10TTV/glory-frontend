@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { FiFacebook, FiInstagram, FiTwitter, FiYoutube } from 'react-icons/fi'
+import CanadaFlag from './CanadaFlag'
 import {
   SiAmericanexpress,
   SiBitcoin,
@@ -12,17 +13,56 @@ import {
   SiXrp
 } from 'react-icons/si'
 
-const shopLinks = ['Skincare', 'Haircare', 'Makeup', 'Nails', 'Lashes', 'Body Care', 'Fragrance', 'Candles']
-const helpLinks = ['Contact Us', 'Track Order', 'Returns & Refunds', 'Shipping Info', 'FAQs', 'Support']
-const aboutLinks = ['Our Story', 'Careers', 'Press', 'Affiliates', 'Blog', 'Community']
-const sellerLinks = ['Become a Seller', 'Seller Resources', 'Seller Agreement', 'Pricing', 'Seller FAQs', 'Success Stories']
-const policyLinks = ['Privacy Policy', 'Terms & Conditions', 'Cookie Policy', 'Accessibility']
+const shopLinks = [
+  { label: 'Skincare', to: '/products?category=Skincare' },
+  { label: 'Haircare', to: '/products?category=Haircare' },
+  { label: 'Makeup', to: '/products?category=Makeup' },
+  { label: 'Nails', to: '/products?category=Nails' },
+  { label: 'Lashes', to: '/products?category=Lashes' },
+  { label: 'Body Care', to: '/products?category=Body%20Care' },
+  { label: 'Fragrance', to: '/products?category=Fragrance' },
+  { label: 'Candles', to: '/products?category=Scented%20Candles' },
+]
+
+const helpLinks = [
+  { label: 'Contact Us', to: '/contact' },
+  { label: 'Track Order', to: '/track-order' },
+  { label: 'Returns & Refunds', to: '/returns' },
+  { label: 'Shipping Info', to: '/shipping' },
+  { label: 'FAQs', to: '/faq' },
+  { label: 'Support', to: '/support' },
+]
+
+const aboutLinks = [
+  { label: 'Our Story', to: '/about' },
+  { label: 'Careers', to: '/careers' },
+  { label: 'Press', to: '/press' },
+  { label: 'Affiliates', to: '/affiliates' },
+  { label: 'Blog', to: '/blog' },
+  { label: 'Community', to: '/community' },
+]
+
+const sellerLinks = [
+  { label: 'Become a Seller', to: '/sell-on-glory' },
+  { label: 'Seller Resources', to: '/seller-resources' },
+  { label: 'Seller Agreement', to: '/seller-agreement' },
+  { label: 'Pricing', to: '/seller-pricing' },
+  { label: 'Seller FAQs', to: '/seller-faq' },
+  { label: 'Success Stories', to: '/success-stories' },
+]
+
+const policyLinks = [
+  { label: 'Privacy Policy', to: '/privacy' },
+  { label: 'Terms & Conditions', to: '/terms' },
+  { label: 'Cookie Policy', to: '/cookies' },
+  { label: 'Accessibility', to: '/accessibility' },
+]
 
 const socialLinks = [
-  { icon: <FiInstagram size={16} />, href: '#', label: 'Instagram' },
-  { icon: <FiTwitter size={16} />, href: '#', label: 'Twitter' },
-  { icon: <FiYoutube size={16} />, href: '#', label: 'YouTube' },
-  { icon: <FiFacebook size={16} />, href: '#', label: 'Facebook' }
+  { icon: <FiInstagram size={16} />, to: '/community', label: 'Community' },
+  { icon: <FiTwitter size={16} />, to: '/press', label: 'Press' },
+  { icon: <FiYoutube size={16} />, to: '/blog', label: 'Blog' },
+  { icon: <FiFacebook size={16} />, to: '/contact', label: 'Contact' }
 ]
 
 const paymentBadges = [
@@ -141,9 +181,9 @@ const Footer = () => {
             </p>
             <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
               {socialLinks.map((social) => (
-                <a
+                <Link
                   key={social.label}
-                  href={social.href}
+                  to={social.to}
                   aria-label={social.label}
                   style={{
                     width: '36px',
@@ -167,7 +207,7 @@ const Footer = () => {
                   }}
                 >
                   {social.icon}
-                </a>
+                </Link>
               ))}
             </div>
             <div className='glory-drawer-location' style={{
@@ -177,24 +217,26 @@ const Footer = () => {
               fontSize: '12px',
               color: 'rgba(255,255,255,0.5)'
             }}>
-              <span>CA</span>
+              <CanadaFlag size={22} title='Canada shipping' />
               <span>Shipping across Canada</span>
-              <span style={{
+              <Link
+                to='/shipping'
+                style={{
                 fontSize: '10px',
                 color: '#c97a9a',
                 fontWeight: '600',
                 cursor: 'pointer',
                 textDecoration: 'underline'
               }}>
-                CHANGE
-              </span>
+                DETAILS
+              </Link>
             </div>
           </div>
 
-          <FooterColumn title='SHOP' links={shopLinks} to={(item) => `/products?category=${item}`} />
-          <FooterColumn title='HELP' links={helpLinks} to={() => '/'} />
-          <FooterColumn title='ABOUT' links={aboutLinks} to={() => '/about'} />
-          <FooterColumn title='SELL ON GLORY' links={sellerLinks} to={() => '/seller'} />
+          <FooterColumn title='SHOP' links={shopLinks} />
+          <FooterColumn title='HELP' links={helpLinks} />
+          <FooterColumn title='ABOUT' links={aboutLinks} />
+          <FooterColumn title='SELL ON GLORY' links={sellerLinks} />
         </div>
 
         <div style={{
@@ -243,8 +285,8 @@ const Footer = () => {
           <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
             {policyLinks.map(item => (
               <Link
-                key={item}
-                to='/'
+                key={item.label}
+                to={item.to}
                 style={{
                   fontSize: '11px',
                   color: 'rgba(255,255,255,0.3)',
@@ -254,7 +296,7 @@ const Footer = () => {
                 onMouseEnter={e => e.currentTarget.style.color = 'rgba(255,255,255,0.7)'}
                 onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.3)'}
               >
-                {item}
+                {item.label}
               </Link>
             ))}
           </div>
@@ -264,18 +306,18 @@ const Footer = () => {
   )
 }
 
-const FooterColumn = ({ title, links, to }) => (
+const FooterColumn = ({ title, links }) => (
   <div>
     <div style={footerHeadStyle}>{title}</div>
     {links.map(item => (
       <Link
-        key={item}
-        to={to(item)}
+        key={item.label}
+        to={item.to}
         style={footerLinkStyle}
         onMouseEnter={e => e.currentTarget.style.color = '#fff'}
         onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.5)'}
       >
-        {item}
+        {item.label}
       </Link>
     ))}
   </div>

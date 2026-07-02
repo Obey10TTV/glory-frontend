@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from 'react'
 import { FiUser, FiShoppingBag, FiHeart, FiX, FiChevronDown, FiMenu, FiSearch } from 'react-icons/fi'
 import { getProducts } from '../api'
 import useIsMobile from '../hooks/useIsMobile'
+import CanadaFlag from './CanadaFlag'
 
 const Navbar = () => {
   const { user, logout } = useUser()
@@ -68,11 +69,21 @@ const Navbar = () => {
 
   const navItems = ['NEW IN', 'SKINCARE', 'HAIRCARE', 'MAKEUP', 'NAILS', 'LASHES', 'BODY CARE', 'FRAGRANCE', 'CANDLES', 'ABOUT', 'SELL ON GLORY']
 
-  const getNavPath = (item) =>
-    item === 'NEW IN' ? '/products' :
-    item === 'ABOUT' ? '/about' :
-    item === 'SELL ON GLORY' ? '/seller' :
-    `/products?category=${item.replace(' CARE', ' Care')}`
+  const navRoutes = {
+    'NEW IN': '/products',
+    SKINCARE: '/products?category=Skincare',
+    HAIRCARE: '/products?category=Haircare',
+    MAKEUP: '/products?category=Makeup',
+    NAILS: '/products?category=Nails',
+    LASHES: '/products?category=Lashes',
+    'BODY CARE': '/products?category=Body%20Care',
+    FRAGRANCE: '/products?category=Fragrance',
+    CANDLES: '/products?category=Scented%20Candles',
+    ABOUT: '/about',
+    'SELL ON GLORY': '/sell-on-glory',
+  }
+
+  const getNavPath = (item) => navRoutes[item] || '/products'
 
   const megaMenus = {
     SKINCARE: {
@@ -237,16 +248,16 @@ const Navbar = () => {
             GLORY.
             {!isMobile && (
               <div className='glory-currency-badge' style={{
-                display: 'flex', alignItems: 'center', gap: '5px',
+                display: 'flex', alignItems: 'center', gap: '6px',
                 background: '#f5f5f5', borderRadius: '999px',
-                padding: '3px 10px'
+                padding: '4px 10px 4px 6px'
               }}>
-                <span style={{ fontSize: '13px' }}>🇨🇦</span>
+                <CanadaFlag size={22} />
                 <span style={{
-                  fontSize: '10px', fontWeight: '600',
+                  fontSize: '10px', fontWeight: '700',
                   color: '#555', letterSpacing: '0.04em',
                   fontFamily: "'Inter', sans-serif"
-                }}>CAD</span>
+                }}>CA</span>
               </div>
             )}
           </Link>
@@ -515,7 +526,7 @@ const Navbar = () => {
                         {col.links.map(link => (
                           <Link
                             key={link}
-                            to={`/products?category=${item}`}
+                            to={getNavPath(item)}
                             style={{
                               display: 'block', fontSize: '14px',
                               fontWeight: '500', color: '#333',
@@ -636,8 +647,8 @@ const Navbar = () => {
               alignItems: 'center', gap: '8px',
               borderTop: '1px solid #f0f0f0', marginTop: '8px'
             }}>
-              <span style={{ fontSize: '14px' }}>🇨🇦</span>
-              <span style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Shipping in CAD</span>
+              <CanadaFlag size={24} />
+              <span style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Shipping across Canada</span>
             </div>
           </div>
           <style>{`

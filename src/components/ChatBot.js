@@ -351,13 +351,13 @@ const ChatBot = () => {
                 Talk to a human
               </div>
               <div style={{ fontSize: '12px', color: '#888', lineHeight: '1.5' }}>
-                Our support team is available Monday to Friday, 9am - 6pm WAT.
+                Our support team is available Monday to Friday, 9am - 6pm Eastern Time.
               </div>
 
               {[
-                { icon: <MdOutlineMailOutline size={20} color="#111" />, label: 'Email us', sub: 'support@glory.ng', href: 'mailto:support@glory.ng' },
-                { icon: <FaWhatsapp size={20} color="#25D366" />, label: 'WhatsApp', sub: '+234 800 GLORY', href: '#' },
-                { icon: <FaInstagram size={20} color="#E1306C" />, label: 'Instagram DM', sub: '@shopglory.ng', href: '#' },
+                { icon: <MdOutlineMailOutline size={20} color="#111" />, label: 'Email us', sub: 'support@shopglory.ca', href: 'mailto:support@shopglory.ca' },
+                { icon: <FaWhatsapp size={20} color="#25D366" />, label: 'Support page', sub: 'Orders, returns and seller help', href: '/support' },
+                { icon: <FaInstagram size={20} color="#E1306C" />, label: 'Community', sub: 'Creator updates and beauty stories', href: '/community' },
               ].map((item, i) => (
                 <a key={i} href={item.href} style={{
                   width: '100%', display: 'flex',
