@@ -4,7 +4,7 @@ export const infoPages = {
     eyebrow: 'Contact',
     title: 'Talk to Glory support.',
     intro: 'Questions about an order, seller account, brand partnership, or product listing can all start here.',
-    primaryAction: { label: 'Email support', href: 'mailto:support@shopglory.ca' },
+    primaryAction: { label: 'Email support', href: 'mailto:ajokuobioma10@gmail.com' },
     secondaryAction: { label: 'Visit support', to: '/support' },
     cards: [
       { title: 'Customer support', text: 'Order questions, returns, delivery updates, payment issues and account help.' },
@@ -115,7 +115,7 @@ export const infoPages = {
     eyebrow: 'Careers',
     title: 'Build the future of beauty commerce.',
     intro: 'Glory is early, focused and building for independent beauty sellers and shoppers across Canada.',
-    primaryAction: { label: 'Email careers', href: 'mailto:careers@shopglory.ca' },
+    primaryAction: { label: 'Email careers', href: 'mailto:ajokuobioma10@gmail.com' },
     secondaryAction: { label: 'Our story', to: '/about' },
     cards: [
       { title: 'Product and design', text: 'Craft storefront, marketplace and seller workflows that feel premium and practical.' },
@@ -128,7 +128,7 @@ export const infoPages = {
     eyebrow: 'Press',
     title: 'Press and media.',
     intro: 'For interviews, launch coverage, founder features and marketplace updates, contact the Glory team.',
-    primaryAction: { label: 'Email press', href: 'mailto:press@shopglory.ca' },
+    primaryAction: { label: 'Email press', href: 'mailto:ajokuobioma10@gmail.com' },
     secondaryAction: { label: 'Read our story', to: '/about' },
     sections: [
       { title: 'Company boilerplate', body: 'Glory is a Canada-focused beauty marketplace helping shoppers discover authentic products while giving independent beauty sellers a professional ecommerce home.' },
@@ -140,7 +140,7 @@ export const infoPages = {
     eyebrow: 'Affiliates',
     title: 'Grow with Glory.',
     intro: 'Creators, beauty editors and community partners can help shoppers discover products while supporting independent sellers.',
-    primaryAction: { label: 'Apply by email', href: 'mailto:partners@shopglory.ca' },
+    primaryAction: { label: 'Apply by email', href: 'mailto:ajokuobioma10@gmail.com' },
     secondaryAction: { label: 'Community', to: '/community' },
     cards: [
       { title: 'Creator-led discovery', text: 'Share product edits, routines and category guides that feel useful to your audience.' },
@@ -296,6 +296,29 @@ export const infoPages = {
       { title: 'Essential cookies', body: 'Essential cookies may support login sessions, cart behavior, checkout flow and account security.' },
       { title: 'Analytics and improvements', body: 'Analytics tools may help Glory understand page performance, product discovery and marketplace reliability.' },
       { title: 'Review before launch', body: 'Cookie consent and tracking disclosures should be finalized with legal and analytics setup before launch.' },
+    ],
+  },
+  security: {
+    group: 'Policy',
+    eyebrow: 'Security',
+    title: 'Security and trust.',
+    intro: 'Glory protects shoppers and sellers with guarded account access, structured checkout flows and careful handling of marketplace data.',
+    primaryAction: { label: 'Report a concern', href: 'mailto:ajokuobioma10@gmail.com' },
+    secondaryAction: { label: 'Privacy policy', to: '/privacy' },
+    cards: [
+      { title: 'Protected accounts', text: 'Sensitive dashboard and order actions require signed-in access, with admin-only controls separated from customer workflows.' },
+      { title: 'Safer checkout', text: 'Payment initialization and verification are handled through the backend so order ownership and totals can be checked server-side.' },
+      { title: 'Security headers', text: 'The storefront uses browser security headers to reduce clickjacking, content sniffing and unnecessary device permissions.' },
+    ],
+    sections: [
+      {
+        title: 'What to report',
+        items: ['Suspicious account activity.', 'Unexpected payment or order behavior.', 'A privacy, access or security issue on any Glory page.'],
+      },
+      {
+        title: 'Responsible disclosure',
+        body: 'Please include the affected page, steps to reproduce and any screenshots that help explain the issue. Do not include passwords, payment card details or private customer data in email.',
+      },
     ],
   },
   accessibility: {

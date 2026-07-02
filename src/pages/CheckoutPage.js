@@ -62,7 +62,6 @@ const CheckoutPage = () => {
       if (paymentMethod === 'Paystack') {
         const { data: payment } = await initializePayment({
           email: user.email,
-          amount: totalAmount,
           orderId: order._id
         })
         clearCart()
