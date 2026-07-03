@@ -5,20 +5,60 @@ import Footer from '../components/Footer'
 import Loader from '../components/Loader'
 import Message from '../components/Message'
 import { useUser } from '../context/UserContext'
-import { createProduct, deleteProduct, getMySellerProducts, uploadImage } from '../api'
-import { FiClock, FiCheckCircle, FiImage, FiPackage, FiPlus, FiTrash2, FiX, FiXCircle } from 'react-icons/fi'
+import {
+  createProduct,
+  deleteProduct,
+  getMySellerProducts,
+  getUserProfile,
+  updateProduct,
+  updateSellerProfile,
+  uploadImage
+} from '../api'
+import {
+  FiCheckCircle,
+  FiClock,
+  FiEdit3,
+  FiImage,
+  FiPackage,
+  FiPlus,
+  FiSave,
+  FiShield,
+  FiTrash2,
+  FiX,
+  FiXCircle
+} from 'react-icons/fi'
 import { formatCurrency } from '../utils/currency'
+
+const emptySellerProfile = {
+  storeName: '',
+  bio: '',
+  businessEmail: '',
+  phone: '',
+  city: '',
+  province: '',
+  country: 'Canada',
+  website: '',
+  instagram: '',
+  verificationStatus: 'incomplete',
+  verificationNote: ''
+}
 
 const SellerDashboardPage = () => {
   const navigate = useNavigate()
-  const { user } = useUser()
+  const { user, login } = useUser()
+  const userId = user?._id
+  const userIsSeller = user?.isSeller
+  const userToken = user?.token
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
-  const [showAddProduct, setShowAddProduct] = useState(false)
+  const [showProductForm, setShowProductForm] = useState(false)
+  const [editingProduct, setEditingProduct] = useState(null)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [uploading, setUploading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [profileSubmitting, setProfileSubmitting] = useState(false)
+  const [sellerProfile, setSellerProfile] = useState(emptySellerProfile)
 
   const [name, setName] = useState('')
   const [price, setPrice] = useState('')
@@ -34,6 +74,11 @@ const SellerDashboardPage = () => {
     'Tools & Accessories'
   ]
 
+  const normalizeSellerProfile = (profile = {}) => ({
+    ...emptySellerProfile,
+    ...profile
+  })
+
   const fetchProducts = useCallback(async () => {
     try {
       setLoading(true)
@@ -47,18 +92,43 @@ const SellerDashboardPage = () => {
   }, [])
 
   useEffect(() => {
-    if (!user) {
+    if (!userId) {
       navigate('/login')
       return
     }
-    if (!user.isSeller) {
+    if (!userIsSeller) {
       navigate('/')
       return
     }
     fetchProducts()
-  }, [user, navigate, fetchProducts])
+  }, [userId, userIsSeller, navigate, fetchProducts])
 
-  const resetForm = () => {
+  useEffect(() => {
+    if (!userIsSeller) return
+
+    let active = true
+
+    const fetchSellerProfile = async () => {
+      try {
+        const { data } = await getUserProfile()
+        if (!active) return
+        setSellerProfile(normalizeSellerProfile(data.sellerProfile))
+        login({ ...data, token: userToken })
+      } catch (err) {
+        if (active) {
+          setSellerProfile(emptySellerProfile)
+        }
+      }
+    }
+
+    fetchSellerProfile()
+
+    return () => {
+      active = false
+    }
+  }, [userId, userIsSeller, userToken, login])
+
+  const resetProductForm = () => {
     setName('')
     setPrice('')
     setDescription('')
@@ -66,6 +136,31 @@ const SellerDashboardPage = () => {
     setBrand('')
     setCountInStock('')
     setImage('')
+    setEditingProduct(null)
+  }
+
+  const openNewProductForm = () => {
+    resetProductForm()
+    setError('')
+    setShowProductForm(true)
+  }
+
+  const openEditProductForm = (product) => {
+    setEditingProduct(product)
+    setName(product.name || '')
+    setPrice(String(product.price || ''))
+    setDescription(product.description || '')
+    setCategory(product.category || '')
+    setBrand(product.brand || '')
+    setCountInStock(String(product.countInStock || 0))
+    setImage(product.image || '')
+    setError('')
+    setShowProductForm(true)
+  }
+
+  const closeProductForm = () => {
+    setShowProductForm(false)
+    resetProductForm()
   }
 
   const handleImageUpload = async (event) => {
@@ -86,25 +181,20 @@ const SellerDashboardPage = () => {
     }
   }
 
-  const handleAddProduct = async () => {
+  const getProductPayload = () => {
     const numericPrice = Number(price)
     const numericStock = Number(countInStock)
 
-    if (!name || !price || !description || !category || !brand || !countInStock || !image) {
-      setError('Please fill in all fields and upload an image')
-      return
+    if (!name || !price || !description || !category || !brand || countInStock === '' || !image) {
+      return { error: 'Please fill in all fields and upload an image' }
     }
 
     if (numericPrice <= 0 || numericStock < 0) {
-      setError('Please enter a valid price and stock quantity')
-      return
+      return { error: 'Please enter a valid price and stock quantity' }
     }
 
-    setSubmitting(true)
-    setError('')
-    setSuccess('')
-    try {
-      await createProduct({
+    return {
+      payload: {
         name,
         price: numericPrice,
         description,
@@ -112,13 +202,33 @@ const SellerDashboardPage = () => {
         brand,
         countInStock: numericStock,
         image
-      })
-      setSuccess('Product submitted for review.')
-      setShowAddProduct(false)
-      resetForm()
+      }
+    }
+  }
+
+  const handleSaveProduct = async () => {
+    const { payload, error: payloadError } = getProductPayload()
+
+    if (payloadError) {
+      setError(payloadError)
+      return
+    }
+
+    setSubmitting(true)
+    setError('')
+    setSuccess('')
+    try {
+      if (editingProduct) {
+        await updateProduct(editingProduct._id, payload)
+        setSuccess('Product updated and resubmitted for review.')
+      } else {
+        await createProduct(payload)
+        setSuccess('Product submitted for review.')
+      }
+      closeProductForm()
       fetchProducts()
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to submit product')
+      setError(err.response?.data?.message || 'Failed to save product')
     } finally {
       setSubmitting(false)
     }
@@ -135,20 +245,60 @@ const SellerDashboardPage = () => {
     }
   }
 
+  const handleProfileChange = (field, value) => {
+    setSellerProfile(current => ({
+      ...current,
+      [field]: value
+    }))
+  }
+
+  const handleSaveSellerProfile = async (submitForReview = false) => {
+    setProfileSubmitting(true)
+    setError('')
+    setSuccess('')
+    try {
+      const { data } = await updateSellerProfile({
+        ...sellerProfile,
+        submitForReview
+      })
+      setSellerProfile(normalizeSellerProfile(data.sellerProfile))
+      login(data)
+      setSuccess(submitForReview ? 'Store profile submitted for verification.' : 'Store profile saved.')
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to save seller profile')
+    } finally {
+      setProfileSubmitting(false)
+    }
+  }
+
   const statusMeta = (status = 'pending') => {
     if (status === 'approved') {
       return { label: 'Approved', color: '#2ecc71', icon: <FiCheckCircle size={14} />, note: 'Live in the storefront.' }
     }
     if (status === 'rejected') {
-      return { label: 'Rejected', color: '#e74c3c', icon: <FiXCircle size={14} />, note: 'Needs changes before it can go live.' }
+      return { label: 'Rejected', color: '#e74c3c', icon: <FiXCircle size={14} />, note: 'Edit and resubmit this product for review.' }
     }
     return { label: 'Pending', color: '#f39c12', icon: <FiClock size={14} />, note: 'Waiting for admin review.' }
+  }
+
+  const sellerStatusMeta = (status = 'incomplete') => {
+    if (status === 'verified') {
+      return { label: 'Verified seller', color: '#2ecc71', icon: <FiCheckCircle size={14} /> }
+    }
+    if (status === 'pending') {
+      return { label: 'Verification pending', color: '#f39c12', icon: <FiClock size={14} /> }
+    }
+    if (status === 'rejected') {
+      return { label: 'Needs changes', color: '#e74c3c', icon: <FiXCircle size={14} /> }
+    }
+    return { label: 'Setup incomplete', color: '#888', icon: <FiShield size={14} /> }
   }
 
   const approvedProducts = products.filter(product => product.approvalStatus === 'approved')
   const pendingProducts = products.filter(product => product.approvalStatus === 'pending' || !product.approvalStatus)
   const rejectedProducts = products.filter(product => product.approvalStatus === 'rejected')
   const inventoryValue = products.reduce((sum, product) => sum + Number(product.price || 0) * Number(product.countInStock || 0), 0)
+  const sellerMeta = sellerStatusMeta(sellerProfile.verificationStatus)
 
   return (
     <div className='glory-page'>
@@ -158,10 +308,10 @@ const SellerDashboardPage = () => {
         <div className='glory-dashboard-header'>
           <div>
             <h1>Seller Dashboard</h1>
-            <p>Welcome back, {user?.name}. Manage your products and review status.</p>
+            <p>Welcome back, {user?.name}. Set up your store, submit products and track verification.</p>
           </div>
           <button
-            onClick={() => setShowAddProduct(true)}
+            onClick={openNewProductForm}
             className='glory-btn glory-dashboard-primary-action'
           >
             <FiPlus size={16} /> Add Product
@@ -186,6 +336,100 @@ const SellerDashboardPage = () => {
           ))}
         </div>
 
+        <section className='glory-dashboard-panel glory-seller-profile-panel'>
+          <div className='glory-dashboard-panel-header glory-dashboard-panel-header-split'>
+            <div>
+              <span>Store Setup</span>
+              <small>Complete this before product approvals become smoother.</small>
+            </div>
+            <span className='glory-status-chip' style={{ color: sellerMeta.color, background: `${sellerMeta.color}15` }}>
+              {sellerMeta.icon} {sellerMeta.label}
+            </span>
+          </div>
+
+          <div className='glory-seller-profile-body'>
+            {sellerProfile.verificationStatus === 'rejected' && sellerProfile.verificationNote && (
+              <div className='glory-dashboard-callout danger'>
+                <strong>Verification needs changes.</strong>
+                <span>{sellerProfile.verificationNote}</span>
+              </div>
+            )}
+
+            <div className='glory-form-grid'>
+              <div>
+                <label style={labelStyle}>Store Name</label>
+                <input value={sellerProfile.storeName} onChange={event => handleProfileChange('storeName', event.target.value)} placeholder='e.g. Glow Lab Beauty' style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>Business Email</label>
+                <input value={sellerProfile.businessEmail} onChange={event => handleProfileChange('businessEmail', event.target.value)} placeholder='store@example.com' type='email' style={inputStyle} />
+              </div>
+            </div>
+
+            <div>
+              <label style={labelStyle}>Store Bio</label>
+              <textarea
+                value={sellerProfile.bio}
+                onChange={event => handleProfileChange('bio', event.target.value)}
+                placeholder='Tell buyers what your store sells, where products come from, and what makes your brand trustworthy.'
+                rows={3}
+                style={{ ...inputStyle, resize: 'vertical' }}
+              />
+              <div className='glory-form-help'>{sellerProfile.bio.length}/600 characters</div>
+            </div>
+
+            <div className='glory-form-grid'>
+              <div>
+                <label style={labelStyle}>Phone</label>
+                <input value={sellerProfile.phone} onChange={event => handleProfileChange('phone', event.target.value)} placeholder='(416) 555-0123' type='tel' style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>City</label>
+                <input value={sellerProfile.city} onChange={event => handleProfileChange('city', event.target.value)} placeholder='Toronto' style={inputStyle} />
+              </div>
+            </div>
+
+            <div className='glory-form-grid'>
+              <div>
+                <label style={labelStyle}>Province</label>
+                <input value={sellerProfile.province} onChange={event => handleProfileChange('province', event.target.value)} placeholder='Ontario' style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>Country</label>
+                <input value={sellerProfile.country} onChange={event => handleProfileChange('country', event.target.value)} placeholder='Canada' style={inputStyle} />
+              </div>
+            </div>
+
+            <div className='glory-form-grid'>
+              <div>
+                <label style={labelStyle}>Website</label>
+                <input value={sellerProfile.website} onChange={event => handleProfileChange('website', event.target.value)} placeholder='https://yourstore.com' type='url' style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>Instagram</label>
+                <input value={sellerProfile.instagram} onChange={event => handleProfileChange('instagram', event.target.value)} placeholder='@yourstore' style={inputStyle} />
+              </div>
+            </div>
+
+            <div className='glory-profile-actions'>
+              <button
+                onClick={() => handleSaveSellerProfile(false)}
+                disabled={profileSubmitting}
+                className='glory-secondary-button'
+              >
+                <FiSave size={15} /> Save Draft
+              </button>
+              <button
+                onClick={() => handleSaveSellerProfile(true)}
+                disabled={profileSubmitting || sellerProfile.verificationStatus === 'verified'}
+                className='glory-btn'
+              >
+                <FiShield size={15} /> Submit for Verification
+              </button>
+            </div>
+          </div>
+        </section>
+
         <section className='glory-dashboard-panel'>
           <div className='glory-dashboard-panel-header'>
             My Products ({products.length})
@@ -196,7 +440,7 @@ const SellerDashboardPage = () => {
               <FiPackage size={42} />
               <strong>No products yet</strong>
               <span>Upload your first product and the Glory team will review it before it goes live.</span>
-              <button onClick={() => setShowAddProduct(true)} className='glory-btn'>
+              <button onClick={openNewProductForm} className='glory-btn'>
                 <FiPlus size={16} /> Add Your First Product
               </button>
             </div>
@@ -240,6 +484,9 @@ const SellerDashboardPage = () => {
                         </td>
                         <td>
                           <div className='glory-table-actions'>
+                            <button onClick={() => openEditProductForm(product)} className='neutral' aria-label={`Edit ${product.name}`}>
+                              <FiEdit3 size={15} />
+                            </button>
                             <button onClick={() => handleDeleteProduct(product._id)} className='danger' aria-label={`Delete ${product.name}`}>
                               <FiTrash2 size={15} />
                             </button>
@@ -257,20 +504,24 @@ const SellerDashboardPage = () => {
         {rejectedProducts.length > 0 && (
           <div className='glory-dashboard-callout'>
             <strong>{rejectedProducts.length} product{rejectedProducts.length === 1 ? '' : 's'} need attention.</strong>
-            <span>Delete and resubmit with clearer photos, descriptions or inventory details.</span>
+            <span>Edit and resubmit rejected products with clearer photos, descriptions or inventory details.</span>
           </div>
         )}
       </div>
 
-      {showAddProduct && (
+      {showProductForm && (
         <div className='glory-modal-backdrop'>
           <div className='glory-product-modal'>
             <div className='glory-modal-header'>
               <div>
-                <strong>Add Product</strong>
-                <span>Products are reviewed before they appear in the storefront.</span>
+                <strong>{editingProduct ? 'Edit Product' : 'Add Product'}</strong>
+                <span>
+                  {editingProduct
+                    ? 'Saving changes sends this product back to review.'
+                    : 'Products are reviewed before they appear in the storefront.'}
+                </span>
               </div>
-              <button onClick={() => setShowAddProduct(false)} aria-label='Close product form'>
+              <button onClick={closeProductForm} aria-label='Close product form'>
                 <FiX size={20} />
               </button>
             </div>
@@ -337,12 +588,14 @@ const SellerDashboardPage = () => {
               </div>
 
               <button
-                onClick={handleAddProduct}
+                onClick={handleSaveProduct}
                 disabled={submitting || uploading}
                 className='glory-btn'
                 style={{ width: '100%', opacity: submitting || uploading ? 0.7 : 1 }}
               >
-                {submitting ? 'Submitting...' : 'Submit for Review'}
+                {submitting
+                  ? 'Saving...'
+                  : editingProduct ? 'Save and Resubmit' : 'Submit for Review'}
               </button>
             </div>
           </div>

@@ -13,6 +13,7 @@ import {
   getAllOrders,
   getAllUsers,
   makeSeller,
+  updateSellerStatus,
   updateProductStatus
 } from '../api'
 import {
@@ -20,6 +21,7 @@ import {
   FiClock,
   FiDollarSign,
   FiPackage,
+  FiShield,
   FiShoppingBag,
   FiTrash2,
   FiUserPlus,
@@ -94,6 +96,27 @@ const AdminDashboardPage = () => {
     }
   }
 
+  const handleSellerStatus = async (id, verificationStatus) => {
+    let verificationNote = ''
+    if (verificationStatus === 'rejected') {
+      const promptValue = window.prompt('Optional seller verification note:', 'Please complete your store profile before verification.')
+      if (promptValue === null) return
+      verificationNote = promptValue
+    }
+
+    try {
+      const { data } = await updateSellerStatus(id, { verificationStatus, verificationNote })
+      setUsers(current => current.map(account => (account._id === id ? data : account)))
+      setProducts(current => current.map(product => (
+        product.seller?._id === id ? { ...product, seller: data } : product
+      )))
+      setSuccess(`Seller ${verificationStatus}`)
+      fetchData(false)
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to update seller verification')
+    }
+  }
+
   const handleProductStatus = async (id, approvalStatus) => {
     let rejectionReason = ''
     if (approvalStatus === 'rejected') {
@@ -136,6 +159,13 @@ const AdminDashboardPage = () => {
     if (status === 'approved') return '#2ecc71'
     if (status === 'rejected') return '#e74c3c'
     return '#f39c12'
+  }
+
+  const sellerStatusColor = (status) => {
+    if (status === 'verified') return '#2ecc71'
+    if (status === 'rejected') return '#e74c3c'
+    if (status === 'pending') return '#f39c12'
+    return '#888'
   }
 
   const tabs = ['overview', 'products', 'orders', 'users']
@@ -194,7 +224,9 @@ const AdminDashboardPage = () => {
                   {[
                     { label: 'Pending Review', value: stats?.pendingProducts || 0, icon: <FiClock size={18} />, color: '#f39c12' },
                     { label: 'Approved Live', value: stats?.approvedProducts || 0, icon: <FiCheckCircle size={18} />, color: '#2ecc71' },
-                    { label: 'Rejected', value: stats?.rejectedProducts || 0, icon: <FiXCircle size={18} />, color: '#e74c3c' }
+                    { label: 'Rejected', value: stats?.rejectedProducts || 0, icon: <FiXCircle size={18} />, color: '#e74c3c' },
+                    { label: 'Seller Reviews', value: stats?.pendingSellers || 0, icon: <FiShield size={18} />, color: '#f39c12' },
+                    { label: 'Verified Sellers', value: stats?.verifiedSellers || 0, icon: <FiCheckCircle size={18} />, color: '#2ecc71' }
                   ].map(stat => (
                     <div key={stat.label} className='glory-dashboard-mini-stat'>
                       <span style={{ color: stat.color }}>{stat.icon}</span>
@@ -212,6 +244,7 @@ const AdminDashboardPage = () => {
               <ProductsTable
                 products={products}
                 productStatusColor={productStatusColor}
+                sellerStatusColor={sellerStatusColor}
                 onApprove={(id) => handleProductStatus(id, 'approved')}
                 onReject={(id) => handleProductStatus(id, 'rejected')}
                 onDelete={handleDeleteProduct}
@@ -228,6 +261,8 @@ const AdminDashboardPage = () => {
                 currentUserId={user?._id}
                 onDelete={handleDeleteUser}
                 onMakeSeller={handleMakeSeller}
+                onSellerStatus={handleSellerStatus}
+                sellerStatusColor={sellerStatusColor}
               />
             )}
           </>
@@ -287,14 +322,14 @@ const OrdersTable = ({ orders, orderStatusColor, compact = false }) => (
   </section>
 )
 
-const ProductsTable = ({ products, productStatusColor, onApprove, onReject, onDelete }) => (
+const ProductsTable = ({ products, productStatusColor, sellerStatusColor, onApprove, onReject, onDelete }) => (
   <section className='glory-dashboard-panel'>
     <div className='glory-dashboard-panel-header'>Product Review ({products.length})</div>
     <div className='glory-table-wrap'>
       <table className='glory-dashboard-table'>
         <thead>
           <tr>
-            {['Product', 'Seller', 'Price', 'Stock', 'Status', 'Actions'].map(header => (
+            {['Product', 'Seller', 'Seller Status', 'Price', 'Stock', 'Product Status', 'Actions'].map(header => (
               <th key={header}>{header}</th>
             ))}
           </tr>
@@ -311,7 +346,23 @@ const ProductsTable = ({ products, productStatusColor, onApprove, onReject, onDe
                   </div>
                 </div>
               </td>
-              <td>{product.seller?.name || 'Admin'}</td>
+              <td>
+                <div className='glory-dashboard-seller-cell'>
+                  <strong>{product.seller?.sellerProfile?.storeName || product.seller?.name || 'Admin'}</strong>
+                  <span>{product.seller?.email || 'Platform product'}</span>
+                </div>
+              </td>
+              <td>
+                <span
+                  className='glory-status-chip'
+                  style={{
+                    color: sellerStatusColor(product.seller?.sellerProfile?.verificationStatus),
+                    background: `${sellerStatusColor(product.seller?.sellerProfile?.verificationStatus)}15`
+                  }}
+                >
+                  {product.seller?.sellerProfile?.verificationStatus || 'incomplete'}
+                </span>
+              </td>
               <td><strong>{formatCurrency(product.price)}</strong></td>
               <td>{product.countInStock}</td>
               <td>
@@ -350,14 +401,14 @@ const ProductsTable = ({ products, productStatusColor, onApprove, onReject, onDe
   </section>
 )
 
-const UsersTable = ({ users, currentUserId, onDelete, onMakeSeller }) => (
+const UsersTable = ({ users, currentUserId, onDelete, onMakeSeller, onSellerStatus, sellerStatusColor }) => (
   <section className='glory-dashboard-panel'>
     <div className='glory-dashboard-panel-header'>All Users ({users.length})</div>
     <div className='glory-table-wrap'>
       <table className='glory-dashboard-table'>
         <thead>
           <tr>
-            {['User', 'Email', 'Role', 'Joined', 'Actions'].map(header => (
+            {['User', 'Email', 'Role', 'Seller Status', 'Joined', 'Actions'].map(header => (
               <th key={header}>{header}</th>
             ))}
           </tr>
@@ -379,6 +430,24 @@ const UsersTable = ({ users, currentUserId, onDelete, onMakeSeller }) => (
                   {!account.isAdmin && !account.isSeller && <span>Buyer</span>}
                 </div>
               </td>
+              <td>
+                {account.isSeller ? (
+                  <div className='glory-dashboard-seller-cell'>
+                    <span
+                      className='glory-status-chip'
+                      style={{
+                        color: sellerStatusColor(account.sellerProfile?.verificationStatus),
+                        background: `${sellerStatusColor(account.sellerProfile?.verificationStatus)}15`
+                      }}
+                    >
+                      {account.sellerProfile?.verificationStatus || 'incomplete'}
+                    </span>
+                    <small>{account.sellerProfile?.storeName || 'No store name yet'}</small>
+                  </div>
+                ) : (
+                  <span style={{ color: '#aaa' }}>Not a seller</span>
+                )}
+              </td>
               <td>{new Date(account.createdAt).toLocaleDateString('en-CA')}</td>
               <td>
                 {account._id !== currentUserId && (
@@ -386,6 +455,16 @@ const UsersTable = ({ users, currentUserId, onDelete, onMakeSeller }) => (
                     {!account.isSeller && (
                       <button onClick={() => onMakeSeller(account._id)} className='success' aria-label={`Make ${account.name} a seller`}>
                         <FiUserPlus size={15} />
+                      </button>
+                    )}
+                    {account.isSeller && account.sellerProfile?.verificationStatus !== 'verified' && (
+                      <button onClick={() => onSellerStatus(account._id, 'verified')} className='success' aria-label={`Verify ${account.name}`}>
+                        <FiCheckCircle size={15} />
+                      </button>
+                    )}
+                    {account.isSeller && account.sellerProfile?.verificationStatus !== 'rejected' && (
+                      <button onClick={() => onSellerStatus(account._id, 'rejected')} className='warning' aria-label={`Reject seller ${account.name}`}>
+                        <FiXCircle size={15} />
                       </button>
                     )}
                     <button onClick={() => onDelete(account._id)} className='danger' aria-label={`Delete ${account.name}`}>

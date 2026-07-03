@@ -124,6 +124,28 @@ select:focus-visible,
 .glory-btn:hover::after { opacity: 1; }
 .glory-btn:active { transform: translateY(0); }
 
+.glory-secondary-button {
+  min-height: 44px;
+  border-radius: 999px;
+  border: 1px solid var(--glory-line);
+  background: #fff;
+  color: var(--glory-ink);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 20px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.glory-secondary-button:disabled,
+.glory-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.52;
+}
+
 @property --angle {
   syntax: '<angle>';
   initial-value: 0deg;
@@ -485,7 +507,7 @@ select:focus-visible,
 }
 
 .glory-dashboard-stats-secondary {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 }
 
 .glory-dashboard-stat,
@@ -558,6 +580,25 @@ select:focus-visible,
   font-weight: 800;
 }
 
+.glory-dashboard-panel-header-split {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.glory-dashboard-panel-header-split > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.glory-dashboard-panel-header-split small {
+  color: #888;
+  font-size: 12px;
+  font-weight: 500;
+}
+
 .glory-table-wrap {
   width: 100%;
   overflow-x: auto;
@@ -566,7 +607,7 @@ select:focus-visible,
 
 .glory-dashboard-table {
   width: 100%;
-  min-width: 780px;
+  min-width: 880px;
   border-collapse: collapse;
 }
 
@@ -615,6 +656,24 @@ select:focus-visible,
 .glory-dashboard-product-cell span {
   display: block;
   margin-top: 3px;
+  color: #888;
+  font-size: 11px;
+}
+
+.glory-dashboard-seller-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 150px;
+}
+
+.glory-dashboard-seller-cell strong {
+  color: var(--glory-ink);
+  font-size: 13px;
+}
+
+.glory-dashboard-seller-cell span,
+.glory-dashboard-seller-cell small {
   color: #888;
   font-size: 11px;
 }
@@ -710,6 +769,11 @@ select:focus-visible,
   color: #e74c3c;
 }
 
+.glory-table-actions button.neutral {
+  color: var(--glory-ink);
+  background: #f5f2ef;
+}
+
 .glory-dashboard-note {
   color: #777;
   font-size: 12px;
@@ -727,6 +791,36 @@ select:focus-visible,
 .glory-dashboard-callout span {
   color: var(--glory-muted);
   font-size: 13px;
+}
+
+.glory-dashboard-callout.danger {
+  border-color: rgba(231, 76, 60, 0.22);
+  background: #fff7f6;
+}
+
+.glory-seller-profile-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 22px;
+}
+
+.glory-form-help {
+  margin-top: 6px;
+  color: #999;
+  font-size: 11px;
+  text-align: right;
+}
+
+.glory-profile-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.glory-profile-actions > button {
+  min-width: 180px;
 }
 
 .glory-empty-state {
@@ -2210,8 +2304,25 @@ select:focus-visible,
     padding: 16px 18px;
   }
 
+  .glory-dashboard-panel-header-split {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .glory-seller-profile-body {
+    padding: 18px;
+  }
+
+  .glory-profile-actions {
+    flex-direction: column;
+  }
+
+  .glory-profile-actions > button {
+    width: 100%;
+  }
+
   .glory-dashboard-table {
-    min-width: 720px;
+    min-width: 840px;
   }
 
   .glory-modal-backdrop {

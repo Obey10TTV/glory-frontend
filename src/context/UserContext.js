@@ -1,4 +1,4 @@
-import { createContext, useState, useContext } from 'react'
+import { createContext, useCallback, useContext, useMemo, useState } from 'react'
 
 const UserContext = createContext()
 
@@ -9,18 +9,20 @@ export const UserProvider = ({ children }) => {
       : null
   )
 
-  const login = (userData) => {
+  const login = useCallback((userData) => {
     setUser(userData)
     localStorage.setItem('gloryUser', JSON.stringify(userData))
-  }
+  }, [])
 
-  const logout = () => {
+  const logout = useCallback(() => {
     setUser(null)
     localStorage.removeItem('gloryUser')
-  }
+  }, [])
+
+  const value = useMemo(() => ({ user, login, logout }), [user, login, logout])
 
   return (
-    <UserContext.Provider value={{ user, login, logout }}>
+    <UserContext.Provider value={value}>
       {children}
     </UserContext.Provider>
   )

@@ -35,6 +35,8 @@ API.interceptors.response.use(
 // USERS
 export const registerUser = (data) => API.post('/users/register', data)
 export const loginUser = (data) => API.post('/users/login', data)
+export const getUserProfile = () => API.get('/users/profile')
+export const updateSellerProfile = (data) => API.put('/users/seller-profile', data)
 
 // PRODUCTS
 export const getProducts = () => API.get('/products')
@@ -70,3 +72,4 @@ export const updateProductStatus = (id, data) => API.put(`/admin/products/${id}/
 export const deleteUser = (id) => API.delete(`/admin/users/${id}`)
 export const deleteAdminProduct = (id) => API.delete(`/admin/products/${id}`)
 export const makeSeller = (id) => API.put(`/admin/users/${id}/makeseller`)
+export const updateSellerStatus = (id, data) => API.put(`/admin/users/${id}/seller-status`, data)
