@@ -6,7 +6,8 @@ import { useCart } from '../context/CartContext'
 import { useUser } from '../context/UserContext'
 import { createOrder, initializePayment } from '../api'
 import Message from '../components/Message'
-import { FiCheck } from 'react-icons/fi'
+import { FiCheck, FiCreditCard, FiShield } from 'react-icons/fi'
+import { formatCurrency } from '../utils/currency'
 
 const CheckoutPage = () => {
   const navigate = useNavigate()
@@ -266,13 +267,13 @@ const CheckoutPage = () => {
                       value: 'Paystack',
                       label: 'Pay by Card',
                       sub: 'Visa, Mastercard, Amex',
-                      icon: '💳'
+                      icon: <FiCreditCard size={22} />
                     },
                     {
                       value: 'Crypto',
                       label: 'Pay with Crypto',
                       sub: 'USDT, Bitcoin via MetaMask',
-                      icon: '🔐'
+                      icon: <FiShield size={22} />
                     },
                   ].map(method => (
                     <div
@@ -287,7 +288,7 @@ const CheckoutPage = () => {
                         transition: 'all 0.2s'
                       }}
                     >
-                      <span style={{ fontSize: '24px' }}>{method.icon}</span>
+                      <span style={{ color: '#111', display: 'flex', alignItems: 'center' }}>{method.icon}</span>
                       <div style={{ flex: 1 }}>
                         <div style={{
                           fontSize: '14px', fontWeight: '600', color: '#111'
@@ -405,7 +406,7 @@ const CheckoutPage = () => {
                     </span>
                   </div>
                   <div style={{ fontSize: '13px', color: '#555' }}>
-                    {paymentMethod === 'Paystack' ? '💳 Card Payment' : '🔐 Crypto'}
+                    {paymentMethod === 'Paystack' ? 'Card Payment' : 'Crypto'}
                   </div>
                 </div>
 
@@ -440,7 +441,7 @@ const CheckoutPage = () => {
                         </div>
                       </div>
                       <div style={{ fontSize: '13px', fontWeight: '600', color: '#111' }}>
-                        ${(item.price * item.quantity).toLocaleString()}
+                        {formatCurrency(item.price * item.quantity)}
                       </div>
                     </div>
                   ))}
@@ -469,7 +470,7 @@ const CheckoutPage = () => {
                       opacity: loading ? 0.7 : 1
                     }}
                   >
-                    {loading ? 'Processing...' : `Place Order — $${totalAmount.toLocaleString()}`}
+                    {loading ? 'Processing...' : `Place Order - ${formatCurrency(totalAmount)}`}
                   </button>
                 </div>
               </div>
@@ -496,7 +497,7 @@ const CheckoutPage = () => {
                 marginBottom: '8px'
               }}>
                 <span>{item.name} × {item.quantity}</span>
-                <span>${(item.price * item.quantity).toLocaleString()}</span>
+                <span>{formatCurrency(item.price * item.quantity)}</span>
               </div>
             ))}
 
@@ -508,7 +509,7 @@ const CheckoutPage = () => {
             }}>
               <span>Shipping</span>
               <span style={{ color: shippingPrice === 0 ? '#2ecc71' : '#111' }}>
-                {shippingPrice === 0 ? 'FREE' : `$${shippingPrice.toLocaleString()}`}
+                {shippingPrice === 0 ? 'FREE' : formatCurrency(shippingPrice)}
               </span>
             </div>
 
@@ -519,7 +520,7 @@ const CheckoutPage = () => {
               fontSize: '16px', fontWeight: '700', color: '#111'
             }}>
               <span>Total</span>
-              <span>${totalAmount.toLocaleString()}</span>
+              <span>{formatCurrency(totalAmount)}</span>
             </div>
 
             <div style={{
@@ -527,9 +528,9 @@ const CheckoutPage = () => {
               background: '#fafaf9', borderRadius: '10px'
             }}>
               {[
-                '🔒 Secure checkout',
-                '✓ 100% authentic products',
-                '↩️ Easy 30-day returns'
+                'Secure checkout',
+                '100% authentic products',
+                'Easy 30-day returns'
               ].map((item, i) => (
                 <div key={i} style={{
                   fontSize: '11px', color: '#888',

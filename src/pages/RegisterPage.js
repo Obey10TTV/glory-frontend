@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useUser } from '../context/UserContext'
 import { registerUser } from '../api'
 import Message from '../components/Message'
-import { FiEye, FiEyeOff } from 'react-icons/fi'
+import { FiEye, FiEyeOff, FiPackage, FiShoppingBag } from 'react-icons/fi'
 import { FcGoogle } from 'react-icons/fc'
 import { FaApple } from 'react-icons/fa'
 
@@ -31,7 +31,7 @@ const RegisterPage = () => {
     try {
       const { data } = await registerUser({ name, email, password, isSeller })
       login(data)
-      navigate('/')
+      navigate(data.isSeller ? '/seller' : '/')
     } catch (err) {
       setError(err.response?.data?.message || 'Something went wrong')
     } finally {
@@ -158,7 +158,7 @@ const RegisterPage = () => {
                     transition: 'all 0.2s'
                   }}
                 >
-                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>🛍️</div>
+                  <FiShoppingBag size={20} style={{ marginBottom: '4px', color: !isSeller ? '#fff' : '#111' }} />
                   <div style={{
                     fontSize: '12px', fontWeight: '600',
                     color: !isSeller ? '#fff' : '#111'
@@ -179,7 +179,7 @@ const RegisterPage = () => {
                     transition: 'all 0.2s'
                   }}
                 >
-                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>💄</div>
+                  <FiPackage size={20} style={{ marginBottom: '4px', color: isSeller ? '#fff' : '#111' }} />
                   <div style={{
                     fontSize: '12px', fontWeight: '600',
                     color: isSeller ? '#fff' : '#111'
@@ -305,7 +305,7 @@ const RegisterPage = () => {
                   fontSize: '12px', color: '#c97a9a',
                   fontWeight: '600', marginBottom: '3px'
                 }}>
-                  🎉 You're signing up as a seller!
+                  You're signing up as a seller.
                 </div>
                 <div style={{ fontSize: '11px', color: '#888', lineHeight: '1.6' }}>
                   Stop selling in DMs. Get your own storefront on Glory.

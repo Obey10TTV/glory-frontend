@@ -8,6 +8,7 @@ import { getProduct, addReview, getReviews } from '../api'
 import { useCart } from '../context/CartContext'
 import { useUser } from '../context/UserContext'
 import { FiShoppingBag, FiHeart, FiStar, FiTruck, FiShield, FiRefreshCw } from 'react-icons/fi'
+import { formatCurrency } from '../utils/currency'
 
 const ProductDetailPage = () => {
   const { id } = useParams()
@@ -91,9 +92,9 @@ const ProductDetailPage = () => {
           alignItems: 'center', gap: '8px'
         }}>
           <span onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>Home</span>
-          <span>›</span>
+          <span>/</span>
           <span onClick={() => navigate(`/products?category=${product.category}`)} style={{ cursor: 'pointer' }}>{product.category}</span>
-          <span>›</span>
+          <span>/</span>
           <span style={{ color: '#111' }}>{product.name}</span>
         </div>
 
@@ -177,7 +178,7 @@ const ProductDetailPage = () => {
             <div style={{
               fontSize: '32px', fontWeight: '700', color: '#111'
             }}>
-              ${product.price.toLocaleString()}
+              {formatCurrency(product.price)}
             </div>
 
             <div style={{
@@ -195,7 +196,7 @@ const ProductDetailPage = () => {
               color: product.countInStock > 0 ? '#2ecc71' : '#e74c3c',
               fontWeight: '600'
             }}>
-              {product.countInStock > 0 ? `✓ In Stock (${product.countInStock} available)` : '✗ Out of Stock'}
+              {product.countInStock > 0 ? `In stock (${product.countInStock} available)` : 'Out of stock'}
             </div>
 
             {product.countInStock > 0 && (
@@ -221,7 +222,7 @@ const ProductDetailPage = () => {
                       display: 'flex', alignItems: 'center',
                       justifyContent: 'center'
                     }}
-                  >−</button>
+                  >-</button>
                   <span style={{
                     padding: '0 20px', fontSize: '14px',
                     fontWeight: '600', color: '#111'

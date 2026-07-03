@@ -1,19 +1,19 @@
-import { useState, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import Loader from '../components/Loader'
-import { useUser } from '../context/UserContext'
-import { getProducts, createProduct, uploadImage } from '../api'
-import { FiPlus, FiPackage, FiDollarSign, FiEye, FiX } from 'react-icons/fi'
 import Message from '../components/Message'
+import { useUser } from '../context/UserContext'
+import { createProduct, deleteProduct, getMySellerProducts, uploadImage } from '../api'
+import { FiClock, FiCheckCircle, FiImage, FiPackage, FiPlus, FiTrash2, FiX, FiXCircle } from 'react-icons/fi'
+import { formatCurrency } from '../utils/currency'
 
 const SellerDashboardPage = () => {
   const navigate = useNavigate()
   const { user } = useUser()
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState('products')
   const [showAddProduct, setShowAddProduct] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -34,340 +34,290 @@ const SellerDashboardPage = () => {
     'Tools & Accessories'
   ]
 
-  useEffect(() => {
-    if (!user) { navigate('/login'); return }
-    if (!user.isSeller) { navigate('/'); return }
-    fetchProducts()
-  }, [user])
-
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     try {
-      const { data } = await getProducts()
-      const myProducts = data.filter(p => p.seller === user._id)
-      setProducts(myProducts)
-    } catch (error) {
-      console.log(error)
+      setLoading(true)
+      const { data } = await getMySellerProducts()
+      setProducts(Array.isArray(data) ? data : [])
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to load seller products')
     } finally {
       setLoading(false)
     }
+  }, [])
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/login')
+      return
+    }
+    if (!user.isSeller) {
+      navigate('/')
+      return
+    }
+    fetchProducts()
+  }, [user, navigate, fetchProducts])
+
+  const resetForm = () => {
+    setName('')
+    setPrice('')
+    setDescription('')
+    setCategory('')
+    setBrand('')
+    setCountInStock('')
+    setImage('')
   }
 
-  const handleImageUpload = async (e) => {
-    const file = e.target.files[0]
+  const handleImageUpload = async (event) => {
+    const file = event.target.files[0]
     if (!file) return
+
     setUploading(true)
+    setError('')
     try {
       const formData = new FormData()
       formData.append('image', file)
       const { data } = await uploadImage(formData)
       setImage(data.url)
     } catch (err) {
-      setError('Image upload failed')
+      setError(err.response?.data?.message || 'Image upload failed')
     } finally {
       setUploading(false)
     }
   }
 
   const handleAddProduct = async () => {
+    const numericPrice = Number(price)
+    const numericStock = Number(countInStock)
+
     if (!name || !price || !description || !category || !brand || !countInStock || !image) {
       setError('Please fill in all fields and upload an image')
       return
     }
+
+    if (numericPrice <= 0 || numericStock < 0) {
+      setError('Please enter a valid price and stock quantity')
+      return
+    }
+
     setSubmitting(true)
     setError('')
+    setSuccess('')
     try {
       await createProduct({
-        name, price: Number(price),
-        description, category, brand,
-        countInStock: Number(countInStock), image
+        name,
+        price: numericPrice,
+        description,
+        category,
+        brand,
+        countInStock: numericStock,
+        image
       })
-      setSuccess('Product added successfully!')
+      setSuccess('Product submitted for review.')
       setShowAddProduct(false)
-      setName(''); setPrice(''); setDescription('')
-      setCategory(''); setBrand(''); setCountInStock(''); setImage('')
+      resetForm()
       fetchProducts()
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to add product')
+      setError(err.response?.data?.message || 'Failed to submit product')
     } finally {
       setSubmitting(false)
     }
   }
 
-  const totalRevenue = products.reduce((acc, p) => acc + (p.price * (50 - p.countInStock)), 0)
+  const handleDeleteProduct = async (id) => {
+    if (!window.confirm('Delete this product?')) return
+    try {
+      await deleteProduct(id)
+      setProducts(current => current.filter(product => product._id !== id))
+      setSuccess('Product deleted successfully')
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to delete product')
+    }
+  }
+
+  const statusMeta = (status = 'pending') => {
+    if (status === 'approved') {
+      return { label: 'Approved', color: '#2ecc71', icon: <FiCheckCircle size={14} />, note: 'Live in the storefront.' }
+    }
+    if (status === 'rejected') {
+      return { label: 'Rejected', color: '#e74c3c', icon: <FiXCircle size={14} />, note: 'Needs changes before it can go live.' }
+    }
+    return { label: 'Pending', color: '#f39c12', icon: <FiClock size={14} />, note: 'Waiting for admin review.' }
+  }
+
+  const approvedProducts = products.filter(product => product.approvalStatus === 'approved')
+  const pendingProducts = products.filter(product => product.approvalStatus === 'pending' || !product.approvalStatus)
+  const rejectedProducts = products.filter(product => product.approvalStatus === 'rejected')
+  const inventoryValue = products.reduce((sum, product) => sum + Number(product.price || 0) * Number(product.countInStock || 0), 0)
 
   return (
-    <div style={{ background: '#fafaf9', minHeight: '100vh' }}>
+    <div className='glory-page'>
       <Navbar />
 
-      <div style={{ padding: '40px', maxWidth: '1100px', margin: '0 auto' }}>
-
-        {/* HEADER */}
-        <div style={{
-          display: 'flex', justifyContent: 'space-between',
-          alignItems: 'center', marginBottom: '32px'
-        }}>
+      <div className='glory-container glory-dashboard-container'>
+        <div className='glory-dashboard-header'>
           <div>
-            <h1 style={{ fontSize: '28px', fontWeight: '700', color: '#111' }}>
-              Seller Dashboard
-            </h1>
-            <p style={{ fontSize: '13px', color: '#888', marginTop: '4px' }}>
-              Welcome back, {user?.name}
-            </p>
+            <h1>Seller Dashboard</h1>
+            <p>Welcome back, {user?.name}. Manage your products and review status.</p>
           </div>
           <button
             onClick={() => setShowAddProduct(true)}
-            className='glory-btn'
-            style={{ padding: '12px 24px', fontSize: '13px',
-              display: 'flex', alignItems: 'center', gap: '8px'
-            }}
+            className='glory-btn glory-dashboard-primary-action'
           >
             <FiPlus size={16} /> Add Product
           </button>
         </div>
 
-        {/* STATS */}
-        <div style={{
-          display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: '20px', marginBottom: '32px'
-        }}>
+        {error && <Message type='error' text={error} />}
+        {success && <Message type='success' text={success} />}
+
+        <div className='glory-dashboard-stats'>
           {[
-            { label: 'Total Products', value: products.length, icon: <FiPackage size={20} />, color: '#c97a9a' },
-            { label: 'Total Revenue', value: `₦${totalRevenue.toLocaleString()}`, icon: <FiDollarSign size={20} />, color: '#2ecc71' },
-            { label: 'Total Views', value: '0', icon: <FiEye size={20} />, color: '#3498db' },
-          ].map((stat, i) => (
-            <div key={i} style={{
-              background: '#fff', borderRadius: '14px',
-              padding: '24px', border: '0.5px solid #eee',
-              display: 'flex', alignItems: 'center', gap: '16px'
-            }}>
-              <div style={{
-                width: '48px', height: '48px',
-                borderRadius: '12px',
-                background: `${stat.color}15`,
-                display: 'flex', alignItems: 'center',
-                justifyContent: 'center',
-                color: stat.color
-              }}>
-                {stat.icon}
-              </div>
-              <div>
-                <div style={{ fontSize: '22px', fontWeight: '700', color: '#111' }}>
-                  {stat.value}
-                </div>
-                <div style={{ fontSize: '12px', color: '#888' }}>
-                  {stat.label}
-                </div>
-              </div>
+            { label: 'Total Products', value: products.length, icon: <FiPackage size={22} />, color: '#b85f83', bg: '#f8e8ee' },
+            { label: 'Approved Live', value: approvedProducts.length, icon: <FiCheckCircle size={22} />, color: '#2ecc71', bg: '#eef8f1' },
+            { label: 'Pending Review', value: pendingProducts.length, icon: <FiClock size={22} />, color: '#f39c12', bg: '#fbf1dd' },
+            { label: 'Inventory Value', value: formatCurrency(inventoryValue), icon: <FiPackage size={22} />, color: '#416b5f', bg: '#eef5f2' }
+          ].map(stat => (
+            <div key={stat.label} className='glory-dashboard-stat'>
+              <div style={{ background: stat.bg, color: stat.color }}>{stat.icon}</div>
+              <strong>{stat.value}</strong>
+              <span>{stat.label}</span>
             </div>
           ))}
         </div>
 
-        {/* PRODUCTS */}
-        <div style={{
-          background: '#fff', borderRadius: '16px',
-          border: '0.5px solid #eee', overflow: 'hidden'
-        }}>
-          <div style={{
-            padding: '20px 24px', borderBottom: '0.5px solid #eee',
-            display: 'flex', justifyContent: 'space-between',
-            alignItems: 'center'
-          }}>
-            <div style={{ fontSize: '15px', fontWeight: '700', color: '#111' }}>
-              My Products
-            </div>
+        <section className='glory-dashboard-panel'>
+          <div className='glory-dashboard-panel-header'>
+            My Products ({products.length})
           </div>
 
           {loading ? <Loader /> : products.length === 0 ? (
-            <div style={{
-              padding: '60px', textAlign: 'center'
-            }}>
-              <FiPackage size={40} style={{ color: '#ddd', marginBottom: '16px' }} />
-              <div style={{ fontSize: '15px', fontWeight: '600', color: '#111', marginBottom: '8px' }}>
-                No products yet
-              </div>
-              <div style={{ fontSize: '13px', color: '#888', marginBottom: '20px' }}>
-                Add your first product to start selling on Glory
-              </div>
-              <button
-                onClick={() => setShowAddProduct(true)}
-                className='glory-btn'
-                style={{ padding: '12px 24px', fontSize: '13px' }}
-              >
-                Add Your First Product
+            <div className='glory-empty-state'>
+              <FiPackage size={42} />
+              <strong>No products yet</strong>
+              <span>Upload your first product and the Glory team will review it before it goes live.</span>
+              <button onClick={() => setShowAddProduct(true)} className='glory-btn'>
+                <FiPlus size={16} /> Add Your First Product
               </button>
             </div>
           ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ background: '#fafaf9' }}>
-                  {['Product', 'Category', 'Price', 'Stock', 'Rating'].map(h => (
-                    <th key={h} style={{
-                      padding: '12px 20px', textAlign: 'left',
-                      fontSize: '11px', fontWeight: '600',
-                      color: '#888', letterSpacing: '0.06em',
-                      textTransform: 'uppercase'
-                    }}>
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {products.map((product, i) => (
-                  <tr key={product._id} style={{
-                    borderTop: '0.5px solid #eee'
-                  }}>
-                    <td style={{ padding: '14px 20px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <img
-                          src={product.image}
-                          alt={product.name}
-                          style={{
-                            width: '44px', height: '44px',
-                            borderRadius: '8px', objectFit: 'cover',
-                            background: '#fdf0f5'
-                          }}
-                        />
-                        <div>
-                          <div style={{ fontSize: '13px', fontWeight: '500', color: '#111' }}>
-                            {product.name}
-                          </div>
-                          <div style={{ fontSize: '11px', color: '#aaa' }}>
-                            {product.brand}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td style={{ padding: '14px 20px', fontSize: '13px', color: '#555' }}>
-                      {product.category}
-                    </td>
-                    <td style={{ padding: '14px 20px', fontSize: '13px', fontWeight: '600', color: '#111' }}>
-                      ₦{product.price.toLocaleString()}
-                    </td>
-                    <td style={{ padding: '14px 20px' }}>
-                      <span style={{
-                        background: product.countInStock > 0 ? '#f0fdf4' : '#fef2f2',
-                        color: product.countInStock > 0 ? '#2ecc71' : '#e74c3c',
-                        padding: '3px 10px', borderRadius: '999px',
-                        fontSize: '11px', fontWeight: '600'
-                      }}>
-                        {product.countInStock > 0 ? `${product.countInStock} in stock` : 'Out of stock'}
-                      </span>
-                    </td>
-                    <td style={{ padding: '14px 20px', fontSize: '13px', color: '#555' }}>
-                      ★ {product.rating.toFixed(1)}
-                    </td>
+            <div className='glory-table-wrap'>
+              <table className='glory-dashboard-table'>
+                <thead>
+                  <tr>
+                    {['Product', 'Price', 'Stock', 'Status', 'Notes', 'Actions'].map(header => (
+                      <th key={header}>{header}</th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {products.map(product => {
+                    const meta = statusMeta(product.approvalStatus)
+                    return (
+                      <tr key={product._id}>
+                        <td>
+                          <div className='glory-dashboard-product-cell'>
+                            <img src={product.image} alt={product.name} />
+                            <div>
+                              <strong>{product.name}</strong>
+                              <span>{product.brand} - {product.category}</span>
+                            </div>
+                          </div>
+                        </td>
+                        <td><strong>{formatCurrency(product.price)}</strong></td>
+                        <td>{product.countInStock}</td>
+                        <td>
+                          <span className='glory-status-chip' style={{ color: meta.color, background: `${meta.color}15` }}>
+                            {meta.icon} {meta.label}
+                          </span>
+                        </td>
+                        <td>
+                          <span className='glory-dashboard-note'>
+                            {product.approvalStatus === 'rejected' && product.rejectionReason
+                              ? product.rejectionReason
+                              : meta.note}
+                          </span>
+                        </td>
+                        <td>
+                          <div className='glory-table-actions'>
+                            <button onClick={() => handleDeleteProduct(product._id)} className='danger' aria-label={`Delete ${product.name}`}>
+                              <FiTrash2 size={15} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
           )}
-        </div>
+        </section>
+
+        {rejectedProducts.length > 0 && (
+          <div className='glory-dashboard-callout'>
+            <strong>{rejectedProducts.length} product{rejectedProducts.length === 1 ? '' : 's'} need attention.</strong>
+            <span>Delete and resubmit with clearer photos, descriptions or inventory details.</span>
+          </div>
+        )}
       </div>
 
-      {/* ADD PRODUCT MODAL */}
       {showAddProduct && (
-        <div style={{
-          position: 'fixed', inset: 0,
-          background: 'rgba(0,0,0,0.5)',
-          display: 'flex', alignItems: 'center',
-          justifyContent: 'center', zIndex: 1000,
-          padding: '20px'
-        }}>
-          <div style={{
-            background: '#fff', borderRadius: '20px',
-            padding: '32px', width: '100%', maxWidth: '560px',
-            maxHeight: '90vh', overflowY: 'auto'
-          }}>
-            <div style={{
-              display: 'flex', justifyContent: 'space-between',
-              alignItems: 'center', marginBottom: '24px'
-            }}>
-              <div style={{ fontSize: '18px', fontWeight: '700', color: '#111' }}>
-                Add New Product
+        <div className='glory-modal-backdrop'>
+          <div className='glory-product-modal'>
+            <div className='glory-modal-header'>
+              <div>
+                <strong>Add Product</strong>
+                <span>Products are reviewed before they appear in the storefront.</span>
               </div>
-              <button
-                onClick={() => setShowAddProduct(false)}
-                style={{
-                  background: 'none', border: 'none',
-                  cursor: 'pointer', color: '#888'
-                }}
-              >
+              <button onClick={() => setShowAddProduct(false)} aria-label='Close product form'>
                 <FiX size={20} />
               </button>
             </div>
 
             {error && <Message type='error' text={error} />}
-            {success && <Message type='success' text={success} />}
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-
-              {/* IMAGE UPLOAD */}
+            <div className='glory-product-form'>
               <div>
                 <label style={labelStyle}>Product Image</label>
-                <div style={{
-                  border: '1.5px dashed #ddd', borderRadius: '12px',
-                  padding: '20px', textAlign: 'center',
-                  background: '#fafaf9', cursor: 'pointer',
-                  position: 'relative'
-                }}>
+                <div className='glory-upload-box'>
                   {image ? (
-                    <img
-                      src={image}
-                      alt='preview'
-                      style={{
-                        width: '120px', height: '120px',
-                        objectFit: 'cover', borderRadius: '8px'
-                      }}
-                    />
+                    <img src={image} alt='Product preview' />
                   ) : (
                     <div>
-                      <div style={{ fontSize: '28px', marginBottom: '8px' }}>📸</div>
-                      <div style={{ fontSize: '13px', color: '#888' }}>
-                        {uploading ? 'Uploading...' : 'Click to upload product image'}
-                      </div>
+                      <FiImage size={28} />
+                      <span>{uploading ? 'Uploading...' : 'Click to upload product image'}</span>
                     </div>
                   )}
-                  <input
-                    type='file'
-                    accept='image/*'
-                    onChange={handleImageUpload}
-                    style={{
-                      position: 'absolute', inset: 0,
-                      opacity: 0, cursor: 'pointer'
-                    }}
-                  />
+                  <input type='file' accept='image/*' onChange={handleImageUpload} />
                 </div>
               </div>
 
-              <div>
-                <label style={labelStyle}>Product Name</label>
-                <input value={name} onChange={e => setName(e.target.value)}
-                  placeholder='e.g. Vitamin C Serum' style={inputStyle} />
-              </div>
-
-              <div>
-                <label style={labelStyle}>Brand</label>
-                <input value={brand} onChange={e => setBrand(e.target.value)}
-                  placeholder='e.g. Nuban Skin' style={inputStyle} />
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+              <div className='glory-form-grid'>
                 <div>
-                  <label style={labelStyle}>Price (₦)</label>
-                  <input value={price} onChange={e => setPrice(e.target.value)}
-                    placeholder='e.g. 8500' type='number' style={inputStyle} />
+                  <label style={labelStyle}>Product Name</label>
+                  <input value={name} onChange={event => setName(event.target.value)} placeholder='e.g. Vitamin C Serum' style={inputStyle} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Brand</label>
+                  <input value={brand} onChange={event => setBrand(event.target.value)} placeholder='e.g. Glow Lab' style={inputStyle} />
+                </div>
+              </div>
+
+              <div className='glory-form-grid'>
+                <div>
+                  <label style={labelStyle}>Price (CAD)</label>
+                  <input value={price} onChange={event => setPrice(event.target.value)} placeholder='e.g. 18' type='number' min='0' step='0.01' style={inputStyle} />
                 </div>
                 <div>
                   <label style={labelStyle}>Stock Quantity</label>
-                  <input value={countInStock} onChange={e => setCountInStock(e.target.value)}
-                    placeholder='e.g. 50' type='number' style={inputStyle} />
+                  <input value={countInStock} onChange={event => setCountInStock(event.target.value)} placeholder='e.g. 50' type='number' min='0' style={inputStyle} />
                 </div>
               </div>
 
               <div>
                 <label style={labelStyle}>Category</label>
-                <select value={category} onChange={e => setCategory(e.target.value)} style={inputStyle}>
+                <select value={category} onChange={event => setCategory(event.target.value)} style={inputStyle}>
                   <option value=''>Select category</option>
                   {categories.map(cat => (
                     <option key={cat} value={cat}>{cat}</option>
@@ -379,8 +329,8 @@ const SellerDashboardPage = () => {
                 <label style={labelStyle}>Description</label>
                 <textarea
                   value={description}
-                  onChange={e => setDescription(e.target.value)}
-                  placeholder='Describe your product...'
+                  onChange={event => setDescription(event.target.value)}
+                  placeholder='Describe texture, size, shade, ingredients, usage or what makes it special.'
                   rows={4}
                   style={{ ...inputStyle, resize: 'none' }}
                 />
@@ -390,12 +340,9 @@ const SellerDashboardPage = () => {
                 onClick={handleAddProduct}
                 disabled={submitting || uploading}
                 className='glory-btn'
-                style={{
-                  width: '100%', padding: '14px', fontSize: '14px',
-                  opacity: submitting ? 0.7 : 1
-                }}
+                style={{ width: '100%', opacity: submitting || uploading ? 0.7 : 1 }}
               >
-                {submitting ? 'Adding Product...' : 'Add Product'}
+                {submitting ? 'Submitting...' : 'Submit for Review'}
               </button>
             </div>
           </div>
@@ -408,15 +355,23 @@ const SellerDashboardPage = () => {
 }
 
 const labelStyle = {
-  display: 'block', fontSize: '12px',
-  fontWeight: '600', color: '#444', marginBottom: '6px'
+  display: 'block',
+  fontSize: '12px',
+  fontWeight: '600',
+  color: '#444',
+  marginBottom: '6px'
 }
 
 const inputStyle = {
-  width: '100%', padding: '12px 16px',
-  border: '0.5px solid #ddd', borderRadius: '10px',
-  fontSize: '13px', color: '#111', outline: 'none',
-  background: '#fafaf9', boxSizing: 'border-box',
+  width: '100%',
+  padding: '12px 16px',
+  border: '0.5px solid #ddd',
+  borderRadius: '10px',
+  fontSize: '13px',
+  color: '#111',
+  outline: 'none',
+  background: '#fafaf9',
+  boxSizing: 'border-box',
   fontFamily: 'inherit'
 }
 

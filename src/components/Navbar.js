@@ -6,6 +6,7 @@ import { FiUser, FiShoppingBag, FiHeart, FiX, FiChevronDown, FiMenu, FiSearch } 
 import { getProducts } from '../api'
 import useIsMobile from '../hooks/useIsMobile'
 import CanadaFlag from './CanadaFlag'
+import { formatCurrency } from '../utils/currency'
 
 const Navbar = () => {
   const { user, logout } = useUser()
@@ -160,7 +161,7 @@ const Navbar = () => {
                 </div>
               </div>
               <div style={{ fontSize: '14px', fontWeight: '700', color: '#111' }}>
-                ${product.price.toLocaleString()}
+                {formatCurrency(product.price)}
               </div>
             </div>
           ))}

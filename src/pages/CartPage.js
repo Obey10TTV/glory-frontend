@@ -3,6 +3,7 @@ import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import { useCart } from '../context/CartContext'
 import { FiTrash2, FiShoppingBag, FiArrowLeft } from 'react-icons/fi'
+import { formatCurrency } from '../utils/currency'
 
 const CartPage = () => {
   const navigate = useNavigate()
@@ -83,7 +84,7 @@ const CartPage = () => {
                   fontSize: '12px', color: '#c97a9a',
                   fontWeight: '500', textAlign: 'center'
                 }}>
-                  You're ${(75 - totalPrice).toLocaleString()} away from free shipping! 🎉
+                  You're {formatCurrency(75 - totalPrice)} away from free shipping.
                 </div>
               )}
               {totalPrice >= 75 && (
@@ -92,7 +93,7 @@ const CartPage = () => {
                   fontSize: '12px', color: '#2ecc71',
                   fontWeight: '500', textAlign: 'center'
                 }}>
-                  ✓ You've unlocked free shipping!
+                  You've unlocked free shipping.
                 </div>
               )}
 
@@ -160,7 +161,7 @@ const CartPage = () => {
                         display: 'flex', alignItems: 'center',
                         justifyContent: 'center'
                       }}
-                    >−</button>
+                    >-</button>
                     <span style={{
                       padding: '0 14px', fontSize: '13px',
                       fontWeight: '600', color: '#111'
@@ -184,7 +185,7 @@ const CartPage = () => {
                     color: '#111', minWidth: '100px',
                     textAlign: 'right'
                   }}>
-                    ${(item.price * item.quantity).toLocaleString()}
+                    {formatCurrency(item.price * item.quantity)}
                   </div>
 
                   <button
@@ -245,7 +246,7 @@ const CartPage = () => {
                   fontSize: '13px', color: '#666'
                 }}>
                   <span>Subtotal ({totalItems} items)</span>
-                  <span>${totalPrice.toLocaleString()}</span>
+                  <span>{formatCurrency(totalPrice)}</span>
                 </div>
                 <div style={{
                   display: 'flex', justifyContent: 'space-between',
@@ -253,7 +254,7 @@ const CartPage = () => {
                 }}>
                   <span>Shipping</span>
                   <span style={{ color: shippingPrice === 0 ? '#2ecc71' : '#111' }}>
-                    {shippingPrice === 0 ? 'FREE' : `$${shippingPrice.toLocaleString()}`}
+                    {shippingPrice === 0 ? 'FREE' : formatCurrency(shippingPrice)}
                   </span>
                 </div>
                 <div style={{
@@ -265,7 +266,7 @@ const CartPage = () => {
                   fontSize: '16px', fontWeight: '700', color: '#111'
                 }}>
                   <span>Total</span>
-                  <span>${(totalPrice + shippingPrice).toLocaleString()}</span>
+                  <span>{formatCurrency(totalPrice + shippingPrice)}</span>
                 </div>
               </div>
 
@@ -300,9 +301,9 @@ const CartPage = () => {
                 display: 'flex', flexDirection: 'column', gap: '8px'
               }}>
                 {[
-                  '🔒 Secure checkout',
-                  '✓ 100% authentic products',
-                  '↩️ Easy 30-day returns'
+                  'Secure checkout',
+                  '100% authentic products',
+                  'Easy 30-day returns'
                 ].map((item, i) => (
                   <div key={i} style={{
                     fontSize: '11px', color: '#888',

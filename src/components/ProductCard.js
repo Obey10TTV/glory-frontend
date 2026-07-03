@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
 import { useState } from 'react'
 import { FiHeart, FiShoppingBag } from 'react-icons/fi'
+import { formatCurrency } from '../utils/currency'
 
 const ProductCard = ({ product }) => {
   const navigate = useNavigate()
@@ -130,7 +131,7 @@ const ProductCard = ({ product }) => {
           <div style={{
             fontSize: '14px', fontWeight: '700', color: '#111'
           }}>
-            ${product.price.toLocaleString()}
+            {formatCurrency(product.price)}
           </div>
           <div style={{
             fontSize: '11px', color: '#999'

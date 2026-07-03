@@ -6,6 +6,7 @@ import Loader from '../components/Loader'
 import { useUser } from '../context/UserContext'
 import { getMyOrders } from '../api'
 import { FiPackage, FiUser, FiMapPin, FiLogOut, FiChevronRight } from 'react-icons/fi'
+import { formatCurrency } from '../utils/currency'
 
 const AccountPage = () => {
   const navigate = useNavigate()
@@ -103,7 +104,7 @@ const AccountPage = () => {
                   padding: '3px 10px', fontSize: '10px',
                   color: '#c97a9a', fontWeight: '600'
                 }}>
-                  ✓ Verified Seller
+                  Verified Seller
                 </div>
               )}
             </div>
@@ -155,7 +156,7 @@ const AccountPage = () => {
                   gap: '10px', fontSize: '13px', color: '#c97a9a',
                   fontWeight: '500'
                 }}>
-                  💄 Seller Dashboard
+                  Seller Dashboard
                 </div>
                 <FiChevronRight size={14} style={{ color: '#ccc' }} />
               </div>
@@ -177,7 +178,7 @@ const AccountPage = () => {
                   gap: '10px', fontSize: '13px', color: '#3498db',
                   fontWeight: '500'
                 }}>
-                  ⚙️ Admin Dashboard
+                  Admin Dashboard
                 </div>
                 <FiChevronRight size={14} style={{ color: '#ccc' }} />
               </div>
@@ -257,7 +258,7 @@ const AccountPage = () => {
                               Order #{order._id.slice(-8).toUpperCase()}
                             </div>
                             <div style={{ fontSize: '13px', color: '#555' }}>
-                              {new Date(order.createdAt).toLocaleDateString('en-NG', {
+                              {new Date(order.createdAt).toLocaleDateString('en-CA', {
                                 year: 'numeric', month: 'long', day: 'numeric'
                               })}
                             </div>
@@ -277,7 +278,7 @@ const AccountPage = () => {
                             <div style={{
                               fontSize: '15px', fontWeight: '700', color: '#111'
                             }}>
-                              ₦{order.totalPrice.toLocaleString()}
+                              {formatCurrency(order.totalPrice)}
                             </div>
                           </div>
                         </div>
@@ -309,10 +310,10 @@ const AccountPage = () => {
                           fontSize: '12px',
                           color: order.isPaid ? '#2ecc71' : '#e74c3c'
                         }}>
-                          {order.isPaid ? '✓ Paid' : '✗ Not paid'}
-                          <span style={{ color: '#ddd', margin: '0 4px' }}>·</span>
+                          {order.isPaid ? 'Paid' : 'Not paid'}
+                          <span style={{ color: '#ddd', margin: '0 4px' }}>-</span>
                           <span style={{ color: order.isDelivered ? '#2ecc71' : '#888' }}>
-                            {order.isDelivered ? '✓ Delivered' : 'Not delivered'}
+                            {order.isDelivered ? 'Delivered' : 'Not delivered'}
                           </span>
                         </div>
                       </div>

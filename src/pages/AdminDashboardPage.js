@@ -1,12 +1,32 @@
-import { useState, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import Loader from '../components/Loader'
-import { useUser } from '../context/UserContext'
-import { getAdminStats, getAllUsers, getAllOrders, deleteUser } from '../api'
-import { FiUsers, FiShoppingBag, FiDollarSign, FiPackage, FiTrash2, FiEye } from 'react-icons/fi'
 import Message from '../components/Message'
+import { useUser } from '../context/UserContext'
+import {
+  deleteAdminProduct,
+  deleteUser,
+  getAdminProducts,
+  getAdminStats,
+  getAllOrders,
+  getAllUsers,
+  makeSeller,
+  updateProductStatus
+} from '../api'
+import {
+  FiCheckCircle,
+  FiClock,
+  FiDollarSign,
+  FiPackage,
+  FiShoppingBag,
+  FiTrash2,
+  FiUserPlus,
+  FiUsers,
+  FiXCircle
+} from 'react-icons/fi'
+import { formatCurrency } from '../utils/currency'
 
 const AdminDashboardPage = () => {
   const navigate = useNavigate()
@@ -14,46 +34,97 @@ const AdminDashboardPage = () => {
   const [stats, setStats] = useState(null)
   const [users, setUsers] = useState([])
   const [orders, setOrders] = useState([])
+  const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('overview')
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
-  useEffect(() => {
-    if (!user) { navigate('/login'); return }
-    if (!user.isAdmin) { navigate('/'); return }
-    fetchData()
-  }, [user])
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async (showLoader = true) => {
     try {
-      const [statsRes, usersRes, ordersRes] = await Promise.all([
+      if (showLoader) setLoading(true)
+      const [statsRes, usersRes, ordersRes, productsRes] = await Promise.all([
         getAdminStats(),
         getAllUsers(),
-        getAllOrders()
+        getAllOrders(),
+        getAdminProducts()
       ])
       setStats(statsRes.data)
       setUsers(usersRes.data)
       setOrders(ordersRes.data)
-    } catch (error) {
-      console.log(error)
+      setProducts(productsRes.data)
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to load admin data')
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/login')
+      return
+    }
+    if (!user.isAdmin) {
+      navigate('/')
+      return
+    }
+    fetchData()
+  }, [user, navigate, fetchData])
 
   const handleDeleteUser = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this user?')) return
+    if (!window.confirm('Delete this user?')) return
     try {
       await deleteUser(id)
       setSuccess('User deleted successfully')
-      setUsers(users.filter(u => u._id !== id))
+      setUsers(current => current.filter(u => u._id !== id))
+      fetchData(false)
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to delete user')
     }
   }
 
-  const statusColor = (status) => {
+  const handleMakeSeller = async (id) => {
+    try {
+      await makeSeller(id)
+      setSuccess('User is now a seller')
+      setUsers(current => current.map(u => (u._id === id ? { ...u, isSeller: true } : u)))
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to update seller role')
+    }
+  }
+
+  const handleProductStatus = async (id, approvalStatus) => {
+    let rejectionReason = ''
+    if (approvalStatus === 'rejected') {
+      const promptValue = window.prompt('Optional rejection note for the seller:', 'Please improve the product photo or details.')
+      if (promptValue === null) return
+      rejectionReason = promptValue
+    }
+
+    try {
+      const { data } = await updateProductStatus(id, { approvalStatus, rejectionReason })
+      setProducts(current => current.map(product => (product._id === id ? data : product)))
+      setSuccess(`Product ${approvalStatus}`)
+      fetchData(false)
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to update product status')
+    }
+  }
+
+  const handleDeleteProduct = async (id) => {
+    if (!window.confirm('Delete this product?')) return
+    try {
+      await deleteAdminProduct(id)
+      setProducts(current => current.filter(product => product._id !== id))
+      setSuccess('Product deleted successfully')
+      fetchData(false)
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to delete product')
+    }
+  }
+
+  const orderStatusColor = (status) => {
     if (status === 'Delivered') return '#2ecc71'
     if (status === 'Shipped') return '#3498db'
     if (status === 'Processing') return '#f39c12'
@@ -61,46 +132,39 @@ const AdminDashboardPage = () => {
     return '#888'
   }
 
-  const tabs = ['overview', 'orders', 'users']
+  const productStatusColor = (status) => {
+    if (status === 'approved') return '#2ecc71'
+    if (status === 'rejected') return '#e74c3c'
+    return '#f39c12'
+  }
+
+  const tabs = ['overview', 'products', 'orders', 'users']
+  const pendingProducts = products.filter(product => product.approvalStatus === 'pending')
 
   return (
-    <div style={{ background: '#fafaf9', minHeight: '100vh' }}>
+    <div className='glory-page'>
       <Navbar />
 
-      <div style={{ padding: '40px', maxWidth: '1200px', margin: '0 auto' }}>
-
-        {/* HEADER */}
-        <div style={{ marginBottom: '32px' }}>
-          <h1 style={{ fontSize: '28px', fontWeight: '700', color: '#111' }}>
-            Admin Dashboard
-          </h1>
-          <p style={{ fontSize: '13px', color: '#888', marginTop: '4px' }}>
-            Welcome back, {user?.name} — here's what's happening on Glory today.
-          </p>
+      <div className='glory-container glory-dashboard-container'>
+        <div className='glory-dashboard-header'>
+          <div>
+            <h1>Admin Dashboard</h1>
+            <p>Welcome back, {user?.name}. Review sellers, products and orders from one place.</p>
+          </div>
+          <div className='glory-dashboard-pill'>
+            {pendingProducts.length} pending product{pendingProducts.length === 1 ? '' : 's'}
+          </div>
         </div>
 
         {error && <Message type='error' text={error} />}
         {success && <Message type='success' text={success} />}
 
-        {/* TABS */}
-        <div style={{
-          display: 'flex', gap: '0',
-          borderBottom: '0.5px solid #eee',
-          marginBottom: '28px'
-        }}>
+        <div className='glory-dashboard-tabs'>
           {tabs.map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              style={{
-                padding: '12px 24px', border: 'none',
-                background: 'none', fontSize: '13px',
-                fontWeight: '600', cursor: 'pointer',
-                fontFamily: 'inherit', textTransform: 'capitalize',
-                color: activeTab === tab ? '#111' : '#888',
-                borderBottom: activeTab === tab ? '2px solid #111' : '2px solid transparent',
-                transition: 'all 0.2s'
-              }}
+              className={activeTab === tab ? 'active' : ''}
             >
               {tab}
             </button>
@@ -109,304 +173,62 @@ const AdminDashboardPage = () => {
 
         {loading ? <Loader /> : (
           <>
-            {/* OVERVIEW TAB */}
             {activeTab === 'overview' && (
-              <div>
-                {/* STATS CARDS */}
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(4, 1fr)',
-                  gap: '20px', marginBottom: '32px'
-                }}>
+              <>
+                <div className='glory-dashboard-stats'>
                   {[
-                    {
-                      label: 'Total Users',
-                      value: stats?.totalUsers || 0,
-                      icon: <FiUsers size={22} />,
-                      color: '#c97a9a',
-                      bg: '#fdf0f5'
-                    },
-                    {
-                      label: 'Total Products',
-                      value: stats?.totalProducts || 0,
-                      icon: <FiPackage size={22} />,
-                      color: '#3498db',
-                      bg: '#eaf4fd'
-                    },
-                    {
-                      label: 'Total Orders',
-                      value: stats?.totalOrders || 0,
-                      icon: <FiShoppingBag size={22} />,
-                      color: '#f39c12',
-                      bg: '#fef9e7'
-                    },
-                    {
-                      label: 'Total Revenue',
-                      value: `₦${(stats?.totalRevenue || 0).toLocaleString()}`,
-                      icon: <FiDollarSign size={22} />,
-                      color: '#2ecc71',
-                      bg: '#f0fdf4'
-                    },
-                  ].map((stat, i) => (
-                    <div key={i} style={{
-                      background: '#fff', borderRadius: '16px',
-                      padding: '24px', border: '0.5px solid #eee',
-                      display: 'flex', flexDirection: 'column', gap: '12px'
-                    }}>
-                      <div style={{
-                        width: '48px', height: '48px',
-                        borderRadius: '12px', background: stat.bg,
-                        display: 'flex', alignItems: 'center',
-                        justifyContent: 'center', color: stat.color
-                      }}>
-                        {stat.icon}
-                      </div>
-                      <div>
-                        <div style={{
-                          fontSize: '26px', fontWeight: '800', color: '#111'
-                        }}>
-                          {stat.value}
-                        </div>
-                        <div style={{ fontSize: '12px', color: '#888', marginTop: '2px' }}>
-                          {stat.label}
-                        </div>
-                      </div>
+                    { label: 'Total Users', value: stats?.totalUsers || 0, icon: <FiUsers size={22} />, color: '#b85f83', bg: '#f8e8ee' },
+                    { label: 'Products', value: stats?.totalProducts || 0, icon: <FiPackage size={22} />, color: '#416b5f', bg: '#eef5f2' },
+                    { label: 'Orders', value: stats?.totalOrders || 0, icon: <FiShoppingBag size={22} />, color: '#9a6a20', bg: '#fbf1dd' },
+                    { label: 'Revenue', value: formatCurrency(stats?.totalRevenue || 0), icon: <FiDollarSign size={22} />, color: '#2f7a52', bg: '#eef8f1' }
+                  ].map(stat => (
+                    <div key={stat.label} className='glory-dashboard-stat'>
+                      <div style={{ background: stat.bg, color: stat.color }}>{stat.icon}</div>
+                      <strong>{stat.value}</strong>
+                      <span>{stat.label}</span>
                     </div>
                   ))}
                 </div>
 
-                {/* RECENT ORDERS */}
-                <div style={{
-                  background: '#fff', borderRadius: '16px',
-                  border: '0.5px solid #eee', overflow: 'hidden',
-                  marginBottom: '24px'
-                }}>
-                  <div style={{
-                    padding: '20px 24px',
-                    borderBottom: '0.5px solid #eee',
-                    fontSize: '15px', fontWeight: '700', color: '#111'
-                  }}>
-                    Recent Orders
-                  </div>
-                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                    <thead>
-                      <tr style={{ background: '#fafaf9' }}>
-                        {['Order ID', 'Customer', 'Amount', 'Status', 'Date'].map(h => (
-                          <th key={h} style={{
-                            padding: '12px 20px', textAlign: 'left',
-                            fontSize: '11px', fontWeight: '600',
-                            color: '#888', letterSpacing: '0.06em',
-                            textTransform: 'uppercase'
-                          }}>
-                            {h}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {orders.slice(0, 5).map((order, i) => (
-                        <tr key={order._id} style={{ borderTop: '0.5px solid #eee' }}>
-                          <td style={{ padding: '14px 20px', fontSize: '13px', fontWeight: '500', color: '#111' }}>
-                            #{order._id.slice(-8).toUpperCase()}
-                          </td>
-                          <td style={{ padding: '14px 20px', fontSize: '13px', color: '#555' }}>
-                            {order.buyer?.name || 'N/A'}
-                          </td>
-                          <td style={{ padding: '14px 20px', fontSize: '13px', fontWeight: '600', color: '#111' }}>
-                            ₦{order.totalPrice.toLocaleString()}
-                          </td>
-                          <td style={{ padding: '14px 20px' }}>
-                            <span style={{
-                              background: `${statusColor(order.status)}15`,
-                              color: statusColor(order.status),
-                              padding: '4px 12px', borderRadius: '999px',
-                              fontSize: '11px', fontWeight: '600'
-                            }}>
-                              {order.status}
-                            </span>
-                          </td>
-                          <td style={{ padding: '14px 20px', fontSize: '12px', color: '#888' }}>
-                            {new Date(order.createdAt).toLocaleDateString('en-NG')}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div className='glory-dashboard-stats glory-dashboard-stats-secondary'>
+                  {[
+                    { label: 'Pending Review', value: stats?.pendingProducts || 0, icon: <FiClock size={18} />, color: '#f39c12' },
+                    { label: 'Approved Live', value: stats?.approvedProducts || 0, icon: <FiCheckCircle size={18} />, color: '#2ecc71' },
+                    { label: 'Rejected', value: stats?.rejectedProducts || 0, icon: <FiXCircle size={18} />, color: '#e74c3c' }
+                  ].map(stat => (
+                    <div key={stat.label} className='glory-dashboard-mini-stat'>
+                      <span style={{ color: stat.color }}>{stat.icon}</span>
+                      <strong>{stat.value}</strong>
+                      <small>{stat.label}</small>
+                    </div>
+                  ))}
                 </div>
-              </div>
+
+                <RecentOrdersTable orders={orders.slice(0, 5)} orderStatusColor={orderStatusColor} />
+              </>
             )}
 
-            {/* ORDERS TAB */}
+            {activeTab === 'products' && (
+              <ProductsTable
+                products={products}
+                productStatusColor={productStatusColor}
+                onApprove={(id) => handleProductStatus(id, 'approved')}
+                onReject={(id) => handleProductStatus(id, 'rejected')}
+                onDelete={handleDeleteProduct}
+              />
+            )}
+
             {activeTab === 'orders' && (
-              <div style={{
-                background: '#fff', borderRadius: '16px',
-                border: '0.5px solid #eee', overflow: 'hidden'
-              }}>
-                <div style={{
-                  padding: '20px 24px',
-                  borderBottom: '0.5px solid #eee',
-                  fontSize: '15px', fontWeight: '700', color: '#111'
-                }}>
-                  All Orders ({orders.length})
-                </div>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr style={{ background: '#fafaf9' }}>
-                      {['Order ID', 'Customer', 'Items', 'Amount', 'Payment', 'Status', 'Date'].map(h => (
-                        <th key={h} style={{
-                          padding: '12px 20px', textAlign: 'left',
-                          fontSize: '11px', fontWeight: '600',
-                          color: '#888', letterSpacing: '0.06em',
-                          textTransform: 'uppercase'
-                        }}>
-                          {h}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {orders.map((order) => (
-                      <tr key={order._id} style={{ borderTop: '0.5px solid #eee' }}>
-                        <td style={{ padding: '14px 20px', fontSize: '13px', fontWeight: '500', color: '#111' }}>
-                          #{order._id.slice(-8).toUpperCase()}
-                        </td>
-                        <td style={{ padding: '14px 20px', fontSize: '13px', color: '#555' }}>
-                          {order.buyer?.name || 'N/A'}
-                        </td>
-                        <td style={{ padding: '14px 20px', fontSize: '13px', color: '#555' }}>
-                          {order.orderItems.length} items
-                        </td>
-                        <td style={{ padding: '14px 20px', fontSize: '13px', fontWeight: '600', color: '#111' }}>
-                          ₦{order.totalPrice.toLocaleString()}
-                        </td>
-                        <td style={{ padding: '14px 20px' }}>
-                          <span style={{
-                            color: order.isPaid ? '#2ecc71' : '#e74c3c',
-                            fontSize: '12px', fontWeight: '600'
-                          }}>
-                            {order.isPaid ? '✓ Paid' : '✗ Unpaid'}
-                          </span>
-                        </td>
-                        <td style={{ padding: '14px 20px' }}>
-                          <span style={{
-                            background: `${statusColor(order.status)}15`,
-                            color: statusColor(order.status),
-                            padding: '4px 12px', borderRadius: '999px',
-                            fontSize: '11px', fontWeight: '600'
-                          }}>
-                            {order.status}
-                          </span>
-                        </td>
-                        <td style={{ padding: '14px 20px', fontSize: '12px', color: '#888' }}>
-                          {new Date(order.createdAt).toLocaleDateString('en-NG')}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <OrdersTable orders={orders} orderStatusColor={orderStatusColor} />
             )}
 
-            {/* USERS TAB */}
             {activeTab === 'users' && (
-              <div style={{
-                background: '#fff', borderRadius: '16px',
-                border: '0.5px solid #eee', overflow: 'hidden'
-              }}>
-                <div style={{
-                  padding: '20px 24px',
-                  borderBottom: '0.5px solid #eee',
-                  fontSize: '15px', fontWeight: '700', color: '#111'
-                }}>
-                  All Users ({users.length})
-                </div>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr style={{ background: '#fafaf9' }}>
-                      {['User', 'Email', 'Role', 'Joined', 'Actions'].map(h => (
-                        <th key={h} style={{
-                          padding: '12px 20px', textAlign: 'left',
-                          fontSize: '11px', fontWeight: '600',
-                          color: '#888', letterSpacing: '0.06em',
-                          textTransform: 'uppercase'
-                        }}>
-                          {h}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {users.map((u) => (
-                      <tr key={u._id} style={{ borderTop: '0.5px solid #eee' }}>
-                        <td style={{ padding: '14px 20px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <div style={{
-                              width: '36px', height: '36px',
-                              borderRadius: '50%', background: '#111',
-                              display: 'flex', alignItems: 'center',
-                              justifyContent: 'center', color: '#fff',
-                              fontSize: '13px', fontWeight: '700'
-                            }}>
-                              {u.name?.charAt(0).toUpperCase()}
-                            </div>
-                            <div style={{ fontSize: '13px', fontWeight: '500', color: '#111' }}>
-                              {u.name}
-                            </div>
-                          </div>
-                        </td>
-                        <td style={{ padding: '14px 20px', fontSize: '13px', color: '#555' }}>
-                          {u.email}
-                        </td>
-                        <td style={{ padding: '14px 20px' }}>
-                          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                            {u.isAdmin && (
-                              <span style={{
-                                background: '#eaf4fd', color: '#3498db',
-                                padding: '3px 10px', borderRadius: '999px',
-                                fontSize: '11px', fontWeight: '600'
-                              }}>Admin</span>
-                            )}
-                            {u.isSeller && (
-                              <span style={{
-                                background: '#fdf0f5', color: '#c97a9a',
-                                padding: '3px 10px', borderRadius: '999px',
-                                fontSize: '11px', fontWeight: '600'
-                              }}>Seller</span>
-                            )}
-                            {!u.isAdmin && !u.isSeller && (
-                              <span style={{
-                                background: '#f5f5f5', color: '#888',
-                                padding: '3px 10px', borderRadius: '999px',
-                                fontSize: '11px', fontWeight: '600'
-                              }}>Buyer</span>
-                            )}
-                          </div>
-                        </td>
-                        <td style={{ padding: '14px 20px', fontSize: '12px', color: '#888' }}>
-                          {new Date(u.createdAt).toLocaleDateString('en-NG')}
-                        </td>
-                        <td style={{ padding: '14px 20px' }}>
-                          {u._id !== user._id && (
-                            <button
-                              onClick={() => handleDeleteUser(u._id)}
-                              style={{
-                                background: 'none', border: 'none',
-                                cursor: 'pointer', color: '#ccc',
-                                display: 'flex', alignItems: 'center',
-                                transition: 'color 0.2s'
-                              }}
-                              onMouseEnter={e => e.currentTarget.style.color = '#e74c3c'}
-                              onMouseLeave={e => e.currentTarget.style.color = '#ccc'}
-                            >
-                              <FiTrash2 size={15} />
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <UsersTable
+                users={users}
+                currentUserId={user?._id}
+                onDelete={handleDeleteUser}
+                onMakeSeller={handleMakeSeller}
+              />
             )}
           </>
         )}
@@ -416,5 +238,168 @@ const AdminDashboardPage = () => {
     </div>
   )
 }
+
+const RecentOrdersTable = ({ orders, orderStatusColor }) => (
+  <section className='glory-dashboard-panel'>
+    <div className='glory-dashboard-panel-header'>Recent Orders</div>
+    <OrdersTable orders={orders} orderStatusColor={orderStatusColor} compact />
+  </section>
+)
+
+const OrdersTable = ({ orders, orderStatusColor, compact = false }) => (
+  <section className={compact ? '' : 'glory-dashboard-panel'}>
+    {!compact && <div className='glory-dashboard-panel-header'>All Orders ({orders.length})</div>}
+    <div className='glory-table-wrap'>
+      <table className='glory-dashboard-table'>
+        <thead>
+          <tr>
+            {['Order ID', 'Customer', 'Items', 'Amount', 'Payment', 'Status', 'Date'].map(header => (
+              <th key={header}>{header}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {orders.map(order => (
+            <tr key={order._id}>
+              <td>#{order._id.slice(-8).toUpperCase()}</td>
+              <td>{order.buyer?.name || 'N/A'}</td>
+              <td>{order.orderItems?.length || 0} items</td>
+              <td><strong>{formatCurrency(order.totalPrice)}</strong></td>
+              <td>
+                <span className={order.isPaid ? 'glory-status-paid' : 'glory-status-unpaid'}>
+                  {order.isPaid ? 'Paid' : 'Unpaid'}
+                </span>
+              </td>
+              <td>
+                <span
+                  className='glory-status-chip'
+                  style={{ color: orderStatusColor(order.status), background: `${orderStatusColor(order.status)}15` }}
+                >
+                  {order.status}
+                </span>
+              </td>
+              <td>{new Date(order.createdAt).toLocaleDateString('en-CA')}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </section>
+)
+
+const ProductsTable = ({ products, productStatusColor, onApprove, onReject, onDelete }) => (
+  <section className='glory-dashboard-panel'>
+    <div className='glory-dashboard-panel-header'>Product Review ({products.length})</div>
+    <div className='glory-table-wrap'>
+      <table className='glory-dashboard-table'>
+        <thead>
+          <tr>
+            {['Product', 'Seller', 'Price', 'Stock', 'Status', 'Actions'].map(header => (
+              <th key={header}>{header}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {products.map(product => (
+            <tr key={product._id}>
+              <td>
+                <div className='glory-dashboard-product-cell'>
+                  <img src={product.image} alt={product.name} />
+                  <div>
+                    <strong>{product.name}</strong>
+                    <span>{product.brand} - {product.category}</span>
+                  </div>
+                </div>
+              </td>
+              <td>{product.seller?.name || 'Admin'}</td>
+              <td><strong>{formatCurrency(product.price)}</strong></td>
+              <td>{product.countInStock}</td>
+              <td>
+                <span
+                  className='glory-status-chip'
+                  style={{
+                    color: productStatusColor(product.approvalStatus),
+                    background: `${productStatusColor(product.approvalStatus)}15`
+                  }}
+                >
+                  {product.approvalStatus || 'pending'}
+                </span>
+              </td>
+              <td>
+                <div className='glory-table-actions'>
+                  {product.approvalStatus !== 'approved' && (
+                    <button onClick={() => onApprove(product._id)} className='success' aria-label={`Approve ${product.name}`}>
+                      <FiCheckCircle size={15} />
+                    </button>
+                  )}
+                  {product.approvalStatus !== 'rejected' && (
+                    <button onClick={() => onReject(product._id)} className='warning' aria-label={`Reject ${product.name}`}>
+                      <FiXCircle size={15} />
+                    </button>
+                  )}
+                  <button onClick={() => onDelete(product._id)} className='danger' aria-label={`Delete ${product.name}`}>
+                    <FiTrash2 size={15} />
+                  </button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </section>
+)
+
+const UsersTable = ({ users, currentUserId, onDelete, onMakeSeller }) => (
+  <section className='glory-dashboard-panel'>
+    <div className='glory-dashboard-panel-header'>All Users ({users.length})</div>
+    <div className='glory-table-wrap'>
+      <table className='glory-dashboard-table'>
+        <thead>
+          <tr>
+            {['User', 'Email', 'Role', 'Joined', 'Actions'].map(header => (
+              <th key={header}>{header}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {users.map(account => (
+            <tr key={account._id}>
+              <td>
+                <div className='glory-dashboard-user-cell'>
+                  <span>{account.name?.charAt(0).toUpperCase()}</span>
+                  <strong>{account.name}</strong>
+                </div>
+              </td>
+              <td>{account.email}</td>
+              <td>
+                <div className='glory-role-list'>
+                  {account.isAdmin && <span className='admin'>Admin</span>}
+                  {account.isSeller && <span className='seller'>Seller</span>}
+                  {!account.isAdmin && !account.isSeller && <span>Buyer</span>}
+                </div>
+              </td>
+              <td>{new Date(account.createdAt).toLocaleDateString('en-CA')}</td>
+              <td>
+                {account._id !== currentUserId && (
+                  <div className='glory-table-actions'>
+                    {!account.isSeller && (
+                      <button onClick={() => onMakeSeller(account._id)} className='success' aria-label={`Make ${account.name} a seller`}>
+                        <FiUserPlus size={15} />
+                      </button>
+                    )}
+                    <button onClick={() => onDelete(account._id)} className='danger' aria-label={`Delete ${account.name}`}>
+                      <FiTrash2 size={15} />
+                    </button>
+                  </div>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </section>
+)
 
 export default AdminDashboardPage

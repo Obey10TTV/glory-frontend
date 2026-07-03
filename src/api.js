@@ -38,6 +38,7 @@ export const loginUser = (data) => API.post('/users/login', data)
 
 // PRODUCTS
 export const getProducts = () => API.get('/products')
+export const getMySellerProducts = () => API.get('/products/mine')
 export const getProduct = (id) => API.get(`/products/${id}`)
 export const createProduct = (data) => API.post('/products', data)
 export const updateProduct = (id, data) => API.put(`/products/${id}`, data)
@@ -64,4 +65,8 @@ export const verifyPayment = (reference) => API.get(`/paystack/verify/${referenc
 export const getAdminStats = () => API.get('/admin/stats')
 export const getAllUsers = () => API.get('/admin/users')
 export const getAllOrders = () => API.get('/admin/orders')
+export const getAdminProducts = () => API.get('/admin/products')
+export const updateProductStatus = (id, data) => API.put(`/admin/products/${id}/status`, data)
 export const deleteUser = (id) => API.delete(`/admin/users/${id}`)
+export const deleteAdminProduct = (id) => API.delete(`/admin/products/${id}`)
+export const makeSeller = (id) => API.put(`/admin/users/${id}/makeseller`)
