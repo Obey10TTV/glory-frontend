@@ -1,11 +1,15 @@
 import axios from 'axios'
 
 const productionApiUrl = 'https://glory-store-production.up.railway.app/api'
-const localApiUrl = 'http://localhost:5000/api'
+const localHost = typeof window !== 'undefined' && window.location.hostname === '127.0.0.1'
+  ? '127.0.0.1'
+  : 'localhost'
+const localApiUrl = `http://${localHost}:5000/api`
+const configuredApiUrl = import.meta.env.VITE_API_URL
 
 const API = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || (
-    process.env.NODE_ENV === 'production' ? productionApiUrl : localApiUrl
+  baseURL: configuredApiUrl || (
+    import.meta.env.PROD ? productionApiUrl : localApiUrl
   )
 })
 
@@ -35,6 +39,13 @@ API.interceptors.response.use(
 // USERS
 export const registerUser = (data) => API.post('/users/register', data)
 export const loginUser = (data) => API.post('/users/login', data)
+export const verifyEmailOtp = (data) => API.post('/users/verify-email', data)
+export const resendVerificationOtp = (data) => API.post('/users/resend-verification', data)
+export const verifyLoginTwoFactor = (data) => API.post('/users/2fa/verify-login', data)
+export const startTwoFactorEnable = () => API.post('/users/2fa/enable/start')
+export const confirmTwoFactorEnable = (data) => API.post('/users/2fa/enable/confirm', data)
+export const startTwoFactorDisable = () => API.post('/users/2fa/disable/start')
+export const confirmTwoFactorDisable = (data) => API.post('/users/2fa/disable/confirm', data)
 export const getUserProfile = () => API.get('/users/profile')
 export const updateSellerProfile = (data) => API.put('/users/seller-profile', data)
 

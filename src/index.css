@@ -2151,6 +2151,51 @@ select:focus-visible,
   }
 }
 
+.glory-account-page {
+  background: #fafaf9;
+  min-height: 100vh;
+}
+
+.glory-account-container {
+  margin: 0 auto;
+  max-width: 1000px;
+  padding: 40px;
+}
+
+.glory-account-layout {
+  align-items: start;
+  display: grid;
+  gap: 28px;
+  grid-template-columns: 240px minmax(0, 1fr);
+}
+
+.glory-account-sidebar {
+  background: #fff;
+  border: 0.5px solid #eee;
+  border-radius: 16px;
+  overflow: hidden;
+  position: sticky;
+  top: 80px;
+}
+
+.glory-account-main {
+  min-width: 0;
+}
+
+.glory-account-order-header {
+  align-items: flex-start;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.glory-security-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 @media (max-width: 1024px) {
   :root {
     --glory-container: 920px;
@@ -2273,6 +2318,22 @@ select:focus-visible,
     margin: 0 auto;
     max-width: 480px;
   }
+
+  .glory-account-container {
+    padding: 32px 20px;
+  }
+
+  .glory-account-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .glory-account-sidebar {
+    position: static;
+  }
+
+  .glory-security-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 720px) {
@@ -2319,6 +2380,14 @@ select:focus-visible,
 
   .glory-profile-actions > button {
     width: 100%;
+  }
+
+  .glory-account-order-header {
+    flex-direction: column;
+  }
+
+  .glory-account-order-header > div:last-child {
+    align-items: flex-start !important;
   }
 
   .glory-dashboard-table {
@@ -2497,22 +2566,35 @@ select:focus-visible,
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 
+  .glory-category-grid-rich {
+    grid-template-columns: 1fr !important;
+  }
+
   .glory-category-card {
     min-height: 184px;
     aspect-ratio: 1 / 1.25 !important;
   }
 
   .glory-category-card-rich {
-    min-height: 300px !important;
+    min-height: 320px !important;
   }
 
   .glory-category-featured {
     grid-column: auto;
-    min-height: 300px !important;
+    min-height: 320px !important;
+  }
+
+  .glory-category-content {
+    padding: 22px;
+  }
+
+  .glory-category-name {
+    font-size: 38px;
   }
 
   .glory-category-copy {
     font-size: 13px;
+    max-width: 100%;
   }
 
   .glory-arrivals-layout {
@@ -2721,6 +2803,15 @@ select:focus-visible,
   .glory-category-featured,
   .glory-routine-card {
     min-height: 280px !important;
+  }
+
+  .glory-category-name {
+    font-size: 34px;
+  }
+
+  .glory-account-container {
+    padding-left: 16px;
+    padding-right: 16px;
   }
 }
 
