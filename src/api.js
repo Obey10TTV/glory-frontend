@@ -5,12 +5,14 @@ const localHost = typeof window !== 'undefined' && window.location.hostname === 
   ? '127.0.0.1'
   : 'localhost'
 const localApiUrl = `http://${localHost}:5000/api`
-const configuredApiUrl = import.meta.env.VITE_API_URL
+const normalizeApiUrl = (url) => (url || '').trim().replace(/\/$/, '')
+
+const configuredApiUrl = normalizeApiUrl(import.meta.env.VITE_API_URL)
+const useLocalApi = import.meta.env.VITE_USE_LOCAL_API === 'true'
 
 const API = axios.create({
-  baseURL: configuredApiUrl || (
-    import.meta.env.PROD ? productionApiUrl : localApiUrl
-  )
+  baseURL: configuredApiUrl || (useLocalApi ? localApiUrl : productionApiUrl),
+  timeout: 20000,
 })
 
 // Automatically add token to every request if user is logged in

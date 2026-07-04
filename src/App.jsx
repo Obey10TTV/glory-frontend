@@ -18,6 +18,7 @@ import AdminDashboardPage from './pages/AdminDashboardPage'
 import AboutPage from './pages/AboutPage'
 import InfoPage from './pages/InfoPage'
 import ChatBot from './components/ChatBot'
+import CookieConsent from './components/CookieConsent'
 import ScrollToTop from './components/ScrollToTop'
 import { useUser } from './context/UserContext'
 import { infoPageRoutes } from './data/infoPages'
@@ -45,6 +46,7 @@ function App() {
         ))}
       </Routes>
       {user && <ChatBot />}
+      <CookieConsent />
     </Router>
   )
 }

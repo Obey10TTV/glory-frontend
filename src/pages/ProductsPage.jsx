@@ -13,6 +13,7 @@ const ProductsPage = () => {
 
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
+  const [catalogError, setCatalogError] = useState('')
   const [selectedCategory, setSelectedCategory] = useState(categoryParam)
   const [sortBy, setSortBy] = useState('newest')
   const [priceRange, setPriceRange] = useState('all')
@@ -36,8 +37,10 @@ const ProductsPage = () => {
       try {
         const { data } = await getProducts()
         setProducts(Array.isArray(data) ? data : [])
+        setCatalogError('')
       } catch (error) {
         console.log(error)
+        setCatalogError('We could not load the live product catalog. Please refresh or try again shortly.')
       } finally {
         setLoading(false)
       }
@@ -231,7 +234,12 @@ const ProductsPage = () => {
             </div>
           </div>
 
-          {loading ? <Loader /> : filteredProducts.length === 0 ? (
+          {loading ? <Loader /> : catalogError ? (
+            <div className='glory-catalog-alert'>
+              <strong>Catalog connection issue</strong>
+              <span>{catalogError}</span>
+            </div>
+          ) : filteredProducts.length === 0 ? (
             <div style={{
               textAlign: 'center', padding: '80px 0',
               color: '#888', fontSize: '14px'

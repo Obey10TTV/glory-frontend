@@ -7,6 +7,7 @@ import Loader from '../components/Loader'
 import { getProducts } from '../api'
 import {
   FiArrowRight,
+  FiAward,
   FiCheckCircle,
   FiHeart,
   FiRefreshCw,
@@ -116,18 +117,40 @@ const concernTiles = [
   { label: 'Warm fragrance', category: 'Fragrance', color: '#efe1cb' },
 ]
 
+const categoryOrder = [
+  'Skincare',
+  'Makeup',
+  'Haircare',
+  'Nails',
+  'Lashes',
+  'Fragrance',
+  'Body Care',
+  'Body Liquid',
+  'Scented Candles',
+  'Tools & Accessories',
+]
+
+const getProductTime = (product) => {
+  const time = new Date(product.createdAt || product.updatedAt || 0).getTime()
+  return Number.isNaN(time) ? 0 : time
+}
+
 const HomePage = () => {
   const navigate = useNavigate()
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
+  const [catalogError, setCatalogError] = useState('')
+  const [arrivalCategory, setArrivalCategory] = useState('All')
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const { data } = await getProducts()
         setProducts(Array.isArray(data) ? data : [])
+        setCatalogError('')
       } catch (error) {
         console.log(error)
+        setCatalogError('We could not reach the live catalog. Please try again in a moment.')
       } finally {
         setLoading(false)
       }
@@ -139,8 +162,36 @@ const HomePage = () => {
     navigate(`/products?category=${encodeURIComponent(category)}`)
   }
 
-  const latestProducts = products.slice(0, 4)
-  const bestsellerProducts = products.slice(0).reverse().slice(0, 4)
+  const sortedProducts = products
+    .slice()
+    .sort((a, b) => getProductTime(b) - getProductTime(a))
+
+  const categoryCounts = sortedProducts.reduce((counts, product) => {
+    if (!product.category) return counts
+    counts[product.category] = (counts[product.category] || 0) + 1
+    return counts
+  }, {})
+
+  const arrivalCategories = [
+    'All',
+    ...categoryOrder.filter((category) => categoryCounts[category]),
+    ...Object.keys(categoryCounts).filter((category) => !categoryOrder.includes(category)),
+  ]
+
+  const latestProducts = sortedProducts
+    .filter((product) => arrivalCategory === 'All' || product.category === arrivalCategory)
+    .slice(0, 4)
+
+  const bestsellerProducts = sortedProducts
+    .slice()
+    .sort((a, b) => {
+      const ratingScore = (b.rating || 0) - (a.rating || 0)
+      if (ratingScore !== 0) return ratingScore
+      const reviewScore = (b.numReviews || 0) - (a.numReviews || 0)
+      if (reviewScore !== 0) return reviewScore
+      return getProductTime(b) - getProductTime(a)
+    })
+    .slice(0, 4)
 
   return (
     <div className='glory-page glory-home-page'>
@@ -173,6 +224,11 @@ const HomePage = () => {
               <FiArrowRight size={17} />
             </button>
           </div>
+          <div className='glory-hero-assurance' aria-label='Glory marketplace assurances'>
+            <span><FiShield size={15} /> Secure checkout</span>
+            <span><FiAward size={15} /> Seller review</span>
+            <span><FiTruck size={15} /> Canada-wide delivery</span>
+          </div>
         </div>
       </section>
 
@@ -193,8 +249,8 @@ const HomePage = () => {
         <div className='glory-section-inner'>
           <div className='glory-home-heading'>
             <span className='glory-eyebrow'>Shop by category</span>
-            <h2>Beauty departments that feel real.</h2>
-            <p>Every category has its own visual mood, clear link, and enough context to help shoppers move with intention.</p>
+            <h2>Beauty departments curated with intention.</h2>
+            <p>Explore clear, visual departments for skincare, makeup, haircare and finishers, built to feel editorial, useful and easy to trust.</p>
           </div>
 
           <div className='glory-category-grid glory-category-grid-rich'>
@@ -228,6 +284,7 @@ const HomePage = () => {
             <div>
               <span className='glory-eyebrow'>Just dropped</span>
               <h2 className='glory-section-title'>New in</h2>
+              <p className='glory-section-subtitle'>Newest approved products from the live Glory catalog, organized by department as sellers add inventory.</p>
             </div>
             <button className='glory-text-link' onClick={() => navigate('/products')}>
               View all
@@ -238,8 +295,23 @@ const HomePage = () => {
           <div className='glory-arrivals-layout'>
             <div className='glory-arrivals-feature'>
               <span className='glory-arrivals-label'>Fresh edit</span>
-              <h3>Curated arrivals for the week.</h3>
-              <p>Feature the newest beauty drops, seller launches and seasonal routines without leaving the homepage feeling empty.</p>
+              <h3>Live arrivals, sorted by category.</h3>
+              <p>When approved products enter the database, Glory surfaces the newest drops here and lets shoppers jump into the department they want.</p>
+              {arrivalCategories.length > 1 && (
+                <div className='glory-arrival-filter' aria-label='Filter new arrivals by category'>
+                  {arrivalCategories.map((category) => (
+                    <button
+                      key={category}
+                      type='button'
+                      className={arrivalCategory === category ? 'is-active' : ''}
+                      onClick={() => setArrivalCategory(category)}
+                    >
+                      {category === 'All' ? 'All' : category}
+                      {category !== 'All' && <span>{categoryCounts[category]}</span>}
+                    </button>
+                  ))}
+                </div>
+              )}
               <button onClick={() => navigate('/products')}>
                 Explore the edit
                 <FiArrowRight size={17} />
@@ -248,6 +320,11 @@ const HomePage = () => {
 
             {loading ? (
               <Loader />
+            ) : catalogError ? (
+              <div className='glory-catalog-alert'>
+                <strong>Catalog connection issue</strong>
+                <span>{catalogError}</span>
+              </div>
             ) : latestProducts.length > 0 ? (
               <div className='glory-product-grid'>
                 {latestProducts.map((product) => (
@@ -284,7 +361,7 @@ const HomePage = () => {
           <div className='glory-home-heading glory-routine-heading'>
             <span className='glory-eyebrow'>Routine builder</span>
             <h2>Build the whole beauty moment.</h2>
-            <p>Stack the homepage like a real store: discovery, routine, bestsellers, selling, and trust all working together.</p>
+            <p>Move from prep to finish with guided product paths that make the store feel considered, not random.</p>
             <button className='glory-outline-action' onClick={() => navigate('/products')}>
               Shop all products
               <FiArrowRight size={17} />
@@ -331,9 +408,9 @@ const HomePage = () => {
       <section className='glory-sell-banner'>
         <div className='glory-sell-banner-inner'>
           <span className='glory-eyebrow'>For independent beauty brands</span>
-          <h2>Stop selling in DMs.</h2>
+          <h2>Bring your beauty brand into a trusted storefront.</h2>
           <p>
-            Turn your Instagram beauty brand into a real store. Join sellers across Canada building their business on Glory.
+            Sellers can submit products for review, manage inventory and build a cleaner customer experience than scattered messages and manual orders.
           </p>
           <button onClick={() => navigate('/register')}>
             Start selling today
