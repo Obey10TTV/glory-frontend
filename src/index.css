@@ -1191,7 +1191,9 @@ select:focus-visible,
 
 .glory-category-card-rich {
   position: relative;
+  justify-self: stretch;
   min-height: 340px !important;
+  width: 100%;
   aspect-ratio: auto !important;
   overflow: hidden;
   border: 0;
@@ -2317,6 +2319,21 @@ select:focus-visible,
   .glory-about-founder-media {
     margin: 0 auto;
     max-width: 480px;
+  }
+
+  .glory-category-grid-rich {
+    grid-template-columns: 1fr !important;
+  }
+
+  .glory-category-card-rich,
+  .glory-category-featured {
+    grid-column: 1 / -1 !important;
+    height: clamp(360px, 66vw, 460px) !important;
+    min-height: 0 !important;
+  }
+
+  .glory-category-card-rich {
+    aspect-ratio: auto !important;
   }
 
   .glory-account-container {
