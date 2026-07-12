@@ -7,7 +7,6 @@ import Loader from '../components/Loader'
 import { getProducts } from '../api'
 import {
   FiArrowRight,
-  FiAward,
   FiCheckCircle,
   FiHeart,
   FiRefreshCw,
@@ -22,37 +21,43 @@ const categoryTiles = [
     name: 'Skincare',
     kicker: 'Barrier, glow, SPF',
     copy: 'Cleansers, serums, masks and daily essentials for every routine.',
-    image: 'https://images.pexels.com/photos/3762879/pexels-photo-3762879.jpeg?auto=compress&cs=tinysrgb&w=900',
+    image: 'https://images.pexels.com/photos/6724440/pexels-photo-6724440.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    imagePosition: 'center 38%',
   },
   {
     name: 'Makeup',
     kicker: 'Complexion to lip',
     copy: 'Pigment, finish and shade range for soft glam or full beat.',
-    image: 'https://images.pexels.com/photos/2113855/pexels-photo-2113855.jpeg?auto=compress&cs=tinysrgb&w=900',
+    image: 'https://images.pexels.com/photos/2688991/pexels-photo-2688991.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    imagePosition: 'center 48%',
   },
   {
     name: 'Haircare',
     kicker: 'Wash day ready',
     copy: 'Moisture, scalp care, styling and protective-hair favorites.',
-    image: 'https://images.pexels.com/photos/3065209/pexels-photo-3065209.jpeg?auto=compress&cs=tinysrgb&w=900',
+    image: 'https://images.pexels.com/photos/3993449/pexels-photo-3993449.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    imagePosition: 'center 42%',
   },
   {
     name: 'Nails',
     kicker: 'Salon finish',
     copy: 'Polish, press-ons, nail care and sets made for clean detail.',
-    image: 'https://images.pexels.com/photos/3997391/pexels-photo-3997391.jpeg?auto=compress&cs=tinysrgb&w=900',
+    image: 'https://images.pexels.com/photos/3997391/pexels-photo-3997391.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    imagePosition: 'center 48%',
   },
   {
     name: 'Lashes',
     kicker: 'Soft to dramatic',
     copy: 'Everyday clusters, strips and lash tools with a lifted finish.',
-    image: 'https://images.pexels.com/photos/3373738/pexels-photo-3373738.jpeg?auto=compress&cs=tinysrgb&w=900',
+    image: 'https://images.pexels.com/photos/3373738/pexels-photo-3373738.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    imagePosition: 'center 34%',
   },
   {
     name: 'Fragrance',
     kicker: 'Signature scents',
     copy: 'Perfume oils, sprays and body mists that linger beautifully.',
-    image: 'https://images.pexels.com/photos/965989/pexels-photo-965989.jpeg?auto=compress&cs=tinysrgb&w=900',
+    image: 'https://images.pexels.com/photos/965989/pexels-photo-965989.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    imagePosition: 'center 50%',
   },
 ]
 
@@ -224,11 +229,6 @@ const HomePage = () => {
               <FiArrowRight size={17} />
             </button>
           </div>
-          <div className='glory-hero-assurance' aria-label='Glory marketplace assurances'>
-            <span><FiShield size={15} /> Secure checkout</span>
-            <span><FiAward size={15} /> Seller review</span>
-            <span><FiTruck size={15} /> Canada-wide delivery</span>
-          </div>
         </div>
       </section>
 
@@ -261,7 +261,12 @@ const HomePage = () => {
                 onClick={() => shopCategory(category.name)}
                 aria-label={`Shop ${category.name}`}
               >
-                <img src={category.image} alt={`${category.name} beauty products`} loading='lazy' />
+                <img
+                  src={category.image}
+                  alt={`${category.name} beauty products`}
+                  loading='lazy'
+                  style={{ objectPosition: category.imagePosition }}
+                />
                 <span className='glory-category-gradient' />
                 <span className='glory-category-content'>
                   <span className='glory-category-kicker'>{category.kicker}</span>

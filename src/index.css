@@ -1079,7 +1079,7 @@ select:focus-visible,
 .glory-home-page .glory-hero-copy {
   color: rgba(255, 255, 255, 0.82);
   line-height: 1.7;
-  margin-bottom: 30px;
+  margin-bottom: clamp(38px, 5vw, 58px);
 }
 
 .glory-hero-primary,
@@ -1122,28 +1122,6 @@ select:focus-visible,
 .glory-brand-strip button:hover,
 .glory-outline-action:hover {
   transform: translateY(-1px);
-}
-
-.glory-hero-assurance {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 22px;
-}
-
-.glory-hero-assurance span {
-  min-height: 38px;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.82);
-  padding: 0 13px;
-  font-size: 12px;
-  font-weight: 800;
-  backdrop-filter: blur(10px);
 }
 
 .glory-marquee {
@@ -1213,12 +1191,14 @@ select:focus-visible,
 
 .glory-category-card-rich {
   position: relative;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
   justify-self: stretch;
-  min-height: 340px !important;
+  min-height: 390px !important;
   width: 100%;
   aspect-ratio: auto !important;
   overflow: hidden;
-  border: 0;
+  border: 1px solid rgba(17, 17, 17, 0.08);
   text-align: left;
   color: #fff;
   padding: 0;
@@ -1246,7 +1226,7 @@ select:focus-visible,
 
 .glory-category-featured {
   grid-column: span 2;
-  min-height: 420px !important;
+  min-height: 480px !important;
 }
 
 .glory-category-card-rich img,
@@ -1259,29 +1239,33 @@ select:focus-visible,
   transition: transform 360ms ease;
 }
 
-.glory-category-card-rich img,
-.glory-category-gradient,
-.glory-category-content {
-  position: absolute;
-  inset: 0;
+.glory-category-card-rich img {
+  position: static;
+  grid-row: 1;
+  min-height: 0;
+  object-position: center;
 }
 
 .glory-category-gradient {
-  background: linear-gradient(180deg, rgba(17, 17, 17, 0.08) 0%, rgba(17, 17, 17, 0.32) 42%, rgba(17, 17, 17, 0.82) 100%);
-  z-index: 1;
+  display: none;
 }
 
 .glory-category-content {
-  z-index: 2;
+  position: relative;
+  grid-row: 2;
+  z-index: 1;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
+  justify-content: space-between;
   gap: 9px;
-  padding: clamp(18px, 3vw, 28px);
+  min-height: 162px;
+  background: linear-gradient(135deg, #1b1716 0%, #0f0d0c 100%);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding: clamp(18px, 3vw, 26px);
 }
 
 .glory-category-kicker {
-  color: rgba(255, 255, 255, 0.72);
+  color: rgba(255, 255, 255, 0.64);
   font-size: 12px;
   font-weight: 800;
   text-transform: uppercase;
@@ -1289,14 +1273,14 @@ select:focus-visible,
 
 .glory-category-name {
   font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(32px, 4vw, 48px);
+  font-size: clamp(32px, 4vw, 46px);
   font-weight: 700;
   line-height: 0.95;
 }
 
 .glory-category-copy {
   max-width: 360px;
-  color: rgba(255, 255, 255, 0.82);
+  color: rgba(255, 255, 255, 0.74);
   font-size: 14px;
   line-height: 1.55;
 }
@@ -1307,7 +1291,8 @@ select:focus-visible,
   align-items: center;
   gap: 8px;
   width: fit-content;
-  margin-top: 4px;
+  margin-top: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.42);
   color: #fff;
   font-size: 13px;
   font-weight: 800;
@@ -2876,15 +2861,6 @@ select:focus-visible,
   .glory-brand-strip button,
   .glory-text-link {
     width: 100%;
-  }
-
-  .glory-hero-assurance {
-    width: 100%;
-  }
-
-  .glory-hero-assurance span {
-    flex: 1 1 100%;
-    justify-content: center;
   }
 
   .glory-arrival-filter {
