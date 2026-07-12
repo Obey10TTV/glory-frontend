@@ -249,8 +249,8 @@ const HomePage = () => {
         <div className='glory-section-inner'>
           <div className='glory-home-heading'>
             <span className='glory-eyebrow'>Shop by category</span>
-            <h2>Beauty departments curated with intention.</h2>
-            <p>Explore clear, visual departments for skincare, makeup, haircare and finishers, built to feel editorial, useful and easy to trust.</p>
+            <h2>Shop the beauty edit.</h2>
+            <p>Explore polished departments for skincare, makeup, haircare and finishers, each curated to help shoppers move quickly and confidently.</p>
           </div>
 
           <div className='glory-category-grid glory-category-grid-rich'>
