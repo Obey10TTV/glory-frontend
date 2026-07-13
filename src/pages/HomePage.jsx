@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
@@ -10,7 +10,6 @@ import {
   FiCheckCircle,
   FiHeart,
   FiRefreshCw,
-  FiSearch,
   FiShield,
   FiShoppingBag,
   FiTruck,
@@ -61,67 +60,6 @@ const categoryTiles = [
   },
 ]
 
-const editorialArrivals = [
-  {
-    name: 'Barrier Repair Serum',
-    category: 'Skincare',
-    brand: 'GLORY Select',
-    price: 'From $28',
-    image: 'https://images.pexels.com/photos/5069609/pexels-photo-5069609.jpeg?auto=compress&cs=tinysrgb&w=900',
-  },
-  {
-    name: 'Soft Sculpt Lip Duo',
-    category: 'Makeup',
-    brand: 'New Season',
-    price: 'From $22',
-    image: 'https://images.pexels.com/photos/2688991/pexels-photo-2688991.jpeg?auto=compress&cs=tinysrgb&w=900',
-  },
-  {
-    name: 'Hydration Wash Day Kit',
-    category: 'Haircare',
-    brand: 'Texture Edit',
-    price: 'From $36',
-    image: 'https://images.pexels.com/photos/3993449/pexels-photo-3993449.jpeg?auto=compress&cs=tinysrgb&w=900',
-  },
-  {
-    name: 'Clean Girl Nail Set',
-    category: 'Nails',
-    brand: 'Studio Drop',
-    price: 'From $18',
-    image: 'https://images.pexels.com/photos/3997379/pexels-photo-3997379.jpeg?auto=compress&cs=tinysrgb&w=900',
-  },
-]
-
-const routineSteps = [
-  {
-    title: 'Prep the skin',
-    category: 'Skincare',
-    copy: 'Start with gentle cleansing, barrier support and daily moisture.',
-    image: 'https://images.pexels.com/photos/6724440/pexels-photo-6724440.jpeg?auto=compress&cs=tinysrgb&w=900',
-  },
-  {
-    title: 'Build the look',
-    category: 'Makeup',
-    copy: 'Layer complexion, lip color, lashes and detail without heaviness.',
-    image: 'https://images.pexels.com/photos/2253833/pexels-photo-2253833.jpeg?auto=compress&cs=tinysrgb&w=900',
-  },
-  {
-    title: 'Finish with scent',
-    category: 'Fragrance',
-    copy: 'Choose a soft mist, perfume oil or statement fragrance to close it.',
-    image: 'https://images.pexels.com/photos/4110337/pexels-photo-4110337.jpeg?auto=compress&cs=tinysrgb&w=900',
-  },
-]
-
-const concernTiles = [
-  { label: 'Hydration', category: 'Skincare', color: '#f7e5d2' },
-  { label: 'Glow makeup', category: 'Makeup', color: '#f7dce8' },
-  { label: 'Scalp care', category: 'Haircare', color: '#dde9df' },
-  { label: 'Press-on sets', category: 'Nails', color: '#e7def6' },
-  { label: 'Everyday lashes', category: 'Lashes', color: '#f3e1d6' },
-  { label: 'Warm fragrance', category: 'Fragrance', color: '#efe1cb' },
-]
-
 const categoryOrder = [
   'Skincare',
   'Makeup',
@@ -147,21 +85,23 @@ const HomePage = () => {
   const [catalogError, setCatalogError] = useState('')
   const [arrivalCategory, setArrivalCategory] = useState('All')
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const { data } = await getProducts()
-        setProducts(Array.isArray(data) ? data : [])
-        setCatalogError('')
-      } catch (error) {
-        console.log(error)
-        setCatalogError('We could not reach the live catalog. Please try again in a moment.')
-      } finally {
-        setLoading(false)
-      }
+  const loadProducts = useCallback(async () => {
+    setLoading(true)
+    try {
+      const { data } = await getProducts()
+      setProducts(Array.isArray(data) ? data : [])
+      setCatalogError('')
+    } catch (error) {
+      setProducts([])
+      setCatalogError('Live products are temporarily unavailable. The rest of Glory is still open to explore.')
+    } finally {
+      setLoading(false)
     }
-    fetchProducts()
   }, [])
+
+  useEffect(() => {
+    loadProducts()
+  }, [loadProducts])
 
   const shopCategory = (category) => {
     navigate(`/products?category=${encodeURIComponent(category)}`)
@@ -236,10 +176,10 @@ const HomePage = () => {
         <div className='glory-marquee-track'>
           {[...Array(3)].map((_, index) => (
             <span key={index} className='glory-marquee-group'>
-              <span>Free shipping over $75</span>
-              <span>Authentic beauty products</span>
-              <span>Verified sellers</span>
-              <span>Card and crypto checkout</span>
+              <span>Beauty across every texture and tone</span>
+              <span>Independent beauty sellers</span>
+              <span>Curated departments</span>
+              <span>Made for beauty shoppers in Canada</span>
             </span>
           ))}
         </div>
@@ -250,7 +190,7 @@ const HomePage = () => {
           <div className='glory-home-heading'>
             <span className='glory-eyebrow'>Shop by category</span>
             <h2>Shop the beauty edit.</h2>
-            <p>Explore polished departments for skincare, makeup, haircare and finishers, each curated to help shoppers move quickly and confidently.</p>
+            <p>Find the department that fits your routine, from everyday essentials to the finishing details.</p>
           </div>
 
           <div className='glory-category-grid glory-category-grid-rich'>
@@ -289,7 +229,7 @@ const HomePage = () => {
             <div>
               <span className='glory-eyebrow'>Just dropped</span>
               <h2 className='glory-section-title'>New in</h2>
-              <p className='glory-section-subtitle'>Newest approved products from the live Glory catalog, organized by department as sellers add inventory.</p>
+              <p className='glory-section-subtitle'>The latest approved beauty, with quick filters to take you straight to your department.</p>
             </div>
             <button className='glory-text-link' onClick={() => navigate('/products')}>
               View all
@@ -297,130 +237,58 @@ const HomePage = () => {
             </button>
           </div>
 
-          <div className='glory-arrivals-layout'>
-            <div className='glory-arrivals-feature'>
-              <span className='glory-arrivals-label'>Fresh edit</span>
-              <h3>Live arrivals, sorted by category.</h3>
-              <p>When approved products enter the database, Glory surfaces the newest drops here and lets shoppers jump into the department they want.</p>
-              {arrivalCategories.length > 1 && (
-                <div className='glory-arrival-filter' aria-label='Filter new arrivals by category'>
-                  {arrivalCategories.map((category) => (
-                    <button
-                      key={category}
-                      type='button'
-                      className={arrivalCategory === category ? 'is-active' : ''}
-                      onClick={() => setArrivalCategory(category)}
-                    >
-                      {category === 'All' ? 'All' : category}
-                      {category !== 'All' && <span>{categoryCounts[category]}</span>}
-                    </button>
-                  ))}
-                </div>
-              )}
-              <button onClick={() => navigate('/products')}>
-                Explore the edit
-                <FiArrowRight size={17} />
-              </button>
-            </div>
-
-            {loading ? (
-              <Loader />
-            ) : catalogError ? (
-              <div className='glory-catalog-alert'>
-                <strong>Catalog connection issue</strong>
-                <span>{catalogError}</span>
-              </div>
-            ) : latestProducts.length > 0 ? (
-              <div className='glory-product-grid'>
-                {latestProducts.map((product) => (
-                  <ProductCard key={product._id} product={product} />
-                ))}
-              </div>
-            ) : (
-              <div className='glory-editorial-grid'>
-                {editorialArrivals.map((item) => (
-                  <button
-                    className='glory-editorial-card'
-                    key={item.name}
-                    onClick={() => shopCategory(item.category)}
-                  >
-                    <span className='glory-editorial-media'>
-                      <img src={item.image} alt={item.name} loading='lazy' />
-                    </span>
-                    <span className='glory-editorial-body'>
-                      <span>{item.brand}</span>
-                      <strong>{item.name}</strong>
-                      <small>{item.category}</small>
-                      <b>{item.price}</b>
-                    </span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-
-      <section className='glory-section glory-routine-section'>
-        <div className='glory-section-inner glory-routine-layout'>
-          <div className='glory-home-heading glory-routine-heading'>
-            <span className='glory-eyebrow'>Routine builder</span>
-            <h2>Build the whole beauty moment.</h2>
-            <p>Move from prep to finish with guided product paths that make the store feel considered, not random.</p>
-            <button className='glory-outline-action' onClick={() => navigate('/products')}>
-              Shop all products
-              <FiArrowRight size={17} />
-            </button>
-          </div>
-          <div className='glory-routine-grid'>
-            {routineSteps.map((step) => (
-              <button className='glory-routine-card' key={step.title} onClick={() => shopCategory(step.category)}>
-                <img src={step.image} alt={step.title} loading='lazy' />
-                <span>
-                  <small>{step.category}</small>
-                  <strong>{step.title}</strong>
-                  <em>{step.copy}</em>
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className='glory-section-tight'>
-        <div className='glory-section-inner'>
-          <div className='glory-concern-panel'>
-            <div>
-              <span className='glory-eyebrow'>Shop by need</span>
-              <h2>Fast paths for shoppers who know what they want.</h2>
-            </div>
-            <div className='glory-concern-grid'>
-              {concernTiles.map((item) => (
+          {arrivalCategories.length > 1 && (
+            <div className='glory-arrival-filter glory-arrival-filter-light' aria-label='Filter new arrivals by category'>
+              {arrivalCategories.map((category) => (
                 <button
-                  key={item.label}
-                  style={{ background: item.color }}
-                  onClick={() => shopCategory(item.category)}
+                  key={category}
+                  type='button'
+                  className={arrivalCategory === category ? 'is-active' : ''}
+                  onClick={() => setArrivalCategory(category)}
                 >
-                  <FiSearch size={17} />
-                  {item.label}
+                  {category}
+                  {category !== 'All' && <span>{categoryCounts[category]}</span>}
                 </button>
               ))}
             </div>
-          </div>
-        </div>
-      </section>
+          )}
 
-      <section className='glory-sell-banner'>
-        <div className='glory-sell-banner-inner'>
-          <span className='glory-eyebrow'>For independent beauty brands</span>
-          <h2>Bring your beauty brand into a trusted storefront.</h2>
-          <p>
-            Sellers can submit products for review, manage inventory and build a cleaner customer experience than scattered messages and manual orders.
-          </p>
-          <button onClick={() => navigate('/register')}>
-            Start selling today
-            <FiArrowRight size={17} />
-          </button>
+          {loading ? (
+            <Loader />
+          ) : catalogError ? (
+            <div className='glory-catalog-alert glory-catalog-alert-wide'>
+              <FiRefreshCw size={22} aria-hidden='true' />
+              <strong>The live edit is taking a short pause.</strong>
+              <span>{catalogError}</span>
+              <button type='button' onClick={loadProducts}>Try again</button>
+            </div>
+          ) : latestProducts.length > 0 ? (
+            <div className='glory-product-grid'>
+              {latestProducts.map((product) => (
+                <ProductCard key={product._id} product={product} />
+              ))}
+            </div>
+          ) : (
+            <div className='glory-editorial-grid'>
+              {categoryTiles.slice(0, 4).map((item) => (
+                <button
+                  className='glory-editorial-card glory-curated-category-card'
+                  key={item.name}
+                  onClick={() => shopCategory(item.name)}
+                >
+                  <span className='glory-editorial-media'>
+                    <img src={item.image} alt={`${item.name} category`} loading='lazy' />
+                  </span>
+                  <span className='glory-editorial-body'>
+                    <span>Explore the edit</span>
+                    <strong>{item.name}</strong>
+                    <small>{item.kicker}</small>
+                    <b>Shop category <FiArrowRight size={14} /></b>
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -439,6 +307,15 @@ const HomePage = () => {
 
           {loading ? (
             <Loader />
+          ) : catalogError ? (
+            <div className='glory-brand-strip'>
+              <div>
+                <FiRefreshCw size={22} />
+                <strong>Bestsellers will return with the live catalogue.</strong>
+                <span>Explore Glory's beauty departments while the product service is paused.</span>
+              </div>
+              <button type='button' onClick={loadProducts}>Try again</button>
+            </div>
           ) : bestsellerProducts.length > 0 ? (
             <div className='glory-product-grid'>
               {bestsellerProducts.map((product) => (
@@ -461,12 +338,26 @@ const HomePage = () => {
         </div>
       </section>
 
+      <section className='glory-sell-banner'>
+        <div className='glory-sell-banner-inner'>
+          <span className='glory-eyebrow'>For independent beauty brands</span>
+          <h2>Build your storefront on Glory.</h2>
+          <p>
+            Create a seller account, complete verification and submit products for review before they reach shoppers.
+          </p>
+          <button onClick={() => navigate('/register')}>
+            Apply to sell
+            <FiArrowRight size={17} />
+          </button>
+        </div>
+      </section>
+
       <section className='glory-trust-strip'>
         {[
-          { Icon: FiTruck, title: 'Fast shipping', sub: 'Across Canada' },
-          { Icon: FiShield, title: 'Secure payments', sub: 'Paystack and crypto' },
-          { Icon: FiCheckCircle, title: 'Authentic products', sub: 'Verified sellers only' },
-          { Icon: FiRefreshCw, title: 'Easy returns', sub: '30-day return policy' },
+          { Icon: FiCheckCircle, title: 'Reviewed listings', sub: 'Products are checked before going live' },
+          { Icon: FiShield, title: 'Secure accounts', sub: 'Email verification and optional 2FA' },
+          { Icon: FiTruck, title: 'Canada-first', sub: 'Built for beauty shoppers across Canada' },
+          { Icon: FiHeart, title: 'Beauty for more people', sub: 'Across shades, textures and traditions' },
         ].map((item) => (
           <div key={item.title} className='glory-trust-item'>
             <span>

@@ -7,8 +7,9 @@ import Message from '../components/Message'
 import { getProduct, addReview, getReviews } from '../api'
 import { useCart } from '../context/CartContext'
 import { useUser } from '../context/UserContext'
-import { FiShoppingBag, FiHeart, FiStar, FiTruck, FiShield, FiRefreshCw } from 'react-icons/fi'
+import { FiShoppingBag, FiHeart, FiStar, FiTruck, FiShield } from 'react-icons/fi'
 import { formatCurrency } from '../utils/currency'
+import { isWishlisted, toggleWishlist } from '../utils/wishlist'
 
 const ProductDetailPage = () => {
   const { id } = useParams()
@@ -20,7 +21,7 @@ const ProductDetailPage = () => {
   const [reviews, setReviews] = useState([])
   const [loading, setLoading] = useState(true)
   const [quantity, setQuantity] = useState(1)
-  const [wished, setWished] = useState(false)
+  const [wished, setWished] = useState(() => isWishlisted(id))
   const [added, setAdded] = useState(false)
   const [rating, setRating] = useState(5)
   const [comment, setComment] = useState('')
@@ -59,6 +60,10 @@ const ProductDetailPage = () => {
   const handleReview = async () => {
     if (!user) {
       navigate('/login')
+      return
+    }
+    if (comment.trim().length < 10) {
+      setReviewError('Write at least 10 characters before submitting your review.')
       return
     }
     setReviewLoading(true)
@@ -115,7 +120,7 @@ const ProductDetailPage = () => {
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             />
             <button
-              onClick={() => setWished(!wished)}
+              onClick={() => setWished(toggleWishlist(id))}
               style={{
                 position: 'absolute', top: '20px', right: '20px',
                 width: '44px', height: '44px',
@@ -175,10 +180,15 @@ const ProductDetailPage = () => {
               </div>
             </div>
 
-            <div style={{
-              fontSize: '32px', fontWeight: '700', color: '#111'
-            }}>
-              {formatCurrency(product.price)}
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', flexWrap: 'wrap' }}>
+              <strong style={{ fontSize: '32px', fontWeight: '700', color: '#111' }}>
+                {formatCurrency(product.price)}
+              </strong>
+              {product.compareAtPrice > product.price && (
+                <span style={{ fontSize: '16px', color: '#999', textDecoration: 'line-through' }}>
+                  {formatCurrency(product.compareAtPrice)}
+                </span>
+              )}
             </div>
 
             <div style={{
@@ -283,9 +293,14 @@ const ProductDetailPage = () => {
               border: '0.5px solid #eee'
             }}>
               {[
-                { icon: <FiTruck size={15} />, text: 'Free shipping on orders over $75' },
-                { icon: <FiShield size={15} />, text: '100% authentic products guaranteed' },
-                { icon: <FiRefreshCw size={15} />, text: 'Easy returns within 30 days' },
+                {
+                  icon: <FiShield size={15} />,
+                  text: product.seller?.sellerProfile?.verificationStatus === 'verified'
+                    ? `Verified seller${product.seller.sellerProfile.storeName ? `: ${product.seller.sellerProfile.storeName}` : ''}`
+                    : 'Seller details reviewed by Glory'
+                },
+                { icon: <FiShoppingBag size={15} />, text: 'Checkout totals are confirmed before payment' },
+                { icon: <FiTruck size={15} />, text: 'Delivery details are confirmed during checkout' },
               ].map((item, i) => (
                 <div key={i} style={{
                   display: 'flex', alignItems: 'center',
@@ -327,11 +342,29 @@ const ProductDetailPage = () => {
           </div>
 
           {activeTab === 'description' && (
-            <div style={{
-              fontSize: '14px', color: '#555',
-              lineHeight: '1.8', maxWidth: '680px'
-            }}>
-              {product.description}
+            <div className='glory-product-information'>
+              <section>
+                <h3>Product details</h3>
+                <p>{product.description}</p>
+                {(product.size || product.sku) && (
+                  <dl>
+                    {product.size && <><dt>Size</dt><dd>{product.size}</dd></>}
+                    {product.sku && <><dt>SKU</dt><dd>{product.sku}</dd></>}
+                  </dl>
+                )}
+              </section>
+              {product.ingredients && (
+                <section>
+                  <h3>Ingredients</h3>
+                  <p>{product.ingredients}</p>
+                </section>
+              )}
+              {product.howToUse && (
+                <section>
+                  <h3>How to use</h3>
+                  <p>{product.howToUse}</p>
+                </section>
+              )}
             </div>
           )}
 
@@ -345,9 +378,12 @@ const ProductDetailPage = () => {
               }}>
                 <div style={{
                   fontSize: '15px', fontWeight: '600',
-                  color: '#111', marginBottom: '16px'
+                  color: '#111', marginBottom: '5px'
                 }}>
                   Write a Review
+                </div>
+                <div style={{ fontSize: '12px', color: '#888', marginBottom: '16px', lineHeight: '1.5' }}>
+                  Reviews are available to verified purchasers after payment or delivery.
                 </div>
 
                 {reviewError && <Message type='error' text={reviewError} />}

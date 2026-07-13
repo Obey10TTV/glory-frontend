@@ -7,6 +7,14 @@ import { FiEye, FiEyeOff, FiMail, FiPackage, FiRefreshCw, FiShield, FiShoppingBa
 import { FcGoogle } from 'react-icons/fc'
 import { FaApple } from 'react-icons/fa'
 
+const passwordIsStrong = (value) => (
+  value.length >= 10
+  && /[a-z]/.test(value)
+  && /[A-Z]/.test(value)
+  && /\d/.test(value)
+  && /[^A-Za-z0-9]/.test(value)
+)
+
 const RegisterPage = () => {
   const navigate = useNavigate()
   const { login } = useUser()
@@ -35,8 +43,8 @@ const RegisterPage = () => {
       return
     }
 
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters')
+    if (!passwordIsStrong(password)) {
+      setError('Use at least 10 characters with uppercase, lowercase, a number and a special character')
       return
     }
 
@@ -238,6 +246,9 @@ const RegisterPage = () => {
               setShow={setShowPassword}
               placeholder='Create a strong password'
             />
+            <div style={{ marginTop: '-10px', color: '#777', fontSize: '11px', lineHeight: '1.5' }}>
+              Use 10+ characters with uppercase, lowercase, a number and a special character.
+            </div>
 
             <PasswordField
               label='Confirm password'

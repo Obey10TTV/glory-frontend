@@ -7,6 +7,7 @@ import { getProducts } from '../api'
 import useIsMobile from '../hooks/useIsMobile'
 import CanadaFlag from './CanadaFlag'
 import { formatCurrency } from '../utils/currency'
+import { getWishlistIds } from '../utils/wishlist'
 
 const Navbar = () => {
   const { user, logout } = useUser()
@@ -21,7 +22,14 @@ const Navbar = () => {
   const [allProducts, setAllProducts] = useState([])
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
+  const [wishlistCount, setWishlistCount] = useState(() => getWishlistIds().length)
   const searchRef = useRef(null)
+
+  useEffect(() => {
+    const updateWishlistCount = () => setWishlistCount(getWishlistIds().length)
+    window.addEventListener('glory:wishlist-change', updateWishlistCount)
+    return () => window.removeEventListener('glory:wishlist-change', updateWishlistCount)
+  }, [])
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -194,11 +202,11 @@ const Navbar = () => {
         letterSpacing: '0.06em', fontFamily: "'Inter', sans-serif",
         fontWeight: '500', lineHeight: '1.6'
       }}>
-        <b style={{ color: '#fff' }}>FREE SHIPPING</b> on orders over $75
+        <b style={{ color: '#fff' }}>CANADA'S BEAUTY MARKETPLACE</b>
         {!isMobile && (
           <span>
-            &nbsp;-&nbsp;<b style={{ color: '#fff' }}>100% AUTHENTIC</b> products only
-            &nbsp;-&nbsp;<b style={{ color: '#fff' }}>SELL ON GLORY</b> - Start your store today
+            &nbsp;-&nbsp;<b style={{ color: '#fff' }}>CURATED DEPARTMENTS</b>
+            &nbsp;-&nbsp;<b style={{ color: '#fff' }}>SELL ON GLORY</b> - Apply to open your store
           </span>
         )}
         {false && !isMobile && (
@@ -401,8 +409,18 @@ const Navbar = () => {
             )}
 
             {!isMobile && (
-              <div style={{ cursor: 'pointer' }}>
+              <div
+                style={{
+                  position: 'relative', cursor: 'pointer', minWidth: '44px', minHeight: '44px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center'
+                }}
+                onClick={() => navigate('/wishlist')}
+                role='button'
+                tabIndex={0}
+                aria-label={`Open saved products with ${wishlistCount} items`}
+              >
                 <FiHeart size={20} style={{ color: '#111' }} />
+                {wishlistCount > 0 && <span className='glory-nav-count'>{wishlistCount}</span>}
               </div>
             )}
 
@@ -625,6 +643,17 @@ const Navbar = () => {
               </button>
             </div>
             <div style={{ padding: '8px 0' }}>
+              <Link
+                to='/wishlist'
+                onClick={() => setDrawerOpen(false)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '10px', padding: '14px 20px',
+                  fontSize: '14px', fontWeight: '700', color: '#111', textDecoration: 'none',
+                  borderBottom: '1px solid #f5f5f5'
+                }}
+              >
+                <FiHeart size={17} /> SAVED {wishlistCount > 0 ? `(${wishlistCount})` : ''}
+              </Link>
               {navItems.map(item => (
                 <Link
                   key={item}
@@ -649,7 +678,7 @@ const Navbar = () => {
               borderTop: '1px solid #f0f0f0', marginTop: '8px'
             }}>
               <CanadaFlag size={24} />
-              <span style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Shipping across Canada</span>
+              <span style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Canada marketplace · Prices in CAD</span>
             </div>
           </div>
           <style>{`

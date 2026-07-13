@@ -1,5 +1,5 @@
 // Glory Store v1.0
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Navigate, Routes, Route, useLocation } from 'react-router-dom'
 import './App.css'
 
 
@@ -17,29 +17,50 @@ import SellerDashboardPage from './pages/SellerDashboardPage'
 import AdminDashboardPage from './pages/AdminDashboardPage'
 import AboutPage from './pages/AboutPage'
 import InfoPage from './pages/InfoPage'
+import WishlistPage from './pages/WishlistPage'
 import ChatBot from './components/ChatBot'
 import CookieConsent from './components/CookieConsent'
 import ScrollToTop from './components/ScrollToTop'
 import { useUser } from './context/UserContext'
 import { infoPageRoutes } from './data/infoPages'
 
+const RequireAccess = ({ children, role }) => {
+  const { user } = useUser()
+  const location = useLocation()
+
+  if (!user) {
+    return <Navigate to='/login' replace state={{ from: location.pathname }} />
+  }
+
+  if (role === 'seller' && !user.isSeller && !user.isAdmin) {
+    return <Navigate to='/account' replace />
+  }
+
+  if (role === 'admin' && !user.isAdmin) {
+    return <Navigate to='/' replace />
+  }
+
+  return children
+}
+
 function App() {
   const { user } = useUser()
 
   return (
-    <Router>
+    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <ScrollToTop />
       <Routes>
         <Route path='/' element={<HomePage />} />
         <Route path='/products' element={<ProductsPage />} />
         <Route path='/products/:id' element={<ProductDetailPage />} />
         <Route path='/cart' element={<CartPage />} />
-        <Route path='/checkout' element={<CheckoutPage />} />
+        <Route path='/wishlist' element={<WishlistPage />} />
+        <Route path='/checkout' element={<RequireAccess><CheckoutPage /></RequireAccess>} />
         <Route path='/login' element={<LoginPage />} />
         <Route path='/register' element={<RegisterPage />} />
-        <Route path='/account' element={<AccountPage />} />
-        <Route path='/seller' element={<SellerDashboardPage />} />
-        <Route path='/admin' element={<AdminDashboardPage />} />
+        <Route path='/account' element={<RequireAccess><AccountPage /></RequireAccess>} />
+        <Route path='/seller' element={<RequireAccess role='seller'><SellerDashboardPage /></RequireAccess>} />
+        <Route path='/admin' element={<RequireAccess role='admin'><AdminDashboardPage /></RequireAccess>} />
         <Route path='/about' element={<AboutPage />} />
         {infoPageRoutes.map((slug) => (
           <Route key={slug} path={`/${slug}`} element={<InfoPage slug={slug} />} />

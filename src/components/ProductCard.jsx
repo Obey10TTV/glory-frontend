@@ -3,11 +3,12 @@ import { useCart } from '../context/CartContext'
 import { useState } from 'react'
 import { FiHeart, FiShoppingBag } from 'react-icons/fi'
 import { formatCurrency } from '../utils/currency'
+import { isWishlisted, toggleWishlist } from '../utils/wishlist'
 
 const ProductCard = ({ product }) => {
   const navigate = useNavigate()
   const { addToCart } = useCart()
-  const [wished, setWished] = useState(false)
+  const [wished, setWished] = useState(() => isWishlisted(product._id))
   const [added, setAdded] = useState(false)
   const [hovered, setHovered] = useState(false)
 
@@ -20,7 +21,7 @@ const ProductCard = ({ product }) => {
 
   const handleWishlist = (e) => {
     e.stopPropagation()
-    setWished(!wished)
+    setWished(toggleWishlist(product._id))
   }
 
   return (
@@ -128,15 +129,20 @@ const ProductCard = ({ product }) => {
           display: 'flex', alignItems: 'center',
           justifyContent: 'space-between'
         }}>
-          <div style={{
-            fontSize: '14px', fontWeight: '700', color: '#111'
-          }}>
-            {formatCurrency(product.price)}
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', flexWrap: 'wrap' }}>
+            <strong style={{ fontSize: '14px', fontWeight: '700', color: '#111' }}>
+              {formatCurrency(product.price)}
+            </strong>
+            {product.compareAtPrice > product.price && (
+              <span style={{ fontSize: '11px', color: '#aaa', textDecoration: 'line-through' }}>
+                {formatCurrency(product.compareAtPrice)}
+              </span>
+            )}
           </div>
           <div style={{
             fontSize: '11px', color: '#999'
           }}>
-            Rated {product.rating.toFixed(1)}
+            Rated {Number(product.rating || 0).toFixed(1)}
           </div>
         </div>
       </div>

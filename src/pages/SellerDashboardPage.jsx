@@ -62,7 +62,12 @@ const SellerDashboardPage = () => {
 
   const [name, setName] = useState('')
   const [price, setPrice] = useState('')
+  const [compareAtPrice, setCompareAtPrice] = useState('')
+  const [sku, setSku] = useState('')
+  const [size, setSize] = useState('')
   const [description, setDescription] = useState('')
+  const [ingredients, setIngredients] = useState('')
+  const [howToUse, setHowToUse] = useState('')
   const [category, setCategory] = useState('')
   const [brand, setBrand] = useState('')
   const [countInStock, setCountInStock] = useState('')
@@ -131,7 +136,12 @@ const SellerDashboardPage = () => {
   const resetProductForm = () => {
     setName('')
     setPrice('')
+    setCompareAtPrice('')
+    setSku('')
+    setSize('')
     setDescription('')
+    setIngredients('')
+    setHowToUse('')
     setCategory('')
     setBrand('')
     setCountInStock('')
@@ -140,6 +150,12 @@ const SellerDashboardPage = () => {
   }
 
   const openNewProductForm = () => {
+    const profileVerified = sellerProfile.verificationStatus === 'verified'
+    const accountSecured = Boolean(user?.twoFactorEnabled)
+    if (!user?.isAdmin && (!profileVerified || !accountSecured)) {
+      setError('Complete seller verification and enable two-factor authentication before adding products.')
+      return
+    }
     resetProductForm()
     setError('')
     setShowProductForm(true)
@@ -149,7 +165,12 @@ const SellerDashboardPage = () => {
     setEditingProduct(product)
     setName(product.name || '')
     setPrice(String(product.price || ''))
+    setCompareAtPrice(product.compareAtPrice ? String(product.compareAtPrice) : '')
+    setSku(product.sku || '')
+    setSize(product.size || '')
     setDescription(product.description || '')
+    setIngredients(product.ingredients || '')
+    setHowToUse(product.howToUse || '')
     setCategory(product.category || '')
     setBrand(product.brand || '')
     setCountInStock(String(product.countInStock || 0))
@@ -183,6 +204,7 @@ const SellerDashboardPage = () => {
 
   const getProductPayload = () => {
     const numericPrice = Number(price)
+    const numericCompareAtPrice = compareAtPrice ? Number(compareAtPrice) : undefined
     const numericStock = Number(countInStock)
 
     if (!name || !price || !description || !category || !brand || countInStock === '' || !image) {
@@ -193,11 +215,20 @@ const SellerDashboardPage = () => {
       return { error: 'Please enter a valid price and stock quantity' }
     }
 
+    if (numericCompareAtPrice && numericCompareAtPrice <= numericPrice) {
+      return { error: 'Compare-at price must be higher than the selling price' }
+    }
+
     return {
       payload: {
         name,
         price: numericPrice,
+        compareAtPrice: numericCompareAtPrice,
+        sku,
+        size,
         description,
+        ingredients,
+        howToUse,
         category,
         brand,
         countInStock: numericStock,
@@ -299,6 +330,13 @@ const SellerDashboardPage = () => {
   const rejectedProducts = products.filter(product => product.approvalStatus === 'rejected')
   const inventoryValue = products.reduce((sum, product) => sum + Number(product.price || 0) * Number(product.countInStock || 0), 0)
   const sellerMeta = sellerStatusMeta(sellerProfile.verificationStatus)
+  const twoFactorEnabled = Boolean(user?.twoFactorEnabled)
+  const sellerCanSubmitProducts = Boolean(
+    user?.isAdmin
+    || (user?.isEmailVerified !== false
+      && sellerProfile.verificationStatus === 'verified'
+      && twoFactorEnabled)
+  )
 
   return (
     <div className='glory-page'>
@@ -313,6 +351,8 @@ const SellerDashboardPage = () => {
           <button
             onClick={openNewProductForm}
             className='glory-btn glory-dashboard-primary-action'
+            disabled={!sellerCanSubmitProducts}
+            title={sellerCanSubmitProducts ? 'Add a product' : 'Complete seller verification and 2FA first'}
           >
             <FiPlus size={16} /> Add Product
           </button>
@@ -336,7 +376,34 @@ const SellerDashboardPage = () => {
           ))}
         </div>
 
-        <section className='glory-dashboard-panel glory-seller-profile-panel'>
+        {!sellerCanSubmitProducts && (
+          <div className='glory-dashboard-callout glory-dashboard-security-gate'>
+            <span className='glory-dashboard-security-icon'><FiShield size={21} /></span>
+            <div>
+              <strong>Finish seller security before listing products.</strong>
+              <span>
+                Glory requires an approved store profile and two-factor authentication before product submissions open.
+              </span>
+            </div>
+            <div className='glory-dashboard-security-actions'>
+              {sellerProfile.verificationStatus !== 'verified' && (
+                <button
+                  type='button'
+                  onClick={() => document.getElementById('seller-store-setup')?.scrollIntoView({ behavior: 'smooth' })}
+                >
+                  Review store setup
+                </button>
+              )}
+              {!twoFactorEnabled && (
+                <button type='button' onClick={() => navigate('/account')}>
+                  Set up 2FA
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        <section id='seller-store-setup' className='glory-dashboard-panel glory-seller-profile-panel'>
           <div className='glory-dashboard-panel-header glory-dashboard-panel-header-split'>
             <div>
               <span>Store Setup</span>
@@ -566,14 +633,32 @@ const SellerDashboardPage = () => {
                 </div>
               </div>
 
-              <div>
-                <label style={labelStyle}>Category</label>
-                <select value={category} onChange={event => setCategory(event.target.value)} style={inputStyle}>
-                  <option value=''>Select category</option>
-                  {categories.map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
-                </select>
+              <div className='glory-form-grid'>
+                <div>
+                  <label style={labelStyle}>Compare-at Price (Optional)</label>
+                  <input value={compareAtPrice} onChange={event => setCompareAtPrice(event.target.value)} placeholder='e.g. 24' type='number' min='0' step='0.01' style={inputStyle} />
+                  <div className='glory-form-help'>Only use this when the regular price is genuinely higher.</div>
+                </div>
+                <div>
+                  <label style={labelStyle}>SKU (Optional)</label>
+                  <input value={sku} onChange={event => setSku(event.target.value)} placeholder='e.g. GLW-SERUM-30' maxLength={64} style={inputStyle} />
+                </div>
+              </div>
+
+              <div className='glory-form-grid'>
+                <div>
+                  <label style={labelStyle}>Category</label>
+                  <select value={category} onChange={event => setCategory(event.target.value)} style={inputStyle}>
+                    <option value=''>Select category</option>
+                    {categories.map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label style={labelStyle}>Size / Volume (Optional)</label>
+                  <input value={size} onChange={event => setSize(event.target.value)} placeholder='e.g. 30 ml, 250 g, One size' maxLength={80} style={inputStyle} />
+                </div>
               </div>
 
               <div>
@@ -584,6 +669,30 @@ const SellerDashboardPage = () => {
                   placeholder='Describe texture, size, shade, ingredients, usage or what makes it special.'
                   rows={4}
                   style={{ ...inputStyle, resize: 'none' }}
+                />
+              </div>
+
+              <div>
+                <label style={labelStyle}>Ingredients (Optional)</label>
+                <textarea
+                  value={ingredients}
+                  onChange={event => setIngredients(event.target.value)}
+                  placeholder='List ingredients exactly as they appear on the product packaging.'
+                  rows={3}
+                  maxLength={2000}
+                  style={{ ...inputStyle, resize: 'vertical' }}
+                />
+              </div>
+
+              <div>
+                <label style={labelStyle}>How to Use (Optional)</label>
+                <textarea
+                  value={howToUse}
+                  onChange={event => setHowToUse(event.target.value)}
+                  placeholder='Give clear, safe usage instructions for the customer.'
+                  rows={3}
+                  maxLength={1200}
+                  style={{ ...inputStyle, resize: 'vertical' }}
                 />
               </div>
 
