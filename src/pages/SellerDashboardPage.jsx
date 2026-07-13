@@ -9,21 +9,26 @@ import {
   createProduct,
   deleteProduct,
   getMySellerProducts,
+  getSellerOrders,
   getUserProfile,
+  updateSellerOrderStatus,
   updateProduct,
   updateSellerProfile,
-  uploadImage
+  uploadImage,
+  uploadSellerDocument
 } from '../api'
 import {
   FiCheckCircle,
   FiClock,
   FiEdit3,
+  FiFileText,
   FiImage,
   FiPackage,
   FiPlus,
   FiSave,
   FiShield,
   FiTrash2,
+  FiTruck,
   FiX,
   FiXCircle
 } from 'react-icons/fi'
@@ -48,8 +53,8 @@ const SellerDashboardPage = () => {
   const { user, login } = useUser()
   const userId = user?._id
   const userIsSeller = user?.isSeller
-  const userToken = user?.token
   const [products, setProducts] = useState([])
+  const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [showProductForm, setShowProductForm] = useState(false)
   const [editingProduct, setEditingProduct] = useState(null)
@@ -59,6 +64,9 @@ const SellerDashboardPage = () => {
   const [submitting, setSubmitting] = useState(false)
   const [profileSubmitting, setProfileSubmitting] = useState(false)
   const [sellerProfile, setSellerProfile] = useState(emptySellerProfile)
+  const [documentUploading, setDocumentUploading] = useState('')
+  const [trackingByItem, setTrackingByItem] = useState({})
+  const [orderUpdating, setOrderUpdating] = useState('')
 
   const [name, setName] = useState('')
   const [price, setPrice] = useState('')
@@ -72,6 +80,8 @@ const SellerDashboardPage = () => {
   const [brand, setBrand] = useState('')
   const [countInStock, setCountInStock] = useState('')
   const [image, setImage] = useState('')
+  const [images, setImages] = useState([])
+  const [variants, setVariants] = useState([])
 
   const categories = [
     'Skincare', 'Haircare', 'Makeup', 'Nails', 'Lashes',
@@ -87,8 +97,12 @@ const SellerDashboardPage = () => {
   const fetchProducts = useCallback(async () => {
     try {
       setLoading(true)
-      const { data } = await getMySellerProducts()
-      setProducts(Array.isArray(data) ? data : [])
+      const [productResponse, orderResponse] = await Promise.all([
+        getMySellerProducts(),
+        getSellerOrders()
+      ])
+      setProducts(Array.isArray(productResponse.data) ? productResponse.data : [])
+      setOrders(Array.isArray(orderResponse.data) ? orderResponse.data : [])
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load seller products')
     } finally {
@@ -118,7 +132,7 @@ const SellerDashboardPage = () => {
         const { data } = await getUserProfile()
         if (!active) return
         setSellerProfile(normalizeSellerProfile(data.sellerProfile))
-        login({ ...data, token: userToken })
+        login(data)
       } catch (err) {
         if (active) {
           setSellerProfile(emptySellerProfile)
@@ -131,7 +145,7 @@ const SellerDashboardPage = () => {
     return () => {
       active = false
     }
-  }, [userId, userIsSeller, userToken, login])
+  }, [userId, userIsSeller, login])
 
   const resetProductForm = () => {
     setName('')
@@ -146,6 +160,8 @@ const SellerDashboardPage = () => {
     setBrand('')
     setCountInStock('')
     setImage('')
+    setImages([])
+    setVariants([])
     setEditingProduct(null)
   }
 
@@ -175,6 +191,15 @@ const SellerDashboardPage = () => {
     setBrand(product.brand || '')
     setCountInStock(String(product.countInStock || 0))
     setImage(product.image || '')
+    setImages(product.images || [])
+    setVariants((product.variants || []).map(variant => ({
+      _id: variant._id,
+      name: variant.name || '',
+      sku: variant.sku || '',
+      price: variant.price || '',
+      countInStock: variant.countInStock ?? 0,
+      image: variant.image || ''
+    })))
     setError('')
     setShowProductForm(true)
   }
@@ -200,6 +225,33 @@ const SellerDashboardPage = () => {
     } finally {
       setUploading(false)
     }
+  }
+
+  const handleGalleryUpload = async (event) => {
+    const files = Array.from(event.target.files || []).slice(0, Math.max(0, 6 - images.length))
+    if (!files.length) return
+    setUploading(true)
+    setError('')
+    try {
+      const uploadedUrls = []
+      for (const file of files) {
+        const formData = new FormData()
+        formData.append('image', file)
+        const { data } = await uploadImage(formData)
+        uploadedUrls.push(data.url)
+      }
+      setImages(current => [...current, ...uploadedUrls].slice(0, 6))
+    } catch (err) {
+      setError(err.response?.data?.message || 'Gallery upload failed')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const updateVariant = (index, field, value) => {
+    setVariants(current => current.map((variant, variantIndex) => (
+      variantIndex === index ? { ...variant, [field]: value } : variant
+    )))
   }
 
   const getProductPayload = () => {
@@ -232,7 +284,15 @@ const SellerDashboardPage = () => {
         category,
         brand,
         countInStock: numericStock,
-        image
+        image,
+        images,
+        variants: variants.map(variant => ({
+          name: variant.name.trim(),
+          sku: variant.sku.trim(),
+          price: variant.price === '' ? undefined : Number(variant.price),
+          countInStock: Number(variant.countInStock) || 0,
+          image: variant.image || ''
+        })).filter(variant => variant.name)
       }
     }
   }
@@ -281,6 +341,42 @@ const SellerDashboardPage = () => {
       ...current,
       [field]: value
     }))
+  }
+
+  const handleDocumentUpload = async (type, file) => {
+    if (!file) return
+    setDocumentUploading(type)
+    setError('')
+    setSuccess('')
+    try {
+      const formData = new FormData()
+      formData.append('type', type)
+      formData.append('document', file)
+      await uploadSellerDocument(formData)
+      const { data } = await getUserProfile()
+      setSellerProfile(normalizeSellerProfile(data.sellerProfile))
+      login(data)
+      setSuccess('Document uploaded privately for verification.')
+    } catch (err) {
+      setError(err.response?.data?.message || 'Verification document upload failed')
+    } finally {
+      setDocumentUploading('')
+    }
+  }
+
+  const handleFulfillment = async (orderId, itemId, status) => {
+    const trackingNumber = trackingByItem[itemId] || ''
+    setOrderUpdating(itemId)
+    setError('')
+    try {
+      const { data } = await updateSellerOrderStatus(orderId, { itemId, status, trackingNumber })
+      setOrders(current => current.map(order => order._id === orderId ? data : order))
+      setSuccess(status === 'Shipped' ? 'Shipment and tracking saved.' : 'Order item marked delivered.')
+    } catch (err) {
+      setError(err.response?.data?.message || 'Could not update fulfillment')
+    } finally {
+      setOrderUpdating('')
+    }
   }
 
   const handleSaveSellerProfile = async (submitForReview = false) => {
@@ -337,6 +433,16 @@ const SellerDashboardPage = () => {
       && sellerProfile.verificationStatus === 'verified'
       && twoFactorEnabled)
   )
+  const documentRequirements = [
+    { type: 'identity', label: 'Government ID', help: 'Passport, driver licence, or provincial photo ID.' },
+    { type: 'business', label: 'Business document', help: 'Registration, incorporation, or sole proprietor record.' },
+    { type: 'address', label: 'Proof of address', help: 'Recent utility, bank, or official address statement.' }
+  ]
+  const sellerDocuments = sellerProfile.documents || []
+  const sellerOrderItems = (order) => order.orderItems.filter(item => {
+    const sellerId = item.seller?._id || item.seller
+    return user?.isAdmin || String(sellerId) === String(userId)
+  })
 
   return (
     <div className='glory-page'>
@@ -478,6 +584,40 @@ const SellerDashboardPage = () => {
               </div>
             </div>
 
+            <div className='glory-seller-documents'>
+              <div className='glory-seller-documents-heading'>
+                <div>
+                  <strong>Private verification documents</strong>
+                  <span>Accepted files: PDF, JPG, PNG, or WebP up to 8 MB.</span>
+                </div>
+                <FiShield size={20} />
+              </div>
+              <div className='glory-seller-document-grid'>
+                {documentRequirements.map(requirement => {
+                  const document = sellerDocuments.find(item => item.type === requirement.type)
+                  return (
+                    <label key={requirement.type} className='glory-seller-document-card'>
+                      <FiFileText size={20} />
+                      <strong>{requirement.label}</strong>
+                      <span>{document?.originalName || requirement.help}</span>
+                      <small className={`is-${document?.status || 'missing'}`}>
+                        {documentUploading === requirement.type
+                          ? 'Uploading...'
+                          : document?.status || 'Required'}
+                      </small>
+                      {document?.note && <em>{document.note}</em>}
+                      <input
+                        type='file'
+                        accept='.pdf,image/jpeg,image/png,image/webp'
+                        disabled={Boolean(documentUploading)}
+                        onChange={event => handleDocumentUpload(requirement.type, event.target.files?.[0])}
+                      />
+                    </label>
+                  )
+                })}
+              </div>
+            </div>
+
             <div className='glory-profile-actions'>
               <button
                 onClick={() => handleSaveSellerProfile(false)}
@@ -495,6 +635,73 @@ const SellerDashboardPage = () => {
               </button>
             </div>
           </div>
+        </section>
+
+        <section className='glory-dashboard-panel'>
+          <div className='glory-dashboard-panel-header glory-dashboard-panel-header-split'>
+            <div>
+              <span>Seller Orders ({orders.length})</span>
+              <small>Tracking updates are emailed to buyers.</small>
+            </div>
+            <FiTruck size={19} />
+          </div>
+          {orders.length === 0 ? (
+            <div className='glory-empty-state glory-seller-orders-empty'>
+              <FiTruck size={36} />
+              <strong>No seller orders yet</strong>
+              <span>Paid orders containing your products will appear here.</span>
+            </div>
+          ) : (
+            <div className='glory-seller-order-list'>
+              {orders.map(order => (
+                <article key={order._id} className='glory-seller-order'>
+                  <header>
+                    <div>
+                      <strong>Order #{order._id.slice(-8).toUpperCase()}</strong>
+                      <span>{order.buyer?.name || 'Customer'} - {new Date(order.createdAt).toLocaleDateString('en-CA')}</span>
+                    </div>
+                    <span className={`glory-order-state is-${String(order.status).toLowerCase()}`}>{order.status}</span>
+                  </header>
+                  {sellerOrderItems(order).map(item => (
+                    <div key={item._id} className='glory-seller-order-item'>
+                      <img src={item.image} alt={item.name} />
+                      <div className='glory-seller-order-copy'>
+                        <strong>{item.name} x {item.quantity}</strong>
+                        <span>{item.fulfillmentStatus || 'Pending'}{item.trackingNumber ? ` - ${item.trackingNumber}` : ''}</span>
+                      </div>
+                      {item.fulfillmentStatus === 'Processing' && (
+                        <div className='glory-fulfillment-actions'>
+                          <input
+                            value={trackingByItem[item._id] || ''}
+                            onChange={event => setTrackingByItem(current => ({ ...current, [item._id]: event.target.value }))}
+                            placeholder='Tracking number'
+                            aria-label={`Tracking number for ${item.name}`}
+                          />
+                          <button
+                            type='button'
+                            disabled={orderUpdating === item._id || !trackingByItem[item._id]?.trim()}
+                            onClick={() => handleFulfillment(order._id, item._id, 'Shipped')}
+                          >
+                            Mark shipped
+                          </button>
+                        </div>
+                      )}
+                      {item.fulfillmentStatus === 'Shipped' && (
+                        <button
+                          type='button'
+                          className='glory-delivered-action'
+                          disabled={orderUpdating === item._id}
+                          onClick={() => handleFulfillment(order._id, item._id, 'Delivered')}
+                        >
+                          Mark delivered
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </article>
+              ))}
+            </div>
+          )}
         </section>
 
         <section className='glory-dashboard-panel'>
@@ -611,6 +818,27 @@ const SellerDashboardPage = () => {
                 </div>
               </div>
 
+              <div>
+                <label style={labelStyle}>Gallery Images (Optional)</label>
+                <div className='glory-gallery-uploader'>
+                  {images.map((galleryImage, index) => (
+                    <div key={galleryImage}>
+                      <img src={galleryImage} alt={`Gallery ${index + 1}`} />
+                      <button type='button' onClick={() => setImages(current => current.filter(item => item !== galleryImage))} aria-label={`Remove gallery image ${index + 1}`}>
+                        <FiX size={14} />
+                      </button>
+                    </div>
+                  ))}
+                  {images.length < 6 && (
+                    <label>
+                      <FiPlus size={19} />
+                      <span>{uploading ? 'Uploading' : 'Add photos'}</span>
+                      <input type='file' multiple accept='image/*' disabled={uploading} onChange={handleGalleryUpload} />
+                    </label>
+                  )}
+                </div>
+              </div>
+
               <div className='glory-form-grid'>
                 <div>
                   <label style={labelStyle}>Product Name</label>
@@ -694,6 +922,33 @@ const SellerDashboardPage = () => {
                   maxLength={1200}
                   style={{ ...inputStyle, resize: 'vertical' }}
                 />
+              </div>
+
+              <div className='glory-variant-builder'>
+                <div className='glory-variant-builder-heading'>
+                  <div>
+                    <strong>Product options (Optional)</strong>
+                    <span>Add shades, sizes, or scents with their own price and stock.</span>
+                  </div>
+                  <button
+                    type='button'
+                    disabled={variants.length >= 30}
+                    onClick={() => setVariants(current => [...current, { name: '', sku: '', price: '', countInStock: 0, image: '' }])}
+                  >
+                    <FiPlus size={14} /> Add option
+                  </button>
+                </div>
+                {variants.map((variant, index) => (
+                  <div key={variant._id || index} className='glory-variant-row'>
+                    <input value={variant.name} onChange={event => updateVariant(index, 'name', event.target.value)} placeholder='Option name' aria-label={`Option ${index + 1} name`} />
+                    <input value={variant.sku} onChange={event => updateVariant(index, 'sku', event.target.value)} placeholder='SKU' aria-label={`Option ${index + 1} SKU`} />
+                    <input value={variant.price} onChange={event => updateVariant(index, 'price', event.target.value)} type='number' min='0' step='.01' placeholder='Price' aria-label={`Option ${index + 1} price`} />
+                    <input value={variant.countInStock} onChange={event => updateVariant(index, 'countInStock', event.target.value)} type='number' min='0' placeholder='Stock' aria-label={`Option ${index + 1} stock`} />
+                    <button type='button' onClick={() => setVariants(current => current.filter((_, itemIndex) => itemIndex !== index))} aria-label={`Remove option ${index + 1}`}>
+                      <FiTrash2 size={15} />
+                    </button>
+                  </div>
+                ))}
               </div>
 
               <button

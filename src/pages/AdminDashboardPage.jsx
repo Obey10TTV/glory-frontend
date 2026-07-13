@@ -12,7 +12,9 @@ import {
   getAdminStats,
   getAllOrders,
   getAllUsers,
+  getSellerDocumentUrl,
   makeSeller,
+  updateSellerDocumentStatus,
   updateSellerStatus,
   updateProductStatus
 } from '../api'
@@ -20,6 +22,7 @@ import {
   FiCheckCircle,
   FiClock,
   FiDollarSign,
+  FiFileText,
   FiPackage,
   FiShield,
   FiShoppingBag,
@@ -114,6 +117,31 @@ const AdminDashboardPage = () => {
       fetchData(false)
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to update seller verification')
+    }
+  }
+
+  const handleOpenDocument = async (userId, documentId) => {
+    try {
+      const { data } = await getSellerDocumentUrl(userId, documentId)
+      window.open(data.url, '_blank', 'noopener,noreferrer')
+    } catch (err) {
+      setError(err.response?.data?.message || 'Could not open this private document')
+    }
+  }
+
+  const handleDocumentStatus = async (userId, documentId, status) => {
+    const promptValue = window.prompt(
+      status === 'rejected' ? 'Why is this document being rejected?' : 'Optional review note:',
+      ''
+    )
+    if (promptValue === null) return
+    try {
+      const { data } = await updateSellerDocumentStatus(userId, documentId, { status, note: promptValue })
+      setUsers(current => current.map(account => account._id === userId ? data : account))
+      setSuccess(`Document ${status}`)
+      fetchData(false)
+    } catch (err) {
+      setError(err.response?.data?.message || 'Could not review this document')
     }
   }
 
@@ -262,6 +290,8 @@ const AdminDashboardPage = () => {
                 onDelete={handleDeleteUser}
                 onMakeSeller={handleMakeSeller}
                 onSellerStatus={handleSellerStatus}
+                onOpenDocument={handleOpenDocument}
+                onDocumentStatus={handleDocumentStatus}
                 sellerStatusColor={sellerStatusColor}
               />
             )}
@@ -401,14 +431,14 @@ const ProductsTable = ({ products, productStatusColor, sellerStatusColor, onAppr
   </section>
 )
 
-const UsersTable = ({ users, currentUserId, onDelete, onMakeSeller, onSellerStatus, sellerStatusColor }) => (
+const UsersTable = ({ users, currentUserId, onDelete, onMakeSeller, onSellerStatus, onOpenDocument, onDocumentStatus, sellerStatusColor }) => (
   <section className='glory-dashboard-panel'>
     <div className='glory-dashboard-panel-header'>All Users ({users.length})</div>
     <div className='glory-table-wrap'>
       <table className='glory-dashboard-table'>
         <thead>
           <tr>
-            {['User', 'Email', 'Role', 'Seller Status', 'Joined', 'Actions'].map(header => (
+            {['User', 'Email', 'Role', 'Seller Status', 'Documents', 'Joined', 'Actions'].map(header => (
               <th key={header}>{header}</th>
             ))}
           </tr>
@@ -447,6 +477,33 @@ const UsersTable = ({ users, currentUserId, onDelete, onMakeSeller, onSellerStat
                 ) : (
                   <span style={{ color: '#aaa' }}>Not a seller</span>
                 )}
+              </td>
+              <td>
+                {account.isSeller && account.sellerProfile?.documents?.length ? (
+                  <div className='glory-admin-documents'>
+                    {account.sellerProfile.documents.map(document => (
+                      <div key={document._id} className={`is-${document.status}`}>
+                        <button
+                          type='button'
+                          onClick={() => onOpenDocument(account._id, document._id)}
+                          title={`Open ${document.type} document`}
+                        >
+                          <FiFileText size={14} /> {document.type}
+                        </button>
+                        {document.status !== 'approved' && (
+                          <button type='button' onClick={() => onDocumentStatus(account._id, document._id, 'approved')} aria-label={`Approve ${document.type} document`}>
+                            <FiCheckCircle size={14} />
+                          </button>
+                        )}
+                        {document.status !== 'rejected' && (
+                          <button type='button' onClick={() => onDocumentStatus(account._id, document._id, 'rejected')} aria-label={`Reject ${document.type} document`}>
+                            <FiXCircle size={14} />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : <span style={{ color: '#aaa' }}>None</span>}
               </td>
               <td>{new Date(account.createdAt).toLocaleDateString('en-CA')}</td>
               <td>

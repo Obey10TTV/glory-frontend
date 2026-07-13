@@ -110,6 +110,9 @@ const LoginPage = () => {
     }
   }
 
+  const verificationCodeValid = /^\d{6}$/.test(otp)
+    || (pendingAuth?.type === '2fa' && /^[A-F0-9]{6}-[A-F0-9]{6}$/.test(otp))
+
   return (
     <div style={pageStyle}>
       <div style={cardStyle}>
@@ -156,7 +159,8 @@ const LoginPage = () => {
                   {pendingAuth.type === '2fa' ? 'Two-factor authentication' : 'Email verification required'}
                 </div>
                 <div style={{ fontSize: '12px', color: '#777', lineHeight: '1.6', marginTop: '4px' }}>
-                  Enter the 6-digit code sent to {pendingAuth.email}.
+                  Enter the 6-digit code sent to {pendingAuth.email}
+                  {pendingAuth.type === '2fa' ? ' or use one recovery code.' : '.'}
                 </div>
               </div>
             </div>
@@ -165,20 +169,24 @@ const LoginPage = () => {
               <label style={labelStyle}>Verification code</label>
               <input
                 type='text'
-                inputMode='numeric'
-                maxLength={6}
+                inputMode={pendingAuth.type === '2fa' ? 'text' : 'numeric'}
+                maxLength={pendingAuth.type === '2fa' ? 13 : 6}
                 value={otp}
-                onChange={e => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                placeholder='000000'
+                onChange={e => setOtp(
+                  pendingAuth.type === '2fa'
+                    ? e.target.value.toUpperCase().replace(/[^A-F0-9-]/g, '').slice(0, 13)
+                    : e.target.value.replace(/\D/g, '').slice(0, 6)
+                )}
+                placeholder={pendingAuth.type === '2fa' ? '000000 or XXXXXX-XXXXXX' : '000000'}
                 style={{ ...inputStyle, letterSpacing: '0.18em', textAlign: 'center', fontSize: '16px' }}
               />
             </div>
 
             <button
               onClick={handleVerifyOtp}
-              disabled={loading || otp.length !== 6}
+              disabled={loading || !verificationCodeValid}
               className='glory-btn'
-              style={{ width: '100%', padding: '13px', fontSize: '13px', opacity: loading || otp.length !== 6 ? 0.7 : 1 }}
+              style={{ width: '100%', padding: '13px', fontSize: '13px', opacity: loading || !verificationCodeValid ? 0.7 : 1 }}
             >
               {loading ? 'Checking...' : 'Verify Code'}
             </button>

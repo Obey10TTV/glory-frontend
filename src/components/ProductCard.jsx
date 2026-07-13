@@ -14,6 +14,10 @@ const ProductCard = ({ product }) => {
 
   const handleAddToCart = (e) => {
     e.stopPropagation()
+    if (product.variants?.length) {
+      navigate(`/products/${product._id}`)
+      return
+    }
     addToCart(product)
     setAdded(true)
     setTimeout(() => setAdded(false), 2000)
@@ -101,17 +105,24 @@ const ProductCard = ({ product }) => {
           }}
         >
           <FiShoppingBag size={13} />
-          {added ? 'Added!' : 'Add to Bag'}
+          {product.variants?.length ? 'Select options' : added ? 'Added!' : 'Add to Bag'}
         </button>
       </div>
       <div style={{ padding: '12px 14px' }}>
-        <div style={{
+        <button
+          type='button'
+          onClick={(event) => {
+            event.stopPropagation()
+            navigate(`/brands/${encodeURIComponent(product.brand)}`)
+          }}
+          className='glory-product-brand-link'
+          style={{
           fontSize: '9px', color: '#aaa',
           letterSpacing: '0.08em', marginBottom: '3px',
           fontWeight: '600', textTransform: 'uppercase'
         }}>
           {product.brand}
-        </div>
+        </button>
         <div style={{
           fontSize: '13px', color: '#111',
           fontWeight: '500', marginBottom: '2px',

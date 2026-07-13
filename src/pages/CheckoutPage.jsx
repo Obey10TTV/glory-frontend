@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
@@ -6,7 +6,7 @@ import { useCart } from '../context/CartContext'
 import { useUser } from '../context/UserContext'
 import { createOrder, initializePayment } from '../api'
 import Message from '../components/Message'
-import { FiCheck, FiCreditCard, FiShield } from 'react-icons/fi'
+import { FiCheck, FiCreditCard } from 'react-icons/fi'
 import { formatCurrency } from '../utils/currency'
 
 const CheckoutPage = () => {
@@ -24,6 +24,7 @@ const CheckoutPage = () => {
   const [paymentMethod, setPaymentMethod] = useState('Paystack')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const idempotencyKey = useRef(crypto.randomUUID())
 
   const shippingPrice = totalPrice >= 75 ? 0 : 8
   const totalAmount = totalPrice + shippingPrice
@@ -49,7 +50,8 @@ const CheckoutPage = () => {
           quantity: item.quantity,
           image: item.image,
           price: item.price,
-          product: item._id
+          product: item._id,
+          variantId: item.variantId || undefined
         })),
         shippingAddress: { fullName, address, city, state, postalCode, phone },
         paymentMethod,
@@ -58,14 +60,13 @@ const CheckoutPage = () => {
         totalPrice: totalAmount
       }
 
-      const { data: order } = await createOrder(orderData)
+      const { data: order } = await createOrder(orderData, idempotencyKey.current)
 
       if (paymentMethod === 'Paystack') {
         const { data: payment } = await initializePayment({
           email: user.email,
           orderId: order._id
         })
-        clearCart()
         window.location.href = payment.data.authorization_url
       } else {
         clearCart()
@@ -265,16 +266,10 @@ const CheckoutPage = () => {
                   {[
                     {
                       value: 'Paystack',
-                      label: 'Pay by Card',
-                      sub: 'Visa, Mastercard, Amex',
+                      label: 'Secure card payment',
+                      sub: 'Complete payment on Paystack, then return for confirmation.',
                       icon: <FiCreditCard size={22} />
-                    },
-                    {
-                      value: 'Crypto',
-                      label: 'Pay with Crypto',
-                      sub: 'USDT, Bitcoin via MetaMask',
-                      icon: <FiShield size={22} />
-                    },
+                    }
                   ].map(method => (
                     <div
                       key={method.value}
@@ -406,7 +401,7 @@ const CheckoutPage = () => {
                     </span>
                   </div>
                   <div style={{ fontSize: '13px', color: '#555' }}>
-                    {paymentMethod === 'Paystack' ? 'Card Payment' : 'Crypto'}
+                    Secure card payment
                   </div>
                 </div>
 
@@ -528,9 +523,9 @@ const CheckoutPage = () => {
               background: '#fafaf9', borderRadius: '10px'
             }}>
               {[
-                'Secure checkout',
-                '100% authentic products',
-                'Easy 30-day returns'
+                'Prices and stock are rechecked by Glory',
+                'Payment is confirmed before the order is processed',
+                'Your bag clears only after successful verification'
               ].map((item, i) => (
                 <div key={i} style={{
                   fontSize: '11px', color: '#888',

@@ -134,7 +134,7 @@ const CartPage = () => {
                     }}
                       onClick={() => navigate(`/products/${item._id}`)}
                     >
-                      {item.name}
+                        {item.name}{item.variantName ? ` - ${item.variantName}` : ''}
                     </div>
                     <div style={{ fontSize: '13px', color: '#888' }}>
                       {item.category}
@@ -149,9 +149,9 @@ const CartPage = () => {
                     <button
                       onClick={() => {
                         if (item.quantity === 1) {
-                          removeFromCart(item._id)
+                          removeFromCart(item.cartKey || item._id)
                         } else {
-                          updateQuantity(item._id, item.quantity - 1)
+                          updateQuantity(item.cartKey || item._id, item.quantity - 1)
                         }
                       }}
                       style={{
@@ -169,7 +169,7 @@ const CartPage = () => {
                       {item.quantity}
                     </span>
                     <button
-                      onClick={() => updateQuantity(item._id, item.quantity + 1)}
+                      onClick={() => updateQuantity(item.cartKey || item._id, item.quantity + 1)}
                       style={{
                         width: '34px', height: '34px',
                         border: 'none', background: '#f5f5f5',
@@ -190,7 +190,7 @@ const CartPage = () => {
 
                   <button
                     className='glory-delete-button'
-                    onClick={() => removeFromCart(item._id)}
+                    onClick={() => removeFromCart(item.cartKey || item._id)}
                     aria-label={`Remove ${item.name} from bag`}
                     style={{
                       background: 'none', border: 'none',

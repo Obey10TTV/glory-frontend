@@ -29,12 +29,16 @@ const ProductDetailPage = () => {
   const [reviewError, setReviewError] = useState('')
   const [reviewSuccess, setReviewSuccess] = useState('')
   const [activeTab, setActiveTab] = useState('description')
+  const [activeImage, setActiveImage] = useState('')
+  const [selectedVariant, setSelectedVariant] = useState(null)
 
   useEffect(() => {
     const fetchProduct = async () => {
       try {
         const { data } = await getProduct(id)
         setProduct(data)
+        setActiveImage(data.image)
+        setSelectedVariant(data.variants?.find(variant => variant.countInStock > 0) || data.variants?.[0] || null)
         const { data: reviewData } = await getReviews(id)
         setReviews(reviewData)
       } catch (error) {
@@ -47,13 +51,22 @@ const ProductDetailPage = () => {
   }, [id])
 
   const handleAddToCart = () => {
-    addToCart({ ...product, quantity })
+    addToCart({
+      ...product,
+      quantity,
+      image: selectedVariant?.image || activeImage || product.image,
+      price: selectedVariant?.price || product.price,
+      countInStock: availableStock,
+      variantId: selectedVariant?._id,
+      variantName: selectedVariant?.name,
+      cartKey: `${product._id}:${selectedVariant?._id || 'default'}`
+    })
     setAdded(true)
     setTimeout(() => setAdded(false), 2000)
   }
 
   const handleBuyNow = () => {
-    addToCart({ ...product, quantity })
+    handleAddToCart()
     navigate('/cart')
   }
 
@@ -85,6 +98,10 @@ const ProductDetailPage = () => {
   if (loading) return <><Navbar /><Loader /></>
   if (!product) return <><Navbar /><Message type='error' text='Product not found' /></>
 
+  const galleryImages = [...new Set([product.image, ...(product.images || []), ...(product.variants || []).map(variant => variant.image)].filter(Boolean))]
+  const availableStock = selectedVariant ? selectedVariant.countInStock : product.countInStock
+  const displayPrice = selectedVariant?.price || product.price
+
   return (
     <div className='glory-page' style={{ background: '#fafaf9', minHeight: '100vh' }}>
       <Navbar />
@@ -115,7 +132,7 @@ const ProductDetailPage = () => {
             position: 'relative'
           }}>
             <img
-              src={product.image}
+              src={activeImage || product.image}
               alt={product.name}
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             />
@@ -138,18 +155,34 @@ const ProductDetailPage = () => {
                 }}
               />
             </button>
+            {galleryImages.length > 1 && (
+              <div className='glory-product-thumbnails'>
+                {galleryImages.map(image => (
+                  <button
+                    key={image}
+                    type='button'
+                    className={activeImage === image ? 'active' : ''}
+                    onClick={() => setActiveImage(image)}
+                    aria-label='View product image'
+                  >
+                    <img src={image} alt='' />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
             <div>
-              <div style={{
+              <button type='button' onClick={() => navigate(`/brands/${encodeURIComponent(product.brand)}`)} style={{
                 fontSize: '11px', color: '#c97a9a',
                 fontWeight: '600', letterSpacing: '0.1em',
-                textTransform: 'uppercase', marginBottom: '8px'
+                textTransform: 'uppercase', marginBottom: '8px', border: 0,
+                background: 'transparent', padding: 0, cursor: 'pointer', fontFamily: 'inherit'
               }}>
                 {product.brand}
-              </div>
+              </button>
               <h1 style={{
                 fontSize: '28px', fontWeight: '700',
                 color: '#111', lineHeight: '1.2',
@@ -182,7 +215,7 @@ const ProductDetailPage = () => {
 
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', flexWrap: 'wrap' }}>
               <strong style={{ fontSize: '32px', fontWeight: '700', color: '#111' }}>
-                {formatCurrency(product.price)}
+                {formatCurrency(displayPrice)}
               </strong>
               {product.compareAtPrice > product.price && (
                 <span style={{ fontSize: '16px', color: '#999', textDecoration: 'line-through' }}>
@@ -190,6 +223,29 @@ const ProductDetailPage = () => {
                 </span>
               )}
             </div>
+
+            {product.variants?.length > 0 && (
+              <div className='glory-variant-picker'>
+                <span>Choose an option</span>
+                <div>
+                  {product.variants.map(variant => (
+                    <button
+                      key={variant._id}
+                      type='button'
+                      className={selectedVariant?._id === variant._id ? 'active' : ''}
+                      disabled={variant.countInStock === 0}
+                      onClick={() => {
+                        setSelectedVariant(variant)
+                        setQuantity(1)
+                        if (variant.image) setActiveImage(variant.image)
+                      }}
+                    >
+                      {variant.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div style={{
               display: 'inline-flex', alignItems: 'center',
@@ -203,13 +259,13 @@ const ProductDetailPage = () => {
 
             <div style={{
               fontSize: '13px',
-              color: product.countInStock > 0 ? '#2ecc71' : '#e74c3c',
+              color: availableStock > 0 ? '#2ecc71' : '#e74c3c',
               fontWeight: '600'
             }}>
-              {product.countInStock > 0 ? `In stock (${product.countInStock} available)` : 'Out of stock'}
+              {availableStock > 0 ? `In stock (${availableStock} available)` : 'Out of stock'}
             </div>
 
-            {product.countInStock > 0 && (
+            {availableStock > 0 && (
               <div>
                 <div style={{
                   fontSize: '12px', fontWeight: '600',
@@ -240,7 +296,7 @@ const ProductDetailPage = () => {
                     {quantity}
                   </span>
                   <button
-                    onClick={() => setQuantity(Math.min(product.countInStock, quantity + 1))}
+                    onClick={() => setQuantity(Math.min(availableStock, quantity + 1))}
                     style={{
                       width: '40px', height: '40px',
                       border: 'none', background: '#f5f5f5',
@@ -256,7 +312,7 @@ const ProductDetailPage = () => {
             <div className='glory-product-actions' style={{ display: 'flex', gap: '12px' }}>
               <button
                 onClick={handleAddToCart}
-                disabled={product.countInStock === 0}
+                disabled={availableStock === 0}
                 className='glory-btn'
                 style={{
                   flex: 1, padding: '15px',
@@ -271,7 +327,7 @@ const ProductDetailPage = () => {
 
               <button
                 onClick={handleBuyNow}
-                disabled={product.countInStock === 0}
+                disabled={availableStock === 0}
                 style={{
                   flex: 1, padding: '15px',
                   fontSize: '14px', fontWeight: '600',

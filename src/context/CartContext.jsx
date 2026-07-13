@@ -10,32 +10,34 @@ export const CartProvider = ({ children }) => {
   )
 
   const addToCart = (product) => {
-    const exists = cartItems.find(item => item._id === product._id)
+    const cartKey = product.cartKey || `${product._id}:${product.variantId || 'default'}`
+    const requestedQuantity = Math.max(1, Number(product.quantity) || 1)
+    const exists = cartItems.find(item => (item.cartKey || `${item._id}:default`) === cartKey)
     
     let updatedCart
     if (exists) {
       updatedCart = cartItems.map(item =>
-        item._id === product._id
-          ? { ...item, quantity: item.quantity + 1 }
+        (item.cartKey || `${item._id}:default`) === cartKey
+          ? { ...item, quantity: item.quantity + requestedQuantity }
           : item
       )
     } else {
-      updatedCart = [...cartItems, { ...product, quantity: 1 }]
+      updatedCart = [...cartItems, { ...product, cartKey, quantity: requestedQuantity }]
     }
     
     setCartItems(updatedCart)
     localStorage.setItem('gloryCart', JSON.stringify(updatedCart))
   }
 
-  const removeFromCart = (id) => {
-    const updatedCart = cartItems.filter(item => item._id !== id)
+  const removeFromCart = (key) => {
+    const updatedCart = cartItems.filter(item => (item.cartKey || item._id) !== key)
     setCartItems(updatedCart)
     localStorage.setItem('gloryCart', JSON.stringify(updatedCart))
   }
 
-  const updateQuantity = (id, quantity) => {
+  const updateQuantity = (key, quantity) => {
     const updatedCart = cartItems.map(item =>
-      item._id === id ? { ...item, quantity } : item
+      (item.cartKey || item._id) === key ? { ...item, quantity } : item
     )
     setCartItems(updatedCart)
     localStorage.setItem('gloryCart', JSON.stringify(updatedCart))

@@ -1,38 +1,82 @@
 import axios from 'axios'
 
-const productionApiUrl = 'https://glory-store-production.up.railway.app/api'
+const productionApiUrl = '/api'
 const localHost = typeof window !== 'undefined' && window.location.hostname === '127.0.0.1'
   ? '127.0.0.1'
   : 'localhost'
 const localApiUrl = `http://${localHost}:5000/api`
 const normalizeApiUrl = (url) => (url || '').trim().replace(/\/$/, '')
-
 const configuredApiUrl = normalizeApiUrl(import.meta.env.VITE_API_URL)
 const useLocalApi = import.meta.env.VITE_USE_LOCAL_API === 'true'
+const baseURL = configuredApiUrl || (useLocalApi ? localApiUrl : productionApiUrl)
 
-const API = axios.create({
-  baseURL: configuredApiUrl || (useLocalApi ? localApiUrl : productionApiUrl),
-  timeout: 20000,
-})
+const API = axios.create({ baseURL, timeout: 20000, withCredentials: true })
+const csrfClient = axios.create({ baseURL, timeout: 20000, withCredentials: true })
+const CSRF_STORAGE_KEY = 'gloryCsrfToken'
+const mutatingMethods = new Set(['post', 'put', 'patch', 'delete'])
+let csrfPromise
 
-// Automatically add token to every request if user is logged in
-API.interceptors.request.use((config) => {
-  const user = JSON.parse(localStorage.getItem('gloryUser'))
-  if (user && user.token) {
-    config.headers.Authorization = `Bearer ${user.token}`
+const getCsrfToken = async (force = false) => {
+  if (!force) {
+    const saved = sessionStorage.getItem(CSRF_STORAGE_KEY)
+    if (saved) return saved
+  }
+  if (!csrfPromise) {
+    csrfPromise = csrfClient.get('/users/csrf')
+      .then(({ data }) => {
+        sessionStorage.setItem(CSRF_STORAGE_KEY, data.csrfToken)
+        return data.csrfToken
+      })
+      .finally(() => { csrfPromise = null })
+  }
+  return csrfPromise
+}
+
+API.interceptors.request.use(async (config) => {
+  if (mutatingMethods.has(String(config.method).toLowerCase())) {
+    config.headers['X-CSRF-Token'] = await getCsrfToken()
   }
   return config
 })
 
-// Handle expired tokens automatically
 API.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response && error.response.status === 401) {
-      // Token expired or invalid — log user out
-      localStorage.removeItem('gloryUser')
-      localStorage.removeItem('gloryCart')
-      window.location.href = '/login'
+  async (error) => {
+    const original = error.config
+    const canRefreshCsrf = error.response?.status === 403
+      && original
+      && !original._gloryCsrfRetried
+      && mutatingMethods.has(String(original.method).toLowerCase())
+
+    if (canRefreshCsrf) {
+      original._gloryCsrfRetried = true
+      try {
+        const csrfToken = await getCsrfToken(true)
+        original.headers['X-CSRF-Token'] = csrfToken
+        return API(original)
+      } catch (csrfError) {
+        return Promise.reject(csrfError)
+      }
+    }
+
+    const canRefresh = error.response?.status === 401
+      && original
+      && !original._gloryRetried
+      && !String(original.url).includes('/users/refresh')
+      && !String(original.url).includes('/users/login')
+
+    if (canRefresh) {
+      original._gloryRetried = true
+      try {
+        const csrfToken = await getCsrfToken()
+        await csrfClient.post('/users/refresh', {}, {
+          headers: { 'X-CSRF-Token': csrfToken }
+        })
+        return API(original)
+      } catch (refreshError) {
+        localStorage.removeItem('gloryUser')
+        window.dispatchEvent(new Event('glory:auth-expired'))
+      }
     }
     return Promise.reject(error)
   }
@@ -41,6 +85,8 @@ API.interceptors.response.use(
 // USERS
 export const registerUser = (data) => API.post('/users/register', data)
 export const loginUser = (data) => API.post('/users/login', data)
+export const logoutUser = () => API.post('/users/logout')
+export const refreshSession = () => API.post('/users/refresh')
 export const verifyEmailOtp = (data) => API.post('/users/verify-email', data)
 export const resendVerificationOtp = (data) => API.post('/users/resend-verification', data)
 export const verifyLoginTwoFactor = (data) => API.post('/users/2fa/verify-login', data)
@@ -48,11 +94,16 @@ export const startTwoFactorEnable = () => API.post('/users/2fa/enable/start')
 export const confirmTwoFactorEnable = (data) => API.post('/users/2fa/enable/confirm', data)
 export const startTwoFactorDisable = () => API.post('/users/2fa/disable/start')
 export const confirmTwoFactorDisable = (data) => API.post('/users/2fa/disable/confirm', data)
+export const startRecoveryCodeRegeneration = () => API.post('/users/2fa/recovery/start')
+export const confirmRecoveryCodeRegeneration = (data) => API.post('/users/2fa/recovery/confirm', data)
 export const getUserProfile = () => API.get('/users/profile')
+export const getSessions = () => API.get('/users/sessions')
+export const revokeSession = (sessionId) => API.delete(`/users/sessions/${sessionId}`)
+export const revokeAllSessions = () => API.delete('/users/sessions')
 export const updateSellerProfile = (data) => API.put('/users/seller-profile', data)
 
 // PRODUCTS
-export const getProducts = () => API.get('/products')
+export const getProducts = (params) => API.get('/products', { params })
 export const getMySellerProducts = () => API.get('/products/mine')
 export const getProduct = (id) => API.get(`/products/${id}`)
 export const createProduct = (data) => API.post('/products', data)
@@ -60,9 +111,14 @@ export const updateProduct = (id, data) => API.put(`/products/${id}`, data)
 export const deleteProduct = (id) => API.delete(`/products/${id}`)
 
 // ORDERS
-export const createOrder = (data) => API.post('/orders', data)
+export const createOrder = (data, idempotencyKey) => API.post('/orders', data, {
+  headers: idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : undefined
+})
 export const getMyOrders = () => API.get('/orders/myorders')
+export const getSellerOrders = () => API.get('/orders/seller')
 export const getOrder = (id) => API.get(`/orders/${id}`)
+export const cancelOrder = (id, data) => API.put(`/orders/${id}/cancel`, data)
+export const updateSellerOrderStatus = (id, data) => API.put(`/orders/${id}/fulfillment`, data)
 export const payOrder = (id, data) => API.put(`/orders/${id}/pay`, data)
 
 // REVIEWS
@@ -71,6 +127,7 @@ export const getReviews = (productId) => API.get(`/reviews/${productId}`)
 
 // UPLOAD
 export const uploadImage = (data) => API.post('/upload', data)
+export const uploadSellerDocument = (data) => API.post('/upload/seller-document', data)
 
 // PAYSTACK
 export const initializePayment = (data) => API.post('/paystack/initialize', data)
@@ -86,3 +143,7 @@ export const deleteUser = (id) => API.delete(`/admin/users/${id}`)
 export const deleteAdminProduct = (id) => API.delete(`/admin/products/${id}`)
 export const makeSeller = (id) => API.put(`/admin/users/${id}/makeseller`)
 export const updateSellerStatus = (id, data) => API.put(`/admin/users/${id}/seller-status`, data)
+export const getSellerDocumentUrl = (userId, documentId) => API.get(`/admin/users/${userId}/documents/${documentId}`)
+export const updateSellerDocumentStatus = (userId, documentId, data) => API.put(`/admin/users/${userId}/documents/${documentId}`, data)
+
+export default API

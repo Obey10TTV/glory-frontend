@@ -6,9 +6,15 @@ import Loader from '../components/Loader'
 import Message from '../components/Message'
 import { useUser } from '../context/UserContext'
 import {
+  cancelOrder,
+  confirmRecoveryCodeRegeneration,
   confirmTwoFactorDisable,
   confirmTwoFactorEnable,
   getMyOrders,
+  getSessions,
+  revokeAllSessions,
+  revokeSession,
+  startRecoveryCodeRegeneration,
   startTwoFactorDisable,
   startTwoFactorEnable
 } from '../api'
@@ -20,7 +26,10 @@ import {
   FiLogOut,
   FiMapPin,
   FiPackage,
+  FiRefreshCw,
   FiShield,
+  FiSmartphone,
+  FiTrash2,
   FiUser
 } from 'react-icons/fi'
 import { formatCurrency } from '../utils/currency'
@@ -36,6 +45,9 @@ const AccountPage = () => {
   const [securityLoading, setSecurityLoading] = useState(false)
   const [securityMessage, setSecurityMessage] = useState('')
   const [securityError, setSecurityError] = useState('')
+  const [sessions, setSessions] = useState([])
+  const [recoveryCodes, setRecoveryCodes] = useState([])
+  const [orderActionId, setOrderActionId] = useState('')
 
   useEffect(() => {
     if (!user) {
@@ -43,10 +55,14 @@ const AccountPage = () => {
       return
     }
 
-    const fetchOrders = async () => {
+    const fetchAccountData = async () => {
       try {
-        const { data } = await getMyOrders()
-        setOrders(data)
+        const [orderResponse, sessionResponse] = await Promise.all([
+          getMyOrders(),
+          getSessions()
+        ])
+        setOrders(orderResponse.data)
+        setSessions(sessionResponse.data)
       } catch (error) {
         console.log(error)
       } finally {
@@ -54,7 +70,7 @@ const AccountPage = () => {
       }
     }
 
-    fetchOrders()
+    fetchAccountData()
   }, [user, navigate])
 
   const handleLogout = () => {
@@ -94,14 +110,19 @@ const AccountPage = () => {
     try {
       const { data } = securityStep === 'enable'
         ? await confirmTwoFactorEnable({ otp: securityCode })
-        : await confirmTwoFactorDisable({ otp: securityCode })
+        : securityStep === 'recovery'
+          ? await confirmRecoveryCodeRegeneration({ otp: securityCode })
+          : await confirmTwoFactorDisable({ otp: securityCode })
 
-      login(data)
+      if (securityStep !== 'recovery') login(data)
+      if (Array.isArray(data.recoveryCodes)) setRecoveryCodes(data.recoveryCodes)
       setSecurityStep(null)
       setSecurityCode('')
       setSecurityMessage(
         securityStep === 'enable'
           ? 'Two-factor authentication is now enabled.'
+          : securityStep === 'recovery'
+            ? 'New recovery codes created. Your previous codes no longer work.'
           : 'Two-factor authentication has been disabled.'
       )
     } catch (error) {
@@ -111,11 +132,69 @@ const AccountPage = () => {
     }
   }
 
+  const handleStartRecoveryCodes = async () => {
+    setSecurityLoading(true)
+    setSecurityError('')
+    setRecoveryCodes([])
+    try {
+      const { data } = await startRecoveryCodeRegeneration()
+      setSecurityStep('recovery')
+      setSecurityMessage(data.message)
+    } catch (error) {
+      setSecurityError(error.response?.data?.message || 'Could not start recovery code regeneration')
+    } finally {
+      setSecurityLoading(false)
+    }
+  }
+
+  const handleRevokeSession = async (sessionId) => {
+    setSecurityLoading(true)
+    setSecurityError('')
+    try {
+      await revokeSession(sessionId)
+      setSessions(current => current.filter(session => session.sessionId !== sessionId))
+      setSecurityMessage('Session signed out.')
+    } catch (error) {
+      setSecurityError(error.response?.data?.message || 'Could not sign out that session')
+    } finally {
+      setSecurityLoading(false)
+    }
+  }
+
+  const handleRevokeAllSessions = async () => {
+    setSecurityLoading(true)
+    setSecurityError('')
+    try {
+      await revokeAllSessions()
+      await logout()
+      navigate('/login')
+    } catch (error) {
+      setSecurityError(error.response?.data?.message || 'Could not sign out all sessions')
+      setSecurityLoading(false)
+    }
+  }
+
+  const handleCancelOrder = async (order) => {
+    const reason = order.isPaid
+      ? 'Buyer requested cancellation before fulfillment.'
+      : 'Buyer cancelled before payment.'
+    setOrderActionId(order._id)
+    try {
+      const { data } = await cancelOrder(order._id, { reason })
+      setOrders(current => current.map(item => item._id === data._id ? data : item))
+    } catch (error) {
+      setSecurityError(error.response?.data?.message || 'Could not update this order')
+    } finally {
+      setOrderActionId('')
+    }
+  }
+
   const statusColor = (status) => {
     if (status === 'Delivered') return '#2ecc71'
     if (status === 'Shipped') return '#3498db'
     if (status === 'Processing') return '#f39c12'
     if (status === 'Cancelled') return '#e74c3c'
+    if (status === 'CancellationRequested') return '#b45309'
     return '#888'
   }
 
@@ -233,13 +312,15 @@ const AccountPage = () => {
 
                         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                           {order.orderItems.map((item, i) => (
-                            <div key={i} style={orderItemStyle}>
-                              <img
-                                src={item.image}
-                                alt={item.name}
-                                style={{ width: '24px', height: '24px', borderRadius: '4px', objectFit: 'cover' }}
-                              />
-                              {item.name} x {item.quantity}
+                            <div key={i} className='glory-account-order-item' style={orderItemStyle}>
+                              <img src={item.image} alt={item.name} />
+                              <span>
+                                <strong>{item.name}</strong> x {item.quantity}
+                                <small>
+                                  {item.fulfillmentStatus || 'Pending'}
+                                  {item.trackingNumber ? ` - Tracking: ${item.trackingNumber}` : ''}
+                                </small>
+                              </span>
                             </div>
                           ))}
                         </div>
@@ -258,6 +339,19 @@ const AccountPage = () => {
                             {order.isDelivered ? 'Delivered' : 'Not delivered'}
                           </span>
                         </div>
+
+                        {['Pending', 'Processing'].includes(order.status) && (
+                          <button
+                            type='button'
+                            className='glory-outline-action glory-order-cancel-action'
+                            disabled={orderActionId === order._id}
+                            onClick={() => handleCancelOrder(order)}
+                          >
+                            {orderActionId === order._id
+                              ? 'Updating...'
+                              : order.isPaid ? 'Request cancellation' : 'Cancel order'}
+                          </button>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -290,6 +384,16 @@ const AccountPage = () => {
                 {securityError && <Message type='error' text={securityError} />}
                 {securityMessage && <Message type='success' text={securityMessage} />}
 
+                {recoveryCodes.length > 0 && (
+                  <div className='glory-recovery-panel' role='status'>
+                    <strong>Store these recovery codes offline</strong>
+                    <p>Each code works once. They will not be displayed again after you leave this page.</p>
+                    <div>
+                      {recoveryCodes.map(code => <code key={code}>{code}</code>)}
+                    </div>
+                  </div>
+                )}
+
                 <div className='glory-security-grid'>
                   <SecurityStatus
                     icon={<FiCheckCircle size={20} />}
@@ -317,23 +421,36 @@ const AccountPage = () => {
 
                 <div style={{ marginTop: '22px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
                   {!securityStep ? (
-                    <button
-                      onClick={() => handleStartTwoFactor(twoFactorEnabled ? 'disable' : 'enable')}
-                      disabled={securityLoading}
-                      className={twoFactorEnabled ? 'glory-outline-action' : 'glory-btn'}
-                      style={{ padding: '12px 22px', fontSize: '13px', width: 'fit-content' }}
-                    >
-                      {securityLoading
-                        ? 'Sending code...'
-                        : twoFactorEnabled
-                          ? 'Disable 2FA'
-                          : 'Enable 2FA'}
-                    </button>
+                    <div className='glory-profile-actions'>
+                      <button
+                        onClick={() => handleStartTwoFactor(twoFactorEnabled ? 'disable' : 'enable')}
+                        disabled={securityLoading}
+                        className={twoFactorEnabled ? 'glory-outline-action' : 'glory-btn'}
+                      >
+                        {securityLoading
+                          ? 'Sending code...'
+                          : twoFactorEnabled
+                            ? 'Disable 2FA'
+                            : 'Enable 2FA'}
+                      </button>
+                      {twoFactorEnabled && (
+                        <button
+                          type='button'
+                          onClick={handleStartRecoveryCodes}
+                          disabled={securityLoading}
+                          className='glory-outline-action'
+                        >
+                          <FiRefreshCw size={15} /> New recovery codes
+                        </button>
+                      )}
+                    </div>
                   ) : (
                     <div style={otpPanelStyle}>
                       <div>
                         <label style={labelStyle}>
-                          {securityStep === 'enable' ? 'Setup code' : 'Disable code'}
+                          {securityStep === 'enable'
+                            ? 'Setup code'
+                            : securityStep === 'recovery' ? 'Recovery code confirmation' : 'Disable code'}
                         </label>
                         <input
                           type='text'
@@ -368,6 +485,43 @@ const AccountPage = () => {
                       </div>
                     </div>
                   )}
+                </div>
+
+                <div className='glory-session-section'>
+                  <div className='glory-session-heading'>
+                    <div>
+                      <strong>Active sessions</strong>
+                      <span>Devices currently signed in to your Glory account.</span>
+                    </div>
+                    {sessions.length > 1 && (
+                      <button type='button' onClick={handleRevokeAllSessions} disabled={securityLoading}>
+                        Sign out everywhere
+                      </button>
+                    )}
+                  </div>
+                  <div className='glory-session-list'>
+                    {sessions.map(session => (
+                      <div key={session.sessionId} className='glory-session-row'>
+                        <FiSmartphone size={19} />
+                        <div>
+                          <strong>{session.deviceLabel}</strong>
+                          <span>
+                            {session.current ? 'This device' : `Last active ${new Date(session.lastUsedAt).toLocaleDateString('en-CA')}`}
+                          </span>
+                        </div>
+                        {!session.current && (
+                          <button
+                            type='button'
+                            onClick={() => handleRevokeSession(session.sessionId)}
+                            disabled={securityLoading}
+                            aria-label={`Sign out ${session.deviceLabel}`}
+                          >
+                            <FiTrash2 size={16} />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </Panel>
             )}
