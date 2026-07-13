@@ -94,6 +94,9 @@ const AboutPage = () => {
             <img
               src='https://res.cloudinary.com/dd8y3dijs/image/upload/v1777771736/glory-store/e0ej2dulr0zdnvper1oz.jpg'
               alt='Obioma Ajoku, Founder of Glory'
+              loading='lazy'
+              width='900'
+              height='1100'
             />
           </div>
 

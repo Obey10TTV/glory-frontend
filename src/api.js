@@ -101,6 +101,9 @@ export const getSessions = () => API.get('/users/sessions')
 export const revokeSession = (sessionId) => API.delete(`/users/sessions/${sessionId}`)
 export const revokeAllSessions = () => API.delete('/users/sessions')
 export const updateSellerProfile = (data) => API.put('/users/seller-profile', data)
+export const exportMyData = () => API.get('/users/privacy/export')
+export const requestAccountDeletion = (data) => API.post('/users/privacy/deletion-request', data)
+export const cancelAccountDeletion = () => API.delete('/users/privacy/deletion-request')
 
 // PRODUCTS
 export const getProducts = (params) => API.get('/products', { params })
@@ -118,6 +121,8 @@ export const getMyOrders = () => API.get('/orders/myorders')
 export const getSellerOrders = () => API.get('/orders/seller')
 export const getOrder = (id) => API.get(`/orders/${id}`)
 export const cancelOrder = (id, data) => API.put(`/orders/${id}/cancel`, data)
+export const openOrderDispute = (id, data) => API.post(`/orders/${id}/dispute`, data)
+export const addOrderSupportNote = (id, data) => API.post(`/orders/${id}/support-notes`, data)
 export const updateSellerOrderStatus = (id, data) => API.put(`/orders/${id}/fulfillment`, data)
 export const payOrder = (id, data) => API.put(`/orders/${id}/pay`, data)
 
@@ -145,5 +150,9 @@ export const makeSeller = (id) => API.put(`/admin/users/${id}/makeseller`)
 export const updateSellerStatus = (id, data) => API.put(`/admin/users/${id}/seller-status`, data)
 export const getSellerDocumentUrl = (userId, documentId) => API.get(`/admin/users/${userId}/documents/${documentId}`)
 export const updateSellerDocumentStatus = (userId, documentId, data) => API.put(`/admin/users/${userId}/documents/${documentId}`, data)
+export const resolveCancellation = (orderId, data) => API.put(`/admin/orders/${orderId}/cancellation`, data)
+export const resolveDispute = (orderId, data) => API.put(`/admin/orders/${orderId}/dispute`, data)
+export const addAdminOrderNote = (orderId, data) => API.post(`/admin/orders/${orderId}/notes`, data)
+export const getAdminAudit = (params) => API.get('/admin/audit', { params })
 
 export default API

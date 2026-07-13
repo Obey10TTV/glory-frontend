@@ -205,6 +205,8 @@ const HomePage = () => {
                   src={category.image}
                   alt={`${category.name} beauty products`}
                   loading='lazy'
+                  width='900'
+                  height='1080'
                   style={{ objectPosition: category.imagePosition }}
                 />
                 <span className='glory-category-gradient' />
@@ -277,7 +279,7 @@ const HomePage = () => {
                   onClick={() => shopCategory(item.name)}
                 >
                   <span className='glory-editorial-media'>
-                    <img src={item.image} alt={`${item.name} category`} loading='lazy' />
+                    <img src={item.image} alt={`${item.name} category`} loading='lazy' width='640' height='520' />
                   </span>
                   <span className='glory-editorial-body'>
                     <span>Explore the edit</span>

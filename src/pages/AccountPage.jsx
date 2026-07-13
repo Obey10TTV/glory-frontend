@@ -6,12 +6,17 @@ import Loader from '../components/Loader'
 import Message from '../components/Message'
 import { useUser } from '../context/UserContext'
 import {
+  addOrderSupportNote,
   cancelOrder,
+  cancelAccountDeletion,
   confirmRecoveryCodeRegeneration,
   confirmTwoFactorDisable,
   confirmTwoFactorEnable,
+  exportMyData,
   getMyOrders,
   getSessions,
+  openOrderDispute,
+  requestAccountDeletion,
   revokeAllSessions,
   revokeSession,
   startRecoveryCodeRegeneration,
@@ -22,9 +27,11 @@ import {
   FiAlertTriangle,
   FiCheckCircle,
   FiChevronRight,
+  FiDownload,
   FiLock,
   FiLogOut,
   FiMapPin,
+  FiMessageSquare,
   FiPackage,
   FiRefreshCw,
   FiShield,
@@ -48,6 +55,12 @@ const AccountPage = () => {
   const [sessions, setSessions] = useState([])
   const [recoveryCodes, setRecoveryCodes] = useState([])
   const [orderActionId, setOrderActionId] = useState('')
+  const [issueOrderId, setIssueOrderId] = useState('')
+  const [issueType, setIssueType] = useState('damaged')
+  const [issueMessage, setIssueMessage] = useState('')
+  const [supportMessage, setSupportMessage] = useState('')
+  const [privacyPassword, setPrivacyPassword] = useState('')
+  const [privacyLoading, setPrivacyLoading] = useState(false)
 
   useEffect(() => {
     if (!user) {
@@ -189,6 +202,89 @@ const AccountPage = () => {
     }
   }
 
+  const replaceOrder = (updatedOrder) => {
+    setOrders(current => current.map(order => order._id === updatedOrder._id ? updatedOrder : order))
+  }
+
+  const handleOpenDispute = async (orderId) => {
+    setOrderActionId(orderId)
+    setSecurityError('')
+    try {
+      const { data } = await openOrderDispute(orderId, { type: issueType, message: issueMessage })
+      replaceOrder(data)
+      setIssueMessage('')
+      setSupportMessage('')
+      setSecurityMessage('Your order issue was sent to Glory support.')
+    } catch (error) {
+      setSecurityError(error.response?.data?.message || 'Could not report this issue')
+    } finally {
+      setOrderActionId('')
+    }
+  }
+
+  const handleSupportMessage = async (orderId) => {
+    setOrderActionId(orderId)
+    setSecurityError('')
+    try {
+      const { data } = await addOrderSupportNote(orderId, { message: supportMessage })
+      replaceOrder(data)
+      setSupportMessage('')
+    } catch (error) {
+      setSecurityError(error.response?.data?.message || 'Could not send this message')
+    } finally {
+      setOrderActionId('')
+    }
+  }
+
+  const handleDataExport = async () => {
+    setPrivacyLoading(true)
+    setSecurityError('')
+    try {
+      const { data } = await exportMyData()
+      const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }))
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `glory-data-${new Date().toISOString().slice(0, 10)}.json`
+      link.click()
+      URL.revokeObjectURL(url)
+      setSecurityMessage('Your Glory data export is ready.')
+    } catch (error) {
+      setSecurityError(error.response?.data?.message || 'Could not create your data export')
+    } finally {
+      setPrivacyLoading(false)
+    }
+  }
+
+  const handleDeletionRequest = async () => {
+    if (!privacyPassword || !window.confirm('Submit an account deletion request? Active orders must be resolved first.')) return
+    setPrivacyLoading(true)
+    setSecurityError('')
+    try {
+      const { data } = await requestAccountDeletion({ password: privacyPassword })
+      login({ ...user, privacy: data.privacy })
+      setPrivacyPassword('')
+      setSecurityMessage(data.message)
+    } catch (error) {
+      setSecurityError(error.response?.data?.message || 'Could not submit the deletion request')
+    } finally {
+      setPrivacyLoading(false)
+    }
+  }
+
+  const handleCancelDeletion = async () => {
+    setPrivacyLoading(true)
+    setSecurityError('')
+    try {
+      const { data } = await cancelAccountDeletion()
+      login({ ...user, privacy: data.privacy })
+      setSecurityMessage(data.message)
+    } catch (error) {
+      setSecurityError(error.response?.data?.message || 'Could not cancel the deletion request')
+    } finally {
+      setPrivacyLoading(false)
+    }
+  }
+
   const statusColor = (status) => {
     if (status === 'Delivered') return '#2ecc71'
     if (status === 'Shipped') return '#3498db'
@@ -233,6 +329,7 @@ const AccountPage = () => {
               { id: 'orders', label: 'My Orders', icon: <FiPackage size={16} /> },
               { id: 'profile', label: 'Profile', icon: <FiUser size={16} /> },
               { id: 'security', label: 'Security', icon: <FiShield size={16} /> },
+              { id: 'privacy', label: 'Privacy', icon: <FiLock size={16} /> },
               { id: 'address', label: 'Addresses', icon: <FiMapPin size={16} /> },
             ].map(item => (
               <SidebarButton
@@ -269,6 +366,8 @@ const AccountPage = () => {
             {activeTab === 'orders' && (
               <div>
                 <SectionTitle title='My Orders' />
+                {securityError && <Message type='error' text={securityError} />}
+                {securityMessage && <Message type='success' text={securityMessage} />}
 
                 {loading ? <Loader /> : orders.length === 0 ? (
                   <EmptyState
@@ -352,6 +451,103 @@ const AccountPage = () => {
                               : order.isPaid ? 'Request cancellation' : 'Cancel order'}
                           </button>
                         )}
+
+                        <div className='glory-order-support'>
+                          <div className='glory-order-support-summary'>
+                            <div>
+                              <strong>Order support</strong>
+                              <span>
+                                {order.dispute?.openedAt
+                                  ? `Issue ${order.dispute.status.toLowerCase()}`
+                                  : 'Report damage, missing items, or listing problems'}
+                              </span>
+                            </div>
+                            <button
+                              type='button'
+                              className='glory-outline-action'
+                              onClick={() => setIssueOrderId(current => current === order._id ? '' : order._id)}
+                              aria-expanded={issueOrderId === order._id}
+                            >
+                              <FiMessageSquare size={15} />
+                              {issueOrderId === order._id ? 'Close' : 'Get help'}
+                            </button>
+                          </div>
+
+                          {order.refundStatus && order.refundStatus !== 'None' && (
+                            <div className='glory-order-refund-state'>
+                              Refund: {order.refundStatus}
+                              {order.refundedAmount > 0 ? ` (${formatCurrency(order.refundedAmount)})` : ''}
+                            </div>
+                          )}
+
+                          {issueOrderId === order._id && (
+                            <div className='glory-order-support-panel'>
+                              {(order.supportNotes || []).length > 0 && (
+                                <div className='glory-order-thread'>
+                                  {order.supportNotes.map(note => (
+                                    <div key={note._id} className={`is-${note.authorRole}`}>
+                                      <strong>{note.authorRole === 'admin' ? 'Glory support' : note.authorRole}</strong>
+                                      <p>{note.message}</p>
+                                      <time>{new Date(note.createdAt).toLocaleString('en-CA')}</time>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+
+                              {!order.dispute?.openedAt && !['Cancelled', 'CancellationRequested'].includes(order.status) ? (
+                                <div className='glory-issue-form'>
+                                  <label>
+                                    Issue type
+                                    <select value={issueType} onChange={event => setIssueType(event.target.value)}>
+                                      <option value='damaged'>Damaged item</option>
+                                      <option value='missing'>Missing item</option>
+                                      <option value='wrong_item'>Wrong item</option>
+                                      <option value='not_as_described'>Not as described</option>
+                                      <option value='other'>Something else</option>
+                                    </select>
+                                  </label>
+                                  <label>
+                                    What happened?
+                                    <textarea
+                                      value={issueMessage}
+                                      onChange={event => setIssueMessage(event.target.value)}
+                                      maxLength={1000}
+                                      placeholder='Include the item and the clearest details you can.'
+                                    />
+                                  </label>
+                                  <button
+                                    type='button'
+                                    className='glory-btn'
+                                    disabled={orderActionId === order._id || issueMessage.trim().length < 10}
+                                    onClick={() => handleOpenDispute(order._id)}
+                                  >
+                                    Submit issue
+                                  </button>
+                                </div>
+                              ) : (
+                                <div className='glory-issue-form'>
+                                  <label>
+                                    Add a message
+                                    <textarea
+                                      value={supportMessage}
+                                      onChange={event => setSupportMessage(event.target.value)}
+                                      maxLength={1000}
+                                      placeholder='Reply to Glory support about this order.'
+                                    />
+                                  </label>
+                                  <button
+                                    type='button'
+                                    className='glory-btn'
+                                    disabled={orderActionId === order._id || supportMessage.trim().length < 2}
+                                    onClick={() => handleSupportMessage(order._id)}
+                                  >
+                                    Send message
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -521,6 +717,53 @@ const AccountPage = () => {
                         )}
                       </div>
                     ))}
+                  </div>
+                </div>
+              </Panel>
+            )}
+
+            {activeTab === 'privacy' && (
+              <Panel>
+                <SectionTitle title='Privacy & Data' />
+                {securityError && <Message type='error' text={securityError} />}
+                {securityMessage && <Message type='success' text={securityMessage} />}
+                <div className='glory-privacy-options'>
+                  <div>
+                    <FiDownload size={20} />
+                    <span>
+                      <strong>Download your data</strong>
+                      <small>Receive a JSON copy of your profile, orders, reviews, and seller listings.</small>
+                    </span>
+                    <button type='button' className='glory-outline-action' onClick={handleDataExport} disabled={privacyLoading}>
+                      Download
+                    </button>
+                  </div>
+
+                  <div className='is-danger'>
+                    <FiTrash2 size={20} />
+                    <span>
+                      <strong>Delete your account</strong>
+                      <small>Requests are reviewed so orders, refunds, and required transaction records remain protected.</small>
+                    </span>
+                    {user?.privacy?.deletionStatus === 'pending' ? (
+                      <button type='button' className='glory-outline-action' onClick={handleCancelDeletion} disabled={privacyLoading}>
+                        Cancel request
+                      </button>
+                    ) : (
+                      <div className='glory-privacy-confirm'>
+                        <label htmlFor='privacy-password'>Current password</label>
+                        <input
+                          id='privacy-password'
+                          type='password'
+                          autoComplete='current-password'
+                          value={privacyPassword}
+                          onChange={event => setPrivacyPassword(event.target.value)}
+                        />
+                        <button type='button' onClick={handleDeletionRequest} disabled={privacyLoading || !privacyPassword}>
+                          Request deletion
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </Panel>

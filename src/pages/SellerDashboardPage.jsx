@@ -20,6 +20,7 @@ import {
 import {
   FiCheckCircle,
   FiClock,
+  FiDollarSign,
   FiEdit3,
   FiFileText,
   FiImage,
@@ -48,6 +49,12 @@ const emptySellerProfile = {
   verificationNote: ''
 }
 
+const priceGuidance = {
+  Skincare: [12, 95], Haircare: [10, 75], Makeup: [10, 85], Nails: [8, 55],
+  Lashes: [8, 45], 'Body Care': [10, 70], 'Body Liquid': [8, 55],
+  Fragrance: [18, 180], 'Scented Candles': [16, 85], 'Tools & Accessories': [8, 120]
+}
+
 const SellerDashboardPage = () => {
   const navigate = useNavigate()
   const { user, login } = useUser()
@@ -73,12 +80,17 @@ const SellerDashboardPage = () => {
   const [compareAtPrice, setCompareAtPrice] = useState('')
   const [sku, setSku] = useState('')
   const [size, setSize] = useState('')
+  const [productType, setProductType] = useState('')
+  const [countryOfOrigin, setCountryOfOrigin] = useState('')
+  const [barcode, setBarcode] = useState('')
   const [description, setDescription] = useState('')
   const [ingredients, setIngredients] = useState('')
   const [howToUse, setHowToUse] = useState('')
+  const [keyBenefits, setKeyBenefits] = useState('')
   const [category, setCategory] = useState('')
   const [brand, setBrand] = useState('')
   const [countInStock, setCountInStock] = useState('')
+  const [lowStockThreshold, setLowStockThreshold] = useState('5')
   const [image, setImage] = useState('')
   const [images, setImages] = useState([])
   const [variants, setVariants] = useState([])
@@ -153,12 +165,17 @@ const SellerDashboardPage = () => {
     setCompareAtPrice('')
     setSku('')
     setSize('')
+    setProductType('')
+    setCountryOfOrigin('')
+    setBarcode('')
     setDescription('')
     setIngredients('')
     setHowToUse('')
+    setKeyBenefits('')
     setCategory('')
     setBrand('')
     setCountInStock('')
+    setLowStockThreshold('5')
     setImage('')
     setImages([])
     setVariants([])
@@ -184,12 +201,17 @@ const SellerDashboardPage = () => {
     setCompareAtPrice(product.compareAtPrice ? String(product.compareAtPrice) : '')
     setSku(product.sku || '')
     setSize(product.size || '')
+    setProductType(product.productType || '')
+    setCountryOfOrigin(product.countryOfOrigin || '')
+    setBarcode(product.barcode || '')
     setDescription(product.description || '')
     setIngredients(product.ingredients || '')
     setHowToUse(product.howToUse || '')
+    setKeyBenefits((product.keyBenefits || []).join('\n'))
     setCategory(product.category || '')
     setBrand(product.brand || '')
     setCountInStock(String(product.countInStock || 0))
+    setLowStockThreshold(String(product.lowStockThreshold ?? 5))
     setImage(product.image || '')
     setImages(product.images || [])
     setVariants((product.variants || []).map(variant => ({
@@ -258,12 +280,14 @@ const SellerDashboardPage = () => {
     const numericPrice = Number(price)
     const numericCompareAtPrice = compareAtPrice ? Number(compareAtPrice) : undefined
     const numericStock = Number(countInStock)
+    const numericLowStockThreshold = Number(lowStockThreshold)
 
-    if (!name || !price || !description || !category || !brand || countInStock === '' || !image) {
-      return { error: 'Please fill in all fields and upload an image' }
+    const benefitList = keyBenefits.split('\n').map(item => item.trim()).filter(Boolean).slice(0, 8)
+    if (!name || !price || description.trim().length < 40 || !category || !brand || !productType || !countryOfOrigin || countInStock === '' || !image || images.length < 1 || benefitList.length < 2) {
+      return { error: 'Complete the required listing details, add two benefits, and upload a primary plus gallery image.' }
     }
 
-    if (numericPrice <= 0 || numericStock < 0) {
+    if (numericPrice <= 0 || numericStock < 0 || numericLowStockThreshold < 0) {
       return { error: 'Please enter a valid price and stock quantity' }
     }
 
@@ -278,12 +302,17 @@ const SellerDashboardPage = () => {
         compareAtPrice: numericCompareAtPrice,
         sku,
         size,
+        productType,
+        countryOfOrigin,
+        barcode,
         description,
         ingredients,
         howToUse,
+        keyBenefits: benefitList,
         category,
         brand,
         countInStock: numericStock,
+        lowStockThreshold: numericLowStockThreshold,
         image,
         images,
         variants: variants.map(variant => ({
@@ -743,7 +772,11 @@ const SellerDashboardPage = () => {
                           </div>
                         </td>
                         <td><strong>{formatCurrency(product.price)}</strong></td>
-                        <td>{product.countInStock}</td>
+                        <td>
+                          <span className={product.countInStock <= (product.lowStockThreshold ?? 5) ? 'glory-low-stock' : ''}>
+                            {product.countInStock}
+                          </span>
+                        </td>
                         <td>
                           <span className='glory-status-chip' style={{ color: meta.color, background: `${meta.color}15` }}>
                             {meta.icon} {meta.label}
@@ -819,7 +852,7 @@ const SellerDashboardPage = () => {
               </div>
 
               <div>
-                <label style={labelStyle}>Gallery Images (Optional)</label>
+                  <label style={labelStyle}>Gallery Images</label>
                 <div className='glory-gallery-uploader'>
                   {images.map((galleryImage, index) => (
                     <div key={galleryImage}>
@@ -861,6 +894,16 @@ const SellerDashboardPage = () => {
                 </div>
               </div>
 
+              {category && priceGuidance[category] && (
+                <div className={`glory-price-guidance ${Number(price) > priceGuidance[category][1] * 2 ? 'is-warning' : ''}`}>
+                  <FiDollarSign size={17} />
+                  <span>
+                    <strong>Pricing reference</strong>
+                    Most {category.toLowerCase()} listings on a Canadian beauty marketplace commonly sit around {formatCurrency(priceGuidance[category][0])}–{formatCurrency(priceGuidance[category][1])}. Set the real price for your product; unusually high prices may need extra review.
+                  </span>
+                </div>
+              )}
+
               <div className='glory-form-grid'>
                 <div>
                   <label style={labelStyle}>Compare-at Price (Optional)</label>
@@ -870,6 +913,29 @@ const SellerDashboardPage = () => {
                 <div>
                   <label style={labelStyle}>SKU (Optional)</label>
                   <input value={sku} onChange={event => setSku(event.target.value)} placeholder='e.g. GLW-SERUM-30' maxLength={64} style={inputStyle} />
+                </div>
+              </div>
+
+              <div className='glory-form-grid'>
+                <div>
+                  <label style={labelStyle}>Product Type</label>
+                  <input value={productType} onChange={event => setProductType(event.target.value)} placeholder='e.g. Leave-in conditioner' maxLength={100} style={inputStyle} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Country of Origin</label>
+                  <input value={countryOfOrigin} onChange={event => setCountryOfOrigin(event.target.value)} placeholder='e.g. Canada' maxLength={100} style={inputStyle} />
+                </div>
+              </div>
+
+              <div className='glory-form-grid'>
+                <div>
+                  <label style={labelStyle}>Barcode / UPC (Optional)</label>
+                  <input value={barcode} onChange={event => setBarcode(event.target.value)} placeholder='Product barcode' maxLength={64} style={inputStyle} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Low-stock Alert</label>
+                  <input value={lowStockThreshold} onChange={event => setLowStockThreshold(event.target.value)} type='number' min='0' max='1000' style={inputStyle} />
+                  <div className='glory-form-help'>Glory alerts you when total stock reaches this number.</div>
                 </div>
               </div>
 
@@ -922,6 +988,19 @@ const SellerDashboardPage = () => {
                   maxLength={1200}
                   style={{ ...inputStyle, resize: 'vertical' }}
                 />
+              </div>
+
+              <div>
+                <label style={labelStyle}>Key Benefits (One per line)</label>
+                <textarea
+                  value={keyBenefits}
+                  onChange={event => setKeyBenefits(event.target.value)}
+                  placeholder={'Hydrates without residue\nSupports the skin barrier\nSuitable for sensitive skin'}
+                  rows={4}
+                  maxLength={960}
+                  style={{ ...inputStyle, resize: 'vertical' }}
+                />
+                <div className='glory-form-help'>Add up to eight specific, supportable benefits. Avoid medical claims.</div>
               </div>
 
               <div className='glory-variant-builder'>

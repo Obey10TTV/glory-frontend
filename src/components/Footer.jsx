@@ -300,6 +300,13 @@ const Footer = () => {
                 {item.label}
               </Link>
             ))}
+            <button
+              type='button'
+              className='glory-footer-cookie-button'
+              onClick={() => window.dispatchEvent(new Event('glory:open-cookie-settings'))}
+            >
+              Manage cookies
+            </button>
           </div>
         </div>
       </div>

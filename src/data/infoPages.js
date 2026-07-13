@@ -94,7 +94,7 @@ export const infoPages = {
       { title: 'Is Glory only for Canada?', body: 'Glory is currently designed around Canadian checkout, CAD pricing and Canada-focused fulfillment.' },
       { title: 'Are products authentic?', body: 'Glory is built for verified sellers and authentic product listings. Seller checks will continue to tighten as the marketplace grows.' },
       { title: 'Can I sell my beauty brand here?', body: 'Yes. Visit Sell on Glory to learn how sellers can prepare their products, store profile and fulfillment setup.' },
-      { title: 'Can I pay with crypto?', body: 'Glory is designed to support card and selected crypto payment options where available.' },
+      { title: 'How can I pay?', body: 'Glory supports the payment methods shown during checkout. Availability may vary while payment services are configured.' },
     ],
   },
   support: {
@@ -106,7 +106,7 @@ export const infoPages = {
     secondaryAction: { label: 'FAQs', to: '/faq' },
     cards: [
       { title: 'Orders', text: 'Track an order, report a missing package, or ask about delivery timing.' },
-      { title: 'Payments', text: 'Get help with card checkout, crypto payment status, refunds or failed payments.' },
+      { title: 'Payments', text: 'Get help with checkout, payment status, refunds or failed payments.' },
       { title: 'Seller help', text: 'Ask about product uploads, seller verification, pricing and marketplace rules.' },
     ],
   },
@@ -183,7 +183,7 @@ export const infoPages = {
     secondaryAction: { label: 'Seller resources', to: '/seller-resources' },
     cards: [
       { title: 'Professional storefront', text: 'Move from DM orders to a polished catalog customers can browse anytime.' },
-      { title: 'Checkout built in', text: 'Use a structured checkout flow with card and supported crypto payment options.' },
+      { title: 'Checkout built in', text: 'Use a structured checkout flow with the payment methods currently offered by Glory.' },
       { title: 'Designed for beauty', text: 'Categories, product details and customer flows made for beauty shoppers.' },
     ],
     sections: [
@@ -242,7 +242,7 @@ export const infoPages = {
     sections: [
       { title: 'Do I need an existing website?', body: 'No. Glory is designed to give sellers a storefront and product catalog inside the marketplace.' },
       { title: 'Can I add my own products?', body: 'Yes. Approved sellers can upload product details, images, price, category and inventory from the seller dashboard.' },
-      { title: 'How do customers pay?', body: 'Glory is built around structured checkout with supported card and crypto payment options.' },
+      { title: 'How do customers pay?', body: 'Glory uses a structured checkout and displays the payment methods currently available to each customer.' },
       { title: 'How do I get approved?', body: 'Seller verification will review product category, brand details and readiness to fulfill orders.' },
     ],
   },
@@ -289,13 +289,13 @@ export const infoPages = {
     group: 'Policy',
     eyebrow: 'Cookies',
     title: 'Cookie policy.',
-    intro: 'This working page explains how Glory may use cookies and similar tools to keep the storefront running.',
+    intro: 'Glory uses essential storage for secure accounts, checkout and cart features, with separate choices for optional analytics and marketing.',
     primaryAction: { label: 'Privacy policy', to: '/privacy' },
     secondaryAction: { label: 'Contact support', to: '/contact' },
     sections: [
       { title: 'Essential cookies', body: 'Essential cookies may support login sessions, cart behavior, checkout flow and account security.' },
       { title: 'Analytics and improvements', body: 'Analytics tools may help Glory understand page performance, product discovery and marketplace reliability.' },
-      { title: 'Review before launch', body: 'Cookie consent and tracking disclosures should be finalized with legal and analytics setup before launch.' },
+      { title: 'Control your choices', body: 'Use Manage cookies in the footer at any time to review or change optional analytics and marketing preferences.' },
     ],
   },
   security: {

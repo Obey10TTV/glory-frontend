@@ -10,6 +10,7 @@ import { useUser } from '../context/UserContext'
 import { FiShoppingBag, FiHeart, FiStar, FiTruck, FiShield } from 'react-icons/fi'
 import { formatCurrency } from '../utils/currency'
 import { isWishlisted, toggleWishlist } from '../utils/wishlist'
+import { ProductSeo } from '../components/Seo'
 
 const ProductDetailPage = () => {
   const { id } = useParams()
@@ -104,6 +105,7 @@ const ProductDetailPage = () => {
 
   return (
     <div className='glory-page' style={{ background: '#fafaf9', minHeight: '100vh' }}>
+      <ProductSeo product={product} />
       <Navbar />
 
       <div className='glory-container' style={{ padding: '40px', maxWidth: '1200px', margin: '0 auto' }}>
@@ -134,6 +136,9 @@ const ProductDetailPage = () => {
             <img
               src={activeImage || product.image}
               alt={product.name}
+              width='900'
+              height='900'
+              fetchpriority='high'
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             />
             <button
@@ -165,7 +170,7 @@ const ProductDetailPage = () => {
                     onClick={() => setActiveImage(image)}
                     aria-label='View product image'
                   >
-                    <img src={image} alt='' />
+                    <img src={image} alt='' loading='lazy' width='96' height='96' />
                   </button>
                 ))}
               </div>
@@ -402,13 +407,24 @@ const ProductDetailPage = () => {
               <section>
                 <h3>Product details</h3>
                 <p>{product.description}</p>
-                {(product.size || product.sku) && (
+                {(product.size || product.sku || product.productType || product.countryOfOrigin || product.barcode) && (
                   <dl>
+                    {product.productType && <><dt>Type</dt><dd>{product.productType}</dd></>}
                     {product.size && <><dt>Size</dt><dd>{product.size}</dd></>}
+                    {product.countryOfOrigin && <><dt>Made in</dt><dd>{product.countryOfOrigin}</dd></>}
                     {product.sku && <><dt>SKU</dt><dd>{product.sku}</dd></>}
+                    {product.barcode && <><dt>Barcode</dt><dd>{product.barcode}</dd></>}
                   </dl>
                 )}
               </section>
+              {(product.keyBenefits || []).length > 0 && (
+                <section>
+                  <h3>Why you'll love it</h3>
+                  <ul className='glory-product-benefits'>
+                    {product.keyBenefits.map(benefit => <li key={benefit}>{benefit}</li>)}
+                  </ul>
+                </section>
+              )}
               {product.ingredients && (
                 <section>
                   <h3>Ingredients</h3>

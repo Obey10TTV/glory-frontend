@@ -59,6 +59,8 @@ const ProductCard = ({ product }) => {
           src={product.image}
           alt={product.name}
           loading='lazy'
+          width='600'
+          height='800'
           style={{
             width: '100%', height: '100%',
             objectFit: 'cover', display: 'block'
