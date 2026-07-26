@@ -1,11 +1,17 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useUser } from '../context/UserContext'
-import { registerUser, resendVerificationOtp, verifyEmailOtp } from '../api'
+import {
+  authenticateWithGoogle,
+  linkGoogleAccount,
+  registerUser,
+  resendVerificationOtp,
+  verifyEmailOtp,
+  verifyLoginTwoFactor
+} from '../api'
 import Message from '../components/Message'
 import { FiEye, FiEyeOff, FiMail, FiPackage, FiRefreshCw, FiShield, FiShoppingBag } from 'react-icons/fi'
-import { FcGoogle } from 'react-icons/fc'
-import { FaApple } from 'react-icons/fa'
+import GoogleSignInButton, { googleAuthConfigured } from '../components/GoogleSignInButton'
 
 const passwordIsStrong = (value) => (
   value.length >= 10
@@ -30,11 +36,71 @@ const RegisterPage = () => {
   const [success, setSuccess] = useState('')
   const [useEmail, setUseEmail] = useState(false)
   const [pendingVerification, setPendingVerification] = useState(null)
+  const [pendingGoogleLink, setPendingGoogleLink] = useState(null)
+  const [googleCredential, setGoogleCredential] = useState('')
+  const [linkPassword, setLinkPassword] = useState('')
+  const [showLinkPassword, setShowLinkPassword] = useState(false)
   const [otp, setOtp] = useState('')
 
   const finishLogin = (data) => {
     login(data)
     navigate(data.isSeller ? '/seller' : '/')
+  }
+
+  const handleAuthResponse = (data) => {
+    if (data.requiresTwoFactor) {
+      setPendingVerification({ type: '2fa', email: data.email })
+      setPendingGoogleLink(null)
+      setSuccess(data.message || 'Enter the verification code sent to your email.')
+      return
+    }
+
+    finishLogin(data)
+  }
+
+  const handleGoogleCredential = async (credential) => {
+    setGoogleCredential(credential)
+    setLoading(true)
+    setError('')
+    setSuccess('')
+
+    try {
+      const { data } = await authenticateWithGoogle({ credential, isSeller })
+      handleAuthResponse(data)
+    } catch (err) {
+      const data = err.response?.data
+      if (data?.requiresGoogleLink) {
+        setPendingGoogleLink({ credential, email: data.email })
+        setSuccess(data.message)
+      } else {
+        setError(data?.message || 'Google sign-up could not be completed.')
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleGoogleLink = async (event) => {
+    event.preventDefault()
+    if (!pendingGoogleLink?.credential || !linkPassword) {
+      setError('Enter the password for your existing Glory account.')
+      return
+    }
+
+    setLoading(true)
+    setError('')
+
+    try {
+      const { data } = await linkGoogleAccount({
+        credential: pendingGoogleLink.credential,
+        password: linkPassword
+      })
+      handleAuthResponse(data)
+    } catch (err) {
+      setError(err.response?.data?.message || 'Google account linking could not be completed.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleSubmit = async () => {
@@ -56,7 +122,7 @@ const RegisterPage = () => {
       const { data } = await registerUser({ name, email, password, isSeller })
 
       if (data.requiresEmailVerification) {
-        setPendingVerification({ email: data.email, isSeller: data.isSeller })
+        setPendingVerification({ type: 'email', email: data.email, isSeller: data.isSeller })
         setSuccess(data.message || 'We sent a verification code to your email.')
         return
       }
@@ -79,11 +145,10 @@ const RegisterPage = () => {
     setError('')
 
     try {
-      const { data } = await verifyEmailOtp({
-        email: pendingVerification.email,
-        otp
-      })
-      finishLogin(data)
+      const response = pendingVerification.type === '2fa'
+        ? await verifyLoginTwoFactor({ email: pendingVerification.email, otp })
+        : await verifyEmailOtp({ email: pendingVerification.email, otp })
+      finishLogin(response.data)
     } catch (err) {
       setError(err.response?.data?.message || 'Verification failed')
     } finally {
@@ -101,14 +166,25 @@ const RegisterPage = () => {
     setSuccess('')
 
     try {
-      const { data } = await resendVerificationOtp({ email: pendingVerification.email })
-      setSuccess(data.message || 'A new verification code has been sent.')
+      if (pendingVerification.type === '2fa') {
+        if (!googleCredential) {
+          throw new Error('Start Google sign-in again to request a new code.')
+        }
+        const { data } = await authenticateWithGoogle({ credential: googleCredential, isSeller })
+        handleAuthResponse(data)
+      } else {
+        const { data } = await resendVerificationOtp({ email: pendingVerification.email })
+        setSuccess(data.message || 'A new verification code has been sent.')
+      }
     } catch (err) {
-      setError(err.response?.data?.message || 'Could not send a new code')
+      setError(err.response?.data?.message || err.message || 'Could not send a new code')
     } finally {
       setLoading(false)
     }
   }
+
+  const verificationCodeValid = /^\d{6}$/.test(otp)
+    || (pendingVerification?.type === '2fa' && /^[A-F0-9]{6}-[A-F0-9]{6}$/.test(otp))
 
   return (
     <div style={pageStyle}>
@@ -119,44 +195,29 @@ const RegisterPage = () => {
           </Link>
         </div>
         <div style={subtitleStyle}>
-          {pendingVerification ? 'Verify your email' : 'Create your account'}
+          {pendingVerification
+            ? 'Security check'
+            : pendingGoogleLink
+              ? 'Link your existing account'
+              : 'Create your account'}
         </div>
 
         {error && <Message type='error' text={error} />}
         {success && <Message type='success' text={success} />}
 
-        {!useEmail ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <button style={socialButtonStyle}>
-              <FcGoogle size={18} />
-              Sign up with Google
-            </button>
-
-            <button style={socialButtonStyle}>
-              <FaApple size={18} />
-              Sign up with Apple
-            </button>
-
-            <Divider text='or' />
-
-            <button
-              onClick={() => setUseEmail(true)}
-              className='glory-btn'
-              style={{ width: '100%', padding: '13px', fontSize: '13px' }}
-            >
-              Sign up with Email
-            </button>
-          </div>
-        ) : pendingVerification ? (
+        {pendingVerification ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div style={verificationPanelStyle}>
               <FiShield size={24} style={{ color: '#111' }} />
               <div>
                 <div style={{ fontSize: '13px', fontWeight: '700', color: '#111' }}>
-                  Email OTP required
+                  {pendingVerification.type === '2fa' ? 'Two-factor authentication' : 'Email OTP required'}
                 </div>
                 <div style={{ fontSize: '12px', color: '#777', lineHeight: '1.6', marginTop: '4px' }}>
-                  Enter the 6-digit code sent to {pendingVerification.email}. Your account opens only after this check.
+                  Enter the 6-digit code sent to {pendingVerification.email}
+                  {pendingVerification.type === '2fa'
+                    ? ' or use one recovery code.'
+                    : '. Your account opens only after this check.'}
                 </div>
               </div>
             </div>
@@ -165,20 +226,25 @@ const RegisterPage = () => {
               <label style={labelStyle}>Verification code</label>
               <input
                 type='text'
-                inputMode='numeric'
-                maxLength={6}
+                inputMode={pendingVerification.type === '2fa' ? 'text' : 'numeric'}
+                autoComplete='one-time-code'
+                maxLength={pendingVerification.type === '2fa' ? 13 : 6}
                 value={otp}
-                onChange={e => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                placeholder='000000'
+                onChange={event => setOtp(
+                  pendingVerification.type === '2fa'
+                    ? event.target.value.toUpperCase().replace(/[^A-F0-9-]/g, '').slice(0, 13)
+                    : event.target.value.replace(/\D/g, '').slice(0, 6)
+                )}
+                placeholder={pendingVerification.type === '2fa' ? '000000 or XXXXXX-XXXXXX' : '000000'}
                 style={{ ...inputStyle, letterSpacing: '0.18em', textAlign: 'center', fontSize: '16px' }}
               />
             </div>
 
             <button
               onClick={handleVerifyEmail}
-              disabled={loading || otp.length !== 6}
+              disabled={loading || !verificationCodeValid}
               className='glory-btn'
-              style={{ width: '100%', padding: '13px', fontSize: '13px', opacity: loading || otp.length !== 6 ? 0.7 : 1 }}
+              style={{ width: '100%', padding: '13px', fontSize: '13px', opacity: loading || !verificationCodeValid ? 0.7 : 1 }}
             >
               {loading ? 'Verifying...' : 'Verify and Continue'}
             </button>
@@ -190,6 +256,95 @@ const RegisterPage = () => {
             >
               <FiRefreshCw size={14} />
               Send a new code
+            </button>
+          </div>
+        ) : pendingGoogleLink ? (
+          <form onSubmit={handleGoogleLink} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={verificationPanelStyle}>
+              <FiShield size={24} style={{ color: '#111' }} />
+              <div>
+                <div style={{ fontSize: '13px', fontWeight: '700', color: '#111' }}>
+                  Protecting your existing account
+                </div>
+                <div style={{ fontSize: '12px', color: '#777', lineHeight: '1.6', marginTop: '4px' }}>
+                  Google verified {pendingGoogleLink.email}. Enter your current Glory password once before we link it.
+                </div>
+              </div>
+            </div>
+
+            <PasswordField
+              label='Current Glory password'
+              value={linkPassword}
+              onChange={setLinkPassword}
+              show={showLinkPassword}
+              setShow={setShowLinkPassword}
+              placeholder='Enter your existing password'
+              autoComplete='current-password'
+            />
+
+            <button
+              type='submit'
+              disabled={loading || !linkPassword}
+              className='glory-btn'
+              style={{ width: '100%', padding: '13px', fontSize: '13px', opacity: loading || !linkPassword ? 0.7 : 1 }}
+            >
+              {loading ? 'Linking securely...' : 'Link Google and Continue'}
+            </button>
+
+            <button
+              type='button'
+              onClick={() => {
+                setPendingGoogleLink(null)
+                setLinkPassword('')
+                setSuccess('')
+              }}
+              style={plainButtonStyle}
+            >
+              Use a different sign-up method
+            </button>
+          </form>
+        ) : !useEmail ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={accountTypeStyle}>
+              <div style={{ fontSize: '12px', fontWeight: '600', color: '#444', marginBottom: '12px' }}>
+                I want to
+              </div>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <AccountTypeButton
+                  active={!isSeller}
+                  icon={<FiShoppingBag size={20} />}
+                  title='Shop'
+                  text='Buy products'
+                  onClick={() => setIsSeller(false)}
+                />
+                <AccountTypeButton
+                  active={isSeller}
+                  icon={<FiPackage size={20} />}
+                  title='Sell'
+                  text='Start my store'
+                  onClick={() => setIsSeller(true)}
+                />
+              </div>
+            </div>
+
+            {googleAuthConfigured && (
+              <>
+                <GoogleSignInButton
+                  text='signup_with'
+                  disabled={loading}
+                  onCredential={handleGoogleCredential}
+                  onError={setError}
+                />
+                <Divider text='or use email' />
+              </>
+            )}
+
+            <button
+              onClick={() => setUseEmail(true)}
+              className='glory-btn'
+              style={{ width: '100%', padding: '13px', fontSize: '13px' }}
+            >
+              Sign up with Email
             </button>
           </div>
         ) : (
@@ -220,6 +375,7 @@ const RegisterPage = () => {
               <label style={labelStyle}>Full name</label>
               <input
                 type='text'
+                autoComplete='name'
                 value={name}
                 onChange={e => setName(e.target.value)}
                 placeholder='Your full name'
@@ -231,6 +387,7 @@ const RegisterPage = () => {
               <label style={labelStyle}>Email address</label>
               <input
                 type='email'
+                autoComplete='email'
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 placeholder='you@example.com'
@@ -245,6 +402,7 @@ const RegisterPage = () => {
               show={showPassword}
               setShow={setShowPassword}
               placeholder='Create a strong password'
+              autoComplete='new-password'
             />
             <div style={{ marginTop: '-10px', color: '#777', fontSize: '11px', lineHeight: '1.5' }}>
               Use 10+ characters with uppercase, lowercase, a number and a special character.
@@ -257,6 +415,7 @@ const RegisterPage = () => {
               show={showConfirmPassword}
               setShow={setShowConfirmPassword}
               placeholder='Confirm your password'
+              autoComplete='new-password'
             />
 
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '11px', color: '#777', lineHeight: '1.6' }}>
@@ -327,12 +486,13 @@ const AccountTypeButton = ({ active, icon, title, text, onClick }) => (
   </button>
 )
 
-const PasswordField = ({ label, value, onChange, show, setShow, placeholder }) => (
+const PasswordField = ({ label, value, onChange, show, setShow, placeholder, autoComplete }) => (
   <div>
     <label style={labelStyle}>{label}</label>
     <div style={{ position: 'relative' }}>
       <input
         type={show ? 'text' : 'password'}
+        autoComplete={autoComplete}
         value={value}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
@@ -391,24 +551,6 @@ const subtitleStyle = {
   fontSize: '15px',
   color: '#555',
   marginBottom: '32px'
-}
-
-const socialButtonStyle = {
-  width: '100%',
-  padding: '13px',
-  border: '1px solid #ddd',
-  borderRadius: '999px',
-  background: '#fff',
-  cursor: 'pointer',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  gap: '10px',
-  fontSize: '13px',
-  fontWeight: '600',
-  color: '#111',
-  fontFamily: 'inherit',
-  minHeight: '44px'
 }
 
 const accountTypeStyle = {
@@ -490,7 +632,7 @@ const inputStyle = {
   padding: '12px 16px',
   border: '0.5px solid #ddd',
   borderRadius: '10px',
-  fontSize: '13px',
+  fontSize: '16px',
   color: '#111',
   outline: 'none',
   background: '#fafaf9',

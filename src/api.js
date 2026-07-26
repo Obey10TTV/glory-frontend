@@ -14,6 +14,14 @@ const API = axios.create({ baseURL, timeout: 20000, withCredentials: true })
 const csrfClient = axios.create({ baseURL, timeout: 20000, withCredentials: true })
 const CSRF_STORAGE_KEY = 'gloryCsrfToken'
 const mutatingMethods = new Set(['post', 'put', 'patch', 'delete'])
+const unauthenticatedPaths = [
+  '/users/login',
+  '/users/register',
+  '/users/google',
+  '/users/verify-email',
+  '/users/resend-verification',
+  '/users/2fa/verify-login'
+]
 let csrfPromise
 
 const getCsrfToken = async (force = false) => {
@@ -63,7 +71,7 @@ API.interceptors.response.use(
       && original
       && !original._gloryRetried
       && !String(original.url).includes('/users/refresh')
-      && !String(original.url).includes('/users/login')
+      && !unauthenticatedPaths.some(path => String(original.url).includes(path))
 
     if (canRefresh) {
       original._gloryRetried = true
@@ -85,6 +93,8 @@ API.interceptors.response.use(
 // USERS
 export const registerUser = (data) => API.post('/users/register', data)
 export const loginUser = (data) => API.post('/users/login', data)
+export const authenticateWithGoogle = (data) => API.post('/users/google', data)
+export const linkGoogleAccount = (data) => API.post('/users/google/link', data)
 export const logoutUser = () => API.post('/users/logout')
 export const refreshSession = () => API.post('/users/refresh')
 export const verifyEmailOtp = (data) => API.post('/users/verify-email', data)

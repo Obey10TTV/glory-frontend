@@ -6779,6 +6779,47 @@ select:focus-visible,
 .glory-footer-cookie-button:hover,
 .glory-footer-cookie-button:focus-visible { color: rgba(255,255,255,.85); }
 
+.glory-google-auth {
+  position: relative;
+  width: 100%;
+  min-height: 44px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+}
+
+.glory-google-auth > div {
+  width: 100%;
+  min-height: 44px;
+  display: grid;
+  place-items: center;
+}
+
+.glory-google-auth iframe {
+  max-width: 100%;
+}
+
+.glory-google-auth > span {
+  position: absolute;
+  inset: 0;
+  border: 1px solid #ddd;
+  border-radius: 999px;
+  background: #fff;
+  color: #777;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+}
+
+.glory-google-auth.is-ready > span {
+  display: none;
+}
+
+.glory-google-auth.is-disabled {
+  opacity: .55;
+  pointer-events: none;
+}
+
 @media (max-width: 1024px) {
   .glory-operations-queue { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .glory-order-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
