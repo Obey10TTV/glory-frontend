@@ -4990,6 +4990,7 @@ select:focus-visible,
   top: 132px;
   padding-right: 30px;
   display: grid;
+  align-content: start;
   gap: 22px;
 }
 
@@ -5038,15 +5039,34 @@ select:focus-visible,
 
 .glory-catalog-filter-panel select,
 .glory-catalog-mobile-tools select {
+  appearance: none;
+  -webkit-appearance: none;
   width: 100%;
   min-height: 46px;
   border: 1px solid #d9d3ce;
   border-radius: 5px;
-  background: #fff;
+  background-color: #fff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='m4 6 4 4 4-4' fill='none' stroke='%23252220' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-position: right 16px center;
+  background-repeat: no-repeat;
+  background-size: 16px 16px;
   color: #252220;
-  padding: 0 34px 0 12px;
+  padding: 0 48px 0 16px;
   font-size: 13px;
   cursor: pointer;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.glory-catalog-filter-panel select:hover,
+.glory-catalog-mobile-tools select:hover {
+  border-color: #9f958e;
+}
+
+.glory-catalog-filter-panel select:focus,
+.glory-catalog-mobile-tools select:focus {
+  border-color: #8f2648;
+  box-shadow: 0 0 0 3px rgba(143, 38, 72, 0.1);
+  outline: 0;
 }
 
 .glory-catalog-reset {
@@ -6234,6 +6254,12 @@ select:focus-visible,
 
   .glory-catalog-mobile-tools label {
     width: min(60%, 280px);
+  }
+
+  .glory-catalog-filter-panel select,
+  .glory-catalog-mobile-tools select {
+    min-height: 50px;
+    font-size: 16px;
   }
 
   .glory-catalog-filter-scrim {
