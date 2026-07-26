@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { FiCheckCircle, FiRefreshCw, FiXCircle } from 'react-icons/fi'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
-import { verifyPayment } from '../api'
+import { verifyPayment, verifyStripePayment } from '../api'
 import { useCart } from '../context/CartContext'
 
 const PaymentVerifyPage = () => {
@@ -13,15 +13,25 @@ const PaymentVerifyPage = () => {
   const [state, setState] = useState({ status: 'loading', message: 'Confirming your payment securely...' })
 
   useEffect(() => {
-    const reference = params.get('reference') || params.get('trxref')
+    const provider = params.get('provider')
+    const reference = provider === 'stripe'
+      ? params.get('session_id')
+      : params.get('reference') || params.get('trxref')
     if (!reference) {
       setState({ status: 'error', message: 'The payment reference is missing.' })
       return
     }
 
-    verifyPayment(reference)
+    const verificationRequest = provider === 'stripe'
+      ? verifyStripePayment(reference)
+      : verifyPayment(reference)
+
+    verificationRequest
       .then(({ data }) => {
-        if (data.data?.status !== 'success') {
+        const paymentConfirmed = provider === 'stripe'
+          ? data.paymentStatus === 'paid'
+          : data.data?.status === 'success'
+        if (!paymentConfirmed) {
           throw new Error('Payment has not been confirmed.')
         }
         clearCart()

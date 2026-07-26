@@ -14,7 +14,7 @@ export const infoPages = {
     sections: [
       {
         title: 'Support hours',
-        body: 'Glory support is available Monday to Friday, 9am to 6pm Eastern Time. Messages received after hours are answered the next business day.',
+        body: 'Glory support is available Monday to Friday, 9am to 6pm UK time. Messages received after hours are answered the next business day.',
       },
       {
         title: 'Before you contact us',
@@ -67,19 +67,19 @@ export const infoPages = {
   shipping: {
     group: 'Help',
     eyebrow: 'Shipping',
-    title: 'Shipping across Canada.',
-    intro: 'Glory is built around Canada-first checkout, CAD pricing and clear delivery expectations for shoppers and sellers.',
+    title: 'UK delivery, with worldwide reach.',
+    intro: 'Glory is based in the United Kingdom, displays prices in GBP and supports international delivery where a seller and destination are eligible.',
     primaryAction: { label: 'Shop products', to: '/products' },
     secondaryAction: { label: 'Track an order', to: '/track-order' },
     cards: [
-      { title: 'Canada-first', text: 'Storefront, checkout and delivery messaging are built around Canadian customers.' },
-      { title: 'Seller fulfillment', text: 'Independent sellers prepare products according to Glory marketplace standards.' },
-      { title: 'Free shipping threshold', text: 'Orders over $75 qualify for the free-shipping offer where available.' },
+      { title: 'UK based', text: 'Storefront pricing and default delivery details are designed around UK customers.' },
+      { title: 'Worldwide destinations', text: 'Customers outside the UK can enter their country and international delivery details at checkout.' },
+      { title: 'Free shipping threshold', text: 'UK orders over £75 qualify for the free-shipping offer where available.' },
     ],
     sections: [
       {
         title: 'Delivery timing',
-        body: 'Delivery windows can vary by seller, province and carrier. Order pages will show the best available tracking information once shipped.',
+        body: 'Delivery windows and charges can vary by seller, destination and carrier. Order pages will show the best available tracking information once shipped.',
       },
     ],
   },
@@ -91,16 +91,16 @@ export const infoPages = {
     primaryAction: { label: 'Contact support', to: '/contact' },
     secondaryAction: { label: 'Become a seller', to: '/sell-on-glory' },
     sections: [
-      { title: 'Is Glory only for Canada?', body: 'Glory is currently designed around Canadian checkout, CAD pricing and Canada-focused fulfillment.' },
+      { title: 'Is Glory only for the United Kingdom?', body: 'No. Glory is UK based and prices are shown in GBP, but customers in other countries can shop when delivery is available to their destination.' },
       { title: 'Are products authentic?', body: 'Glory is built for verified sellers and authentic product listings. Seller checks will continue to tighten as the marketplace grows.' },
-      { title: 'Can I sell my beauty brand here?', body: 'Yes. Visit Sell on Glory to learn how sellers can prepare their products, store profile and fulfillment setup.' },
+      { title: 'Can I sell my beauty brand here?', body: 'Yes. Visit Sell on Glory to learn how sellers can prepare their products, store profile and fulfilment setup.' },
       { title: 'How can I pay?', body: 'Glory supports the payment methods shown during checkout. Availability may vary while payment services are configured.' },
     ],
   },
   support: {
     group: 'Help',
     eyebrow: 'Support',
-    title: 'Support center.',
+    title: 'Support centre.',
     intro: 'Find the right next step for orders, returns, account help and seller questions.',
     primaryAction: { label: 'Contact support', to: '/contact' },
     secondaryAction: { label: 'FAQs', to: '/faq' },
@@ -114,12 +114,12 @@ export const infoPages = {
     group: 'About',
     eyebrow: 'Careers',
     title: 'Build the future of beauty commerce.',
-    intro: 'Glory is early, focused and building for independent beauty sellers and shoppers across Canada.',
+    intro: 'Glory is early, focused and building for independent beauty sellers in the UK and shoppers around the world.',
     primaryAction: { label: 'Email careers', href: 'mailto:ajokuobioma10@gmail.com' },
     secondaryAction: { label: 'Our story', to: '/about' },
     cards: [
       { title: 'Product and design', text: 'Craft storefront, marketplace and seller workflows that feel premium and practical.' },
-      { title: 'Operations', text: 'Help sellers onboard, list products and build reliable fulfillment habits.' },
+      { title: 'Operations', text: 'Help sellers onboard, list products and build reliable fulfilment habits.' },
       { title: 'Growth', text: 'Shape partnerships, creator programs and community-led brand discovery.' },
     ],
   },
@@ -131,7 +131,7 @@ export const infoPages = {
     primaryAction: { label: 'Email press', href: 'mailto:ajokuobioma10@gmail.com' },
     secondaryAction: { label: 'Read our story', to: '/about' },
     sections: [
-      { title: 'Company boilerplate', body: 'Glory is a Canada-focused beauty marketplace helping shoppers discover authentic products while giving independent beauty sellers a professional ecommerce home.' },
+      { title: 'Company boilerplate', body: 'Glory is a UK-based global beauty marketplace helping shoppers discover authentic products while giving independent beauty sellers a professional e-commerce home.' },
       { title: 'Media requests', body: 'Please include your publication, deadline, interview topic and any requested assets when contacting the team.' },
     ],
   },
@@ -170,7 +170,7 @@ export const infoPages = {
     secondaryAction: { label: 'Contact us', to: '/contact' },
     cards: [
       { title: 'Inclusive discovery', text: 'Every shade, texture and tradition deserves space in the marketplace.' },
-      { title: 'Local trust', text: 'Canada-first delivery expectations and clear seller standards.' },
+      { title: 'Local trust, global reach', text: 'UK-based marketplace standards with international delivery where available.' },
       { title: 'Brand building', text: 'Tools and stories that help independent sellers move beyond DMs.' },
     ],
   },
@@ -178,11 +178,11 @@ export const infoPages = {
     group: 'Sell on Glory',
     eyebrow: 'Seller platform',
     title: 'Turn your beauty brand into a real store.',
-    intro: 'Glory gives independent beauty sellers a professional storefront, product catalog, checkout path and customer trust signals.',
+    intro: 'Glory gives independent beauty sellers a professional storefront, product catalogue, checkout path and customer trust signals.',
     primaryAction: { label: 'Create seller account', to: '/register' },
     secondaryAction: { label: 'Seller resources', to: '/seller-resources' },
     cards: [
-      { title: 'Professional storefront', text: 'Move from DM orders to a polished catalog customers can browse anytime.' },
+      { title: 'Professional storefront', text: 'Move from DM orders to a polished catalogue customers can browse anytime.' },
       { title: 'Checkout built in', text: 'Use a structured checkout flow with the payment methods currently offered by Glory.' },
       { title: 'Designed for beauty', text: 'Categories, product details and customer flows made for beauty shoppers.' },
     ],
@@ -214,7 +214,7 @@ export const infoPages = {
     primaryAction: { label: 'Seller FAQ', to: '/seller-faq' },
     secondaryAction: { label: 'Contact support', to: '/contact' },
     sections: [
-      { title: 'Seller responsibilities', body: 'Sellers are responsible for accurate listings, safe products, timely fulfillment and honest communication with Glory support.' },
+      { title: 'Seller responsibilities', body: 'Sellers are responsible for accurate listings, safe products, timely fulfilment and honest communication with Glory support.' },
       { title: 'Product standards', body: 'Listings should include accurate product names, ingredients where relevant, pricing, inventory and product images.' },
       { title: 'Legal review', body: 'The final seller agreement should be reviewed by legal counsel before public launch and seller onboarding.' },
     ],
@@ -240,10 +240,10 @@ export const infoPages = {
     primaryAction: { label: 'Create seller account', to: '/register' },
     secondaryAction: { label: 'Seller resources', to: '/seller-resources' },
     sections: [
-      { title: 'Do I need an existing website?', body: 'No. Glory is designed to give sellers a storefront and product catalog inside the marketplace.' },
+      { title: 'Do I need an existing website?', body: 'No. Glory is designed to give sellers a storefront and product catalogue inside the marketplace.' },
       { title: 'Can I add my own products?', body: 'Yes. Approved sellers can upload product details, images, price, category and inventory from the seller dashboard.' },
       { title: 'How do customers pay?', body: 'Glory uses a structured checkout and displays the payment methods currently available to each customer.' },
-      { title: 'How do I get approved?', body: 'Seller verification will review product category, brand details and readiness to fulfill orders.' },
+      { title: 'How do I get approved?', body: 'Seller verification will review product category, brand details and readiness to fulfil orders.' },
     ],
   },
   'success-stories': {
@@ -269,7 +269,7 @@ export const infoPages = {
     sections: [
       { title: 'Information we collect', body: 'Glory may collect account details, order information, payment status, seller profile details and support messages needed to run the marketplace.' },
       { title: 'How information is used', body: 'Information is used to provide accounts, process orders, support sellers, prevent fraud and improve the shopping experience.' },
-      { title: 'Legal review', body: 'This page is not final legal language. Privacy terms should be reviewed for Canadian privacy requirements before public launch.' },
+      { title: 'Legal review', body: 'This page is not final legal language. Privacy terms should be reviewed for UK GDPR and Data Protection Act 2018 requirements before public launch.' },
     ],
   },
   terms: {
@@ -281,7 +281,7 @@ export const infoPages = {
     secondaryAction: { label: 'Contact support', to: '/contact' },
     sections: [
       { title: 'Marketplace use', body: 'Users should provide accurate account information, follow marketplace rules and use Glory for lawful shopping and selling activity.' },
-      { title: 'Orders and sellers', body: 'Sellers are responsible for accurate listings and fulfillment. Glory helps structure the marketplace and support process.' },
+      { title: 'Orders and sellers', body: 'Sellers are responsible for accurate listings and fulfilment. Glory helps structure the marketplace and support process.' },
       { title: 'Legal review', body: 'Final terms should be reviewed by legal counsel before onboarding sellers or accepting production transactions.' },
     ],
   },
@@ -293,7 +293,8 @@ export const infoPages = {
     primaryAction: { label: 'Privacy policy', to: '/privacy' },
     secondaryAction: { label: 'Contact support', to: '/contact' },
     sections: [
-      { title: 'Essential cookies', body: 'Essential cookies may support login sessions, cart behavior, checkout flow and account security.' },
+      { title: 'Essential cookies', body: 'Essential cookies may support login sessions, cart behaviour, checkout flow and account security.' },
+      { title: 'UK consent standard', body: 'Optional analytics and marketing storage remain off unless a visitor actively chooses to enable them. Essential storage can still be used to provide requested account, cart and security features.' },
       { title: 'Analytics and improvements', body: 'Analytics tools may help Glory understand page performance, product discovery and marketplace reliability.' },
       { title: 'Control your choices', body: 'Use Manage cookies in the footer at any time to review or change optional analytics and marketing preferences.' },
     ],

@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from 'react'
 import { FiUser, FiShoppingBag, FiHeart, FiX, FiChevronDown, FiMenu, FiSearch } from 'react-icons/fi'
 import { getProducts } from '../api'
 import useIsMobile from '../hooks/useIsMobile'
-import CanadaFlag from './CanadaFlag'
+import UnitedKingdomFlag from './UnitedKingdomFlag'
 import { formatCurrency } from '../utils/currency'
 import { getWishlistIds } from '../utils/wishlist'
 
@@ -202,7 +202,7 @@ const Navbar = () => {
         letterSpacing: '0.06em', fontFamily: "'Inter', sans-serif",
         fontWeight: '500', lineHeight: '1.6'
       }}>
-        <b style={{ color: '#fff' }}>CANADA'S BEAUTY MARKETPLACE</b>
+        <b style={{ color: '#fff' }}>THE UK'S GLOBAL BEAUTY MARKETPLACE</b>
         {!isMobile && (
           <span>
             &nbsp;-&nbsp;<b style={{ color: '#fff' }}>CURATED DEPARTMENTS</b>
@@ -261,12 +261,12 @@ const Navbar = () => {
                 background: '#f5f5f5', borderRadius: '999px',
                 padding: '4px 10px 4px 6px'
               }}>
-                <CanadaFlag size={22} />
+                <UnitedKingdomFlag size={22} />
                 <span style={{
                   fontSize: '10px', fontWeight: '700',
                   color: '#555', letterSpacing: '0.04em',
                   fontFamily: "'Inter', sans-serif"
-                }}>CA</span>
+                }}>UK</span>
               </div>
             )}
           </Link>
@@ -677,8 +677,8 @@ const Navbar = () => {
               alignItems: 'center', gap: '8px',
               borderTop: '1px solid #f0f0f0', marginTop: '8px'
             }}>
-              <CanadaFlag size={24} />
-              <span style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Canada marketplace · Prices in CAD</span>
+              <UnitedKingdomFlag size={24} />
+              <span style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>UK marketplace · Prices in GBP · Worldwide delivery</span>
             </div>
           </div>
           <style>{`

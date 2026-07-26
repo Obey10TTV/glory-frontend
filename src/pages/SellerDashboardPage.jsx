@@ -42,7 +42,7 @@ const emptySellerProfile = {
   phone: '',
   city: '',
   province: '',
-  country: 'Canada',
+  country: 'United Kingdom',
   website: '',
   instagram: '',
   verificationStatus: 'incomplete',
@@ -402,7 +402,7 @@ const SellerDashboardPage = () => {
       setOrders(current => current.map(order => order._id === orderId ? data : order))
       setSuccess(status === 'Shipped' ? 'Shipment and tracking saved.' : 'Order item marked delivered.')
     } catch (err) {
-      setError(err.response?.data?.message || 'Could not update fulfillment')
+      setError(err.response?.data?.message || 'Could not update fulfilment')
     } finally {
       setOrderUpdating('')
     }
@@ -593,12 +593,12 @@ const SellerDashboardPage = () => {
 
             <div className='glory-form-grid'>
               <div>
-                <label style={labelStyle}>Province</label>
-                <input value={sellerProfile.province} onChange={event => handleProfileChange('province', event.target.value)} placeholder='Ontario' style={inputStyle} />
+                <label style={labelStyle}>County / Region</label>
+                <input value={sellerProfile.province} onChange={event => handleProfileChange('province', event.target.value)} placeholder='e.g. Greater London' style={inputStyle} />
               </div>
               <div>
                 <label style={labelStyle}>Country</label>
-                <input value={sellerProfile.country} onChange={event => handleProfileChange('country', event.target.value)} placeholder='Canada' style={inputStyle} />
+                <input value={sellerProfile.country} onChange={event => handleProfileChange('country', event.target.value)} placeholder='United Kingdom' style={inputStyle} />
               </div>
             </div>
 
@@ -687,7 +687,7 @@ const SellerDashboardPage = () => {
                   <header>
                     <div>
                       <strong>Order #{order._id.slice(-8).toUpperCase()}</strong>
-                      <span>{order.buyer?.name || 'Customer'} - {new Date(order.createdAt).toLocaleDateString('en-CA')}</span>
+                      <span>{order.buyer?.name || 'Customer'} - {new Date(order.createdAt).toLocaleDateString('en-GB')}</span>
                     </div>
                     <span className={`glory-order-state is-${String(order.status).toLowerCase()}`}>{order.status}</span>
                   </header>
@@ -885,7 +885,7 @@ const SellerDashboardPage = () => {
 
               <div className='glory-form-grid'>
                 <div>
-                  <label style={labelStyle}>Price (CAD)</label>
+                  <label style={labelStyle}>Price (GBP)</label>
                   <input value={price} onChange={event => setPrice(event.target.value)} placeholder='e.g. 18' type='number' min='0' step='0.01' style={inputStyle} />
                 </div>
                 <div>
@@ -899,7 +899,7 @@ const SellerDashboardPage = () => {
                   <FiDollarSign size={17} />
                   <span>
                     <strong>Pricing reference</strong>
-                    Most {category.toLowerCase()} listings on a Canadian beauty marketplace commonly sit around {formatCurrency(priceGuidance[category][0])}–{formatCurrency(priceGuidance[category][1])}. Set the real price for your product; unusually high prices may need extra review.
+                    Most {category.toLowerCase()} listings on a UK beauty marketplace commonly sit around {formatCurrency(priceGuidance[category][0])}–{formatCurrency(priceGuidance[category][1])}. Set the real price for your product; unusually high prices may need extra review.
                   </span>
                 </div>
               )}
@@ -923,7 +923,7 @@ const SellerDashboardPage = () => {
                 </div>
                 <div>
                   <label style={labelStyle}>Country of Origin</label>
-                  <input value={countryOfOrigin} onChange={event => setCountryOfOrigin(event.target.value)} placeholder='e.g. Canada' maxLength={100} style={inputStyle} />
+                  <input value={countryOfOrigin} onChange={event => setCountryOfOrigin(event.target.value)} placeholder='e.g. United Kingdom' maxLength={100} style={inputStyle} />
                 </div>
               </div>
 

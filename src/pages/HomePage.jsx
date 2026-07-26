@@ -202,7 +202,7 @@ const HomePage = () => {
           />
           <div className='glory-campaign-hero-wash' />
           <div className='glory-campaign-hero-inner'>
-            <span className='glory-home-label'>Glory beauty, Canada</span>
+            <span className='glory-home-label'>Glory beauty, United Kingdom</span>
             <h1 id='glory-home-title'>Beauty, in all your glory.</h1>
             <p>
               Authentic beauty for every shade, texture and ritual, selected from independent sellers and loved brands.
@@ -357,7 +357,7 @@ const HomePage = () => {
             </div>
             <div>
               <p>
-                Build a verified Glory storefront, submit products for review and sell to beauty shoppers across Canada.
+                Build a verified Glory storefront, submit products for review and reach beauty shoppers in the UK and around the world.
               </p>
               <button type='button' onClick={() => navigate('/sell-on-glory')}>
                 Sell on Glory
@@ -372,7 +372,7 @@ const HomePage = () => {
             {[
               { Icon: FiCheckCircle, title: 'Reviewed listings', sub: 'Products are checked before going live' },
               { Icon: FiShield, title: 'Secure accounts', sub: 'Email verification and optional 2FA' },
-              { Icon: FiTruck, title: 'Canada-first', sub: 'Built for beauty shoppers across Canada' },
+              { Icon: FiTruck, title: 'UK based, globally open', sub: 'International delivery where available' },
               { Icon: FiHeart, title: 'Beauty for more people', sub: 'Across shades, textures and traditions' },
             ].map((item) => (
               <div key={item.title} className='glory-home-trust-item'>

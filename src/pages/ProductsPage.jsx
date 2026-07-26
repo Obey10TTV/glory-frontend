@@ -16,10 +16,10 @@ import { getProducts } from '../api'
 
 const priceRanges = [
   { label: 'All prices', value: 'all' },
-  { label: 'Under $25', value: '0-25' },
-  { label: '$25 - $50', value: '25-50' },
-  { label: '$50 - $100', value: '50-100' },
-  { label: 'Above $100', value: '100-100000' },
+  { label: 'Under £25', value: '0-25' },
+  { label: '£25 - £50', value: '25-50' },
+  { label: '£50 - £100', value: '50-100' },
+  { label: 'Above £100', value: '100-100000' },
 ]
 
 const sortOptions = [

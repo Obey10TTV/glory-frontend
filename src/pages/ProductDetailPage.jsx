@@ -449,7 +449,7 @@ const ProductDetailPage = () => {
                       <div>
                         <strong>{review.name}</strong>
                         <small>
-                          {new Date(review.createdAt).toLocaleDateString('en-CA', {
+                          {new Date(review.createdAt).toLocaleDateString('en-GB', {
                             year: 'numeric',
                             month: 'long',
                             day: 'numeric',

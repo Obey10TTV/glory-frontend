@@ -2,14 +2,14 @@ import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 
 const defaults = {
-  title: 'Glory | Canada Beauty Marketplace',
-  description: 'Discover authentic beauty products from independent sellers and loved brands across Canada.'
+  title: 'Glory | UK Beauty Marketplace',
+  description: 'Discover authentic beauty products from reviewed sellers in the UK and around the world.'
 }
 
 const pages = {
   '/': defaults,
-  '/products': { title: 'Shop Beauty in Canada | Glory', description: 'Shop skincare, makeup, haircare, fragrance, nails and beauty essentials from reviewed sellers.' },
-  '/about': { title: 'About Glory | Beauty Across Canada', description: 'Meet Glory, a Canada-first marketplace created for global beauty, independent sellers and every beauty tradition.' },
+  '/products': { title: 'Shop Beauty in the UK | Glory', description: 'Shop skincare, makeup, haircare, fragrance, nails and beauty essentials from reviewed sellers, with international delivery where available.' },
+  '/about': { title: 'About Glory | UK Beauty, Global Community', description: 'Meet Glory, a UK-based marketplace created for global beauty, independent sellers and every beauty tradition.' },
   '/sell-on-glory': { title: 'Sell Beauty Products on Glory', description: 'Build your beauty storefront on Glory with seller verification, product review and structured order management.' },
   '/cart': { title: 'Your Bag | Glory', description: 'Review your selected Glory beauty products before checkout.' },
   '/wishlist': { title: 'Your Wishlist | Glory', description: 'Return to the beauty products you saved on Glory.' },
@@ -97,7 +97,7 @@ export const ProductSeo = ({ product }) => {
       aggregateRating: product.numReviews > 0 ? { '@type': 'AggregateRating', ratingValue: product.rating, reviewCount: product.numReviews } : undefined,
       offers: {
         '@type': 'Offer',
-        priceCurrency: 'CAD',
+        priceCurrency: 'GBP',
         price: product.price,
         availability: product.countInStock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
         url: canonical

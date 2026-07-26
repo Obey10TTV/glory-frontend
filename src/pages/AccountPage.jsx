@@ -189,7 +189,7 @@ const AccountPage = () => {
 
   const handleCancelOrder = async (order) => {
     const reason = order.isPaid
-      ? 'Buyer requested cancellation before fulfillment.'
+      ? 'Buyer requested cancellation before fulfilment.'
       : 'Buyer cancelled before payment.'
     setOrderActionId(order._id)
     try {
@@ -387,7 +387,7 @@ const AccountPage = () => {
                               Order #{order._id.slice(-8).toUpperCase()}
                             </div>
                             <div style={{ fontSize: '13px', color: '#555' }}>
-                              {new Date(order.createdAt).toLocaleDateString('en-CA', {
+                              {new Date(order.createdAt).toLocaleDateString('en-GB', {
                                 year: 'numeric', month: 'long', day: 'numeric'
                               })}
                             </div>
@@ -488,7 +488,7 @@ const AccountPage = () => {
                                     <div key={note._id} className={`is-${note.authorRole}`}>
                                       <strong>{note.authorRole === 'admin' ? 'Glory support' : note.authorRole}</strong>
                                       <p>{note.message}</p>
-                                      <time>{new Date(note.createdAt).toLocaleString('en-CA')}</time>
+                                      <time>{new Date(note.createdAt).toLocaleString('en-GB')}</time>
                                     </div>
                                   ))}
                                 </div>
@@ -702,7 +702,7 @@ const AccountPage = () => {
                         <div>
                           <strong>{session.deviceLabel}</strong>
                           <span>
-                            {session.current ? 'This device' : `Last active ${new Date(session.lastUsedAt).toLocaleDateString('en-CA')}`}
+                            {session.current ? 'This device' : `Last active ${new Date(session.lastUsedAt).toLocaleDateString('en-GB')}`}
                           </span>
                         </div>
                         {!session.current && (

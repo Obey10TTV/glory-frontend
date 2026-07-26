@@ -1,13 +1,14 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import { useCart } from '../context/CartContext'
 import { useUser } from '../context/UserContext'
-import { createOrder, initializePayment } from '../api'
+import { createOrder, getStripeStatus, initializeStripePayment } from '../api'
 import Message from '../components/Message'
 import { FiCheck, FiCreditCard } from 'react-icons/fi'
 import { formatCurrency } from '../utils/currency'
+import { getShippingPrice, isUnitedKingdom } from '../utils/shipping'
 
 const CheckoutPage = () => {
   const navigate = useNavigate()
@@ -20,25 +21,39 @@ const CheckoutPage = () => {
   const [city, setCity] = useState('')
   const [state, setState] = useState('')
   const [postalCode, setPostalCode] = useState('')
+  const [country, setCountry] = useState('United Kingdom')
   const [phone, setPhone] = useState('')
-  const [paymentMethod, setPaymentMethod] = useState('Paystack')
+  const [paymentMethod, setPaymentMethod] = useState('Stripe')
+  const [stripeAvailable, setStripeAvailable] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const idempotencyKey = useRef(crypto.randomUUID())
 
-  const shippingPrice = totalPrice >= 75 ? 0 : 8
+  const shippingPrice = getShippingPrice(totalPrice, country)
   const totalAmount = totalPrice + shippingPrice
 
-  const canadianProvinces = [
-    'Alberta', 'British Columbia', 'Manitoba', 'New Brunswick',
-    'Newfoundland and Labrador', 'Northwest Territories', 'Nova Scotia',
-    'Nunavut', 'Ontario', 'Prince Edward Island', 'Quebec',
-    'Saskatchewan', 'Yukon'
-  ]
+  useEffect(() => {
+    let active = true
+    getStripeStatus()
+      .then(({ data }) => {
+        if (active) setStripeAvailable(Boolean(data.enabled))
+      })
+      .catch(() => {
+        if (active) setStripeAvailable(false)
+      })
+    return () => {
+      active = false
+    }
+  }, [])
 
   const handlePlaceOrder = async () => {
     if (!user) {
       navigate('/login')
+      return
+    }
+    if (!stripeAvailable) {
+      setError('UK card checkout is not available yet. Please try again after payment setup is complete.')
+      setStep(2)
       return
     }
     setLoading(true)
@@ -53,7 +68,7 @@ const CheckoutPage = () => {
           product: item._id,
           variantId: item.variantId || undefined
         })),
-        shippingAddress: { fullName, address, city, state, postalCode, phone },
+        shippingAddress: { fullName, address, city, state, postalCode, country, phone },
         paymentMethod,
         itemsPrice: totalPrice,
         shippingPrice,
@@ -62,12 +77,12 @@ const CheckoutPage = () => {
 
       const { data: order } = await createOrder(orderData, idempotencyKey.current)
 
-      if (paymentMethod === 'Paystack') {
-        const { data: payment } = await initializePayment({
+      if (paymentMethod === 'Stripe') {
+        const { data: payment } = await initializeStripePayment({
           email: user.email,
           orderId: order._id
         })
-        window.location.href = payment.data.authorization_url
+        window.location.href = payment.url
       } else {
         clearCart()
         navigate(`/account`)
@@ -175,12 +190,35 @@ const CheckoutPage = () => {
                     />
                   </div>
                   <div>
+                    <label style={labelStyle}>Destination Country</label>
+                    <input
+                      className='glory-input'
+                      value={country}
+                      onChange={e => setCountry(e.target.value)}
+                      placeholder='United Kingdom'
+                      list='glory-shipping-countries'
+                      autoComplete='country-name'
+                      style={inputStyle}
+                    />
+                    <datalist id='glory-shipping-countries'>
+                      {[
+                        'United Kingdom', 'Ireland', 'France', 'Germany', 'Italy',
+                        'Spain', 'Netherlands', 'United States', 'Canada', 'Nigeria',
+                        'Ghana', 'South Africa', 'United Arab Emirates', 'Australia',
+                        'New Zealand'
+                      ].map(destination => <option key={destination} value={destination} />)}
+                    </datalist>
+                    <small style={{ display: 'block', marginTop: '7px', color: '#777', lineHeight: '1.5' }}>
+                      Glory is UK based. International delivery is available where the seller and carrier support your destination.
+                    </small>
+                  </div>
+                  <div>
                     <label style={labelStyle}>Phone Number</label>
                     <input
                       className='glory-input'
                       value={phone}
                       onChange={e => setPhone(e.target.value)}
-                      placeholder='(416) 555-0123'
+                      placeholder={isUnitedKingdom(country) ? '07123 456789' : 'Include country calling code'}
                       style={inputStyle}
                     />
                   </div>
@@ -206,27 +244,23 @@ const CheckoutPage = () => {
                       />
                     </div>
                     <div>
-                      <label style={labelStyle}>Province</label>
-                      <select
+                      <label style={labelStyle}>County / State / Region</label>
+                      <input
                         className='glory-input'
                         value={state}
                         onChange={e => setState(e.target.value)}
-                        style={{ ...inputStyle, cursor: 'pointer' }}
-                      >
-                        <option value=''>Select province</option>
-                        {canadianProvinces.map(s => (
-                          <option key={s} value={s}>{s}</option>
-                        ))}
-                      </select>
+                        placeholder={isUnitedKingdom(country) ? 'e.g. Greater London' : 'Your region'}
+                        style={inputStyle}
+                      />
                     </div>
                   </div>
                   <div>
-                    <label style={labelStyle}>Postal Code</label>
+                    <label style={labelStyle}>Postcode / ZIP Code</label>
                     <input
                       className='glory-input'
                       value={postalCode}
                       onChange={e => setPostalCode(e.target.value.toUpperCase())}
-                      placeholder='A1A 1A1'
+                      placeholder={isUnitedKingdom(country) ? 'SW1A 1AA' : 'Your postal code'}
                       style={inputStyle}
                     />
                   </div>
@@ -234,7 +268,7 @@ const CheckoutPage = () => {
 
                 <button
                   onClick={() => {
-                    if (!fullName || !address || !city || !state || !postalCode || !phone) {
+                    if (!fullName || !address || !city || !state || !postalCode || !country || !phone) {
                       setError('Please fill in all shipping details')
                       return
                     }
@@ -265,9 +299,11 @@ const CheckoutPage = () => {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   {[
                     {
-                      value: 'Paystack',
+                      value: 'Stripe',
                       label: 'Secure card payment',
-                      sub: 'Complete payment on Paystack, then return for confirmation.',
+                      sub: stripeAvailable === false
+                        ? 'UK card checkout is being configured. No order will be placed until it is ready.'
+                        : 'Pay securely in GBP with Stripe, then return for confirmation.',
                       icon: <FiCreditCard size={22} />
                     }
                   ].map(method => (
@@ -329,10 +365,21 @@ const CheckoutPage = () => {
                   </button>
                   <button
                     onClick={() => setStep(3)}
+                    disabled={stripeAvailable !== true}
                     className='glory-btn'
-                    style={{ flex: 2, padding: '14px', fontSize: '14px' }}
+                    style={{
+                      flex: 2,
+                      padding: '14px',
+                      fontSize: '14px',
+                      opacity: stripeAvailable === true ? 1 : 0.55,
+                      cursor: stripeAvailable === true ? 'pointer' : 'not-allowed'
+                    }}
                   >
-                    Review Order →
+                    {stripeAvailable === null
+                      ? 'Checking payment...'
+                      : stripeAvailable
+                        ? 'Review Order →'
+                        : 'Card checkout unavailable'}
                   </button>
                 </div>
               </div>
@@ -373,7 +420,8 @@ const CheckoutPage = () => {
                   </div>
                   <div style={{ fontSize: '13px', color: '#555', lineHeight: '1.6' }}>
                     {fullName} · {phone}<br />
-                    {address}, {city}, {state} {postalCode}
+                    {address}, {city}, {state} {postalCode}<br />
+                    {country}
                   </div>
                 </div>
 

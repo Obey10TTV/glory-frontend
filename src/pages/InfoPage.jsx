@@ -48,7 +48,7 @@ const InfoPage = ({ slug }) => {
               {[
                 ['Verified profiles', 'Trust starts with a reviewed seller identity.'],
                 ['Reviewed products', 'Listings are checked before shoppers can buy.'],
-                ['Canada-first', 'A marketplace shaped around Canadian shoppers.'],
+                ['UK based, globally open', 'Built in the United Kingdom for beauty shoppers everywhere.'],
               ].map(([title, text], index) => (
                 <div key={title}>
                   <span>0{index + 1}</span>

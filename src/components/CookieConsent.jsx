@@ -22,7 +22,7 @@ const saveConsent = (value) => {
 const CookieConsent = () => {
   const [saved, setSaved] = useState(readSavedConsent)
   const [expanded, setExpanded] = useState(false)
-  const [analyticsEnabled, setAnalyticsEnabled] = useState(true)
+  const [analyticsEnabled, setAnalyticsEnabled] = useState(false)
   const [marketingEnabled, setMarketingEnabled] = useState(false)
 
   useEffect(() => {

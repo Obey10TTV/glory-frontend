@@ -2669,10 +2669,12 @@ select:focus-visible,
   font-size: 12px;
 }
 
-.glory-canada-flag {
+.glory-uk-flag {
   display: block;
   flex: 0 0 auto;
   box-shadow: 0 0 0 1px rgba(17, 17, 17, 0.08);
+  border-radius: 3px;
+  overflow: hidden;
 }
 
 .glory-info-page {

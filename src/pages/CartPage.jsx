@@ -4,12 +4,13 @@ import Footer from '../components/Footer'
 import { useCart } from '../context/CartContext'
 import { FiTrash2, FiShoppingBag, FiArrowLeft } from 'react-icons/fi'
 import { formatCurrency } from '../utils/currency'
+import { getShippingPrice } from '../utils/shipping'
 
 const CartPage = () => {
   const navigate = useNavigate()
   const { cartItems, removeFromCart, updateQuantity, clearCart, totalItems, totalPrice } = useCart()
 
-  const shippingPrice = totalPrice >= 75 ? 0 : 8
+  const shippingPrice = getShippingPrice(totalPrice)
 
   return (
     <div className='glory-page' style={{ background: '#fafaf9', minHeight: '100vh' }}>

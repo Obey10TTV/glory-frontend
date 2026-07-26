@@ -144,7 +144,10 @@ export const getReviews = (productId) => API.get(`/reviews/${productId}`)
 export const uploadImage = (data) => API.post('/upload', data)
 export const uploadSellerDocument = (data) => API.post('/upload/seller-document', data)
 
-// PAYSTACK
+// PAYMENTS
+export const initializeStripePayment = (data) => API.post('/stripe/initialize', data)
+export const verifyStripePayment = (sessionId) => API.get(`/stripe/verify/${sessionId}`)
+export const getStripeStatus = () => API.get('/stripe/status')
 export const initializePayment = (data) => API.post('/paystack/initialize', data)
 export const verifyPayment = (reference) => API.get(`/paystack/verify/${reference}`)
 

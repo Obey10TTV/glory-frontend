@@ -13,12 +13,12 @@ const values = [
   {
     Icon: FiShield,
     title: 'Safe & Secure',
-    text: 'Every transaction on Glory is protected. Secure card payments through Stripe and crypto options mean sellers always get paid.',
+    text: 'Account safeguards, reviewed listings and server-verified checkout help protect every Glory purchase.',
   },
   {
     Icon: FiGlobe,
     title: 'Globally Inspired',
-    text: 'Built in Canada, for everyone. CAD pricing, fast shipping, and a marketplace that celebrates every shade and tradition.',
+    text: 'Based in the United Kingdom, open to the world. GBP pricing, international delivery and beauty across every shade and tradition.',
   },
 ]
 
@@ -48,7 +48,7 @@ const AboutPage = () => {
           <p className='glory-about-eyebrow'>Our Story</p>
           <h1 className='glory-about-hero-title'>
             Built for beauty,
-            <span>made in Canada.</span>
+            <span>based in the UK.</span>
           </h1>
           <p className='glory-about-hero-copy'>
             Glory was born out of frustration. Too many talented beauty entrepreneurs
@@ -68,7 +68,7 @@ const AboutPage = () => {
           <p className='glory-about-body'>
             Every beauty entrepreneur deserves a professional storefront,
             seamless payments, and real analytics. Glory gives independent beauty
-            businesses across Canada the same tools that big brands have without
+            businesses in the UK and beyond the same tools that big brands have without
             the complexity or cost.
           </p>
         </div>
@@ -110,9 +110,9 @@ const AboutPage = () => {
               that people actually love to use.
             </p>
             <p>
-              Glory is her vision of what beauty ecommerce should look like,
+              Glory is her vision of what beauty e-commerce should look like,
               premium, purposeful, and built with the seller in mind, for shoppers
-              everywhere from Toronto to anywhere in the world.
+              everywhere from London to Lagos and beyond.
             </p>
             <SocialLinks />
           </div>
@@ -134,7 +134,7 @@ const AboutPage = () => {
         <div className='glory-about-cta-layer' />
         <div className='glory-about-cta-content'>
           <h2 id='about-cta-title'>Ready to grow your beauty brand?</h2>
-          <p>Join sellers across Canada already building their business on Glory.</p>
+          <p>Join beauty sellers building from the United Kingdom for customers around the world.</p>
           <div className='glory-about-cta-actions'>
             <button
               onClick={() => navigate('/register')}

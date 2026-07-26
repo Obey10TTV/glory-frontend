@@ -371,7 +371,7 @@ const OrderRows = ({ orders }) => (
         <tr key={order._id}>
           <td>#{order._id.slice(-8).toUpperCase()}</td><td>{order.buyer?.name || 'N/A'}</td>
           <td><strong>{formatCurrency(order.totalPrice)}</strong></td><td>{order.isPaid ? 'Paid' : 'Unpaid'}</td>
-          <td><span className='glory-status-chip'>{order.status}</span></td><td>{new Date(order.createdAt).toLocaleDateString('en-CA')}</td>
+          <td><span className='glory-status-chip'>{order.status}</span></td><td>{new Date(order.createdAt).toLocaleDateString('en-GB')}</td>
         </tr>
       ))}</tbody>
     </table>
@@ -397,14 +397,14 @@ const OrderOperation = ({ order, onCancellation, onDispute, onNote }) => {
     <article className='glory-order-operation'>
       <button type='button' className='glory-order-operation-summary' onClick={() => setOpen(!open)} aria-expanded={open}>
         <span><strong>#{order._id.slice(-8).toUpperCase()}</strong><small>{order.buyer?.name} · {order.buyer?.email}</small></span>
-        <span><strong>{formatCurrency(order.totalPrice)}</strong><small>{order.status} · {new Date(order.createdAt).toLocaleDateString('en-CA')}</small></span>
+        <span><strong>{formatCurrency(order.totalPrice)}</strong><small>{order.status} · {new Date(order.createdAt).toLocaleDateString('en-GB')}</small></span>
         <span className='glory-status-chip'>{order.dispute?.status || order.refundStatus || 'No issue'}</span>
       </button>
       {open && (
         <div className='glory-order-operation-body'>
           <div className='glory-order-facts'>
             <span><b>Payment</b>{order.isPaid ? 'Paid' : 'Unpaid'} via {order.paymentMethod}</span>
-            <span><b>Fulfillment</b>{order.orderItems.map(item => `${item.name}: ${item.fulfillmentStatus}`).join(', ')}</span>
+            <span><b>Fulfilment</b>{order.orderItems.map(item => `${item.name}: ${item.fulfillmentStatus}`).join(', ')}</span>
             <span><b>Cancellation reason</b>{order.cancellationReason || 'None'}</span>
             <span><b>Refunded</b>{formatCurrency(order.refundedAmount || 0)} · {order.refundStatus || 'None'}</span>
           </div>
@@ -474,7 +474,7 @@ const UsersTable = ({ users, orders, products, currentUserId, onDelete, onMakeSe
 const AuditTable = ({ logs }) => (
   <section className='glory-dashboard-panel'>
     <div className='glory-dashboard-panel-header'><FiActivity /> Administrative audit trail ({logs.length})</div>
-    <div className='glory-audit-list'>{logs.length ? logs.map(log => <article key={log._id}><FiActivity /><div><strong>{log.action.replaceAll('_', ' ')}</strong><p>{log.summary}</p><small>{log.actor?.name || 'System'} · {new Date(log.createdAt).toLocaleString('en-CA')} · {log.entityType} {log.entityId.slice(-8)}</small></div></article>) : <div className='glory-admin-empty'>No audit events match this search.</div>}</div>
+    <div className='glory-audit-list'>{logs.length ? logs.map(log => <article key={log._id}><FiActivity /><div><strong>{log.action.replaceAll('_', ' ')}</strong><p>{log.summary}</p><small>{log.actor?.name || 'System'} · {new Date(log.createdAt).toLocaleString('en-GB')} · {log.entityType} {log.entityId.slice(-8)}</small></div></article>) : <div className='glory-admin-empty'>No audit events match this search.</div>}</div>
   </section>
 )
 

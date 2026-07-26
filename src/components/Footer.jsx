@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { FiFacebook, FiInstagram, FiTwitter, FiYoutube } from 'react-icons/fi'
-import CanadaFlag from './CanadaFlag'
+import UnitedKingdomFlag from './UnitedKingdomFlag'
 import {
   SiAmericanexpress,
   SiBitcoin,
@@ -178,7 +178,7 @@ const Footer = () => {
               marginBottom: '24px',
               color: 'rgba(255,255,255,0.5)'
             }}>
-              Canada's home for global beauty. Discover, shop and sell authentic beauty products for every shade and tradition.
+              The UK's home for global beauty. Discover, shop and sell authentic products for every shade and tradition, with international delivery where available.
             </p>
             <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
               {socialLinks.map((social) => (
@@ -218,8 +218,8 @@ const Footer = () => {
               fontSize: '12px',
               color: 'rgba(255,255,255,0.5)'
             }}>
-              <CanadaFlag size={22} title='Canada shipping' />
-              <span>Shipping across Canada</span>
+              <UnitedKingdomFlag size={22} title='United Kingdom marketplace' />
+              <span>UK based · Worldwide delivery</span>
               <Link
                 to='/shipping'
                 style={{
@@ -281,7 +281,7 @@ const Footer = () => {
           gap: '12px'
         }}>
           <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>
-            (c) 2026 GLORY. All rights reserved. Made for Canada.
+            (c) 2026 GLORY. All rights reserved. Based in the United Kingdom.
           </div>
           <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
             {policyLinks.map(item => (
