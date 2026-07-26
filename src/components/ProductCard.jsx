@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
 import { useState } from 'react'
-import { FiHeart, FiShoppingBag } from 'react-icons/fi'
+import { FiHeart, FiShoppingBag, FiStar } from 'react-icons/fi'
 import { formatCurrency } from '../utils/currency'
 import { isWishlisted, toggleWishlist } from '../utils/wishlist'
 
@@ -152,11 +152,23 @@ const ProductCard = ({ product }) => {
               </span>
             )}
           </div>
-          <div style={{
-            fontSize: '11px', color: '#999'
-          }}>
-            Rated {Number(product.rating || 0).toFixed(1)}
-          </div>
+          {Number(product.numReviews || 0) > 0 ? (
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: '4px',
+              fontSize: '11px', color: '#68615d'
+            }}>
+              <FiStar size={11} fill='currentColor' aria-hidden='true' />
+              <span>{Number(product.rating || 0).toFixed(1)}</span>
+              <span className='sr-only'>out of 5 stars</span>
+            </div>
+          ) : (
+            <div style={{
+              fontSize: '10px', color: '#8f2648',
+              fontWeight: '700', textTransform: 'uppercase'
+            }}>
+              New
+            </div>
+          )}
         </div>
       </div>
     </div>

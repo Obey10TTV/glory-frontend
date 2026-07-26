@@ -1,10 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Navbar from '../components/Navbar'
-import Footer from '../components/Footer'
-import ProductCard from '../components/ProductCard'
-import Loader from '../components/Loader'
-import { getProducts } from '../api'
 import {
   FiArrowRight,
   FiCheckCircle,
@@ -14,48 +9,47 @@ import {
   FiShoppingBag,
   FiTruck,
 } from 'react-icons/fi'
+import Navbar from '../components/Navbar'
+import Footer from '../components/Footer'
+import ProductCard from '../components/ProductCard'
+import Loader from '../components/Loader'
+import { getProducts } from '../api'
 
 const categoryTiles = [
   {
     name: 'Skincare',
-    kicker: 'Barrier, glow, SPF',
-    copy: 'Cleansers, serums, masks and daily essentials for every routine.',
-    image: 'https://images.pexels.com/photos/6724440/pexels-photo-6724440.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    note: 'Barrier, glow, SPF',
+    image: 'https://images.pexels.com/photos/6724440/pexels-photo-6724440.jpeg?auto=compress&cs=tinysrgb&w=720',
     imagePosition: 'center 38%',
   },
   {
     name: 'Makeup',
-    kicker: 'Complexion to lip',
-    copy: 'Pigment, finish and shade range for soft glam or full beat.',
-    image: 'https://images.pexels.com/photos/2688991/pexels-photo-2688991.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    note: 'Complexion to lip',
+    image: 'https://images.pexels.com/photos/2688991/pexels-photo-2688991.jpeg?auto=compress&cs=tinysrgb&w=720',
     imagePosition: 'center 48%',
   },
   {
     name: 'Haircare',
-    kicker: 'Wash day ready',
-    copy: 'Moisture, scalp care, styling and protective-hair favorites.',
-    image: 'https://images.pexels.com/photos/3993449/pexels-photo-3993449.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    note: 'Wash day ready',
+    image: 'https://images.pexels.com/photos/3993449/pexels-photo-3993449.jpeg?auto=compress&cs=tinysrgb&w=720',
     imagePosition: 'center 42%',
   },
   {
     name: 'Nails',
-    kicker: 'Salon finish',
-    copy: 'Polish, press-ons, nail care and sets made for clean detail.',
-    image: 'https://images.pexels.com/photos/3997391/pexels-photo-3997391.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    note: 'Salon finish',
+    image: 'https://images.pexels.com/photos/3997391/pexels-photo-3997391.jpeg?auto=compress&cs=tinysrgb&w=720',
     imagePosition: 'center 48%',
   },
   {
     name: 'Lashes',
-    kicker: 'Soft to dramatic',
-    copy: 'Everyday clusters, strips and lash tools with a lifted finish.',
-    image: 'https://images.pexels.com/photos/3373738/pexels-photo-3373738.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    note: 'Soft to dramatic',
+    image: 'https://images.pexels.com/photos/3373738/pexels-photo-3373738.jpeg?auto=compress&cs=tinysrgb&w=720',
     imagePosition: 'center 34%',
   },
   {
     name: 'Fragrance',
-    kicker: 'Signature scents',
-    copy: 'Perfume oils, sprays and body mists that linger beautifully.',
-    image: 'https://images.pexels.com/photos/965989/pexels-photo-965989.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    note: 'Signature scents',
+    image: 'https://images.pexels.com/photos/965989/pexels-photo-965989.jpeg?auto=compress&cs=tinysrgb&w=720',
     imagePosition: 'center 50%',
   },
 ]
@@ -71,6 +65,25 @@ const categoryOrder = [
   'Body Liquid',
   'Scented Candles',
   'Tools & Accessories',
+]
+
+const editorialCampaigns = [
+  {
+    eyebrow: 'The skincare edit',
+    title: 'Fresh starts here.',
+    copy: 'Hydration, barrier care and daily SPF for routines that feel as good as they look.',
+    image: '/images/home/skincare-edit.jpg',
+    category: 'Skincare',
+    tone: 'light',
+  },
+  {
+    eyebrow: 'Colour, your way',
+    title: 'Make your statement.',
+    copy: 'Complexion, lip and eye favourites selected for expression across every shade.',
+    image: '/images/home/makeup-edit.jpg',
+    category: 'Makeup',
+    tone: 'dark',
+  },
 ]
 
 const getProductTime = (product) => {
@@ -138,240 +151,241 @@ const HomePage = () => {
     })
     .slice(0, 4)
 
+  const renderCatalogState = (items, emptyCopy) => {
+    if (loading) return <Loader />
+
+    if (catalogError) {
+      return (
+        <div className='glory-catalog-alert glory-catalog-alert-wide'>
+          <FiRefreshCw size={22} aria-hidden='true' />
+          <strong>The live edit is taking a short pause.</strong>
+          <span>{catalogError}</span>
+          <button type='button' onClick={loadProducts}>Try again</button>
+        </div>
+      )
+    }
+
+    if (items.length === 0) {
+      return (
+        <div className='glory-home-empty'>
+          <strong>{emptyCopy}</strong>
+          <button type='button' onClick={() => navigate('/products')}>
+            Explore all beauty
+            <FiArrowRight size={16} />
+          </button>
+        </div>
+      )
+    }
+
+    return (
+      <div className='glory-product-grid glory-home-product-grid'>
+        {items.map((product) => (
+          <ProductCard key={product._id} product={product} />
+        ))}
+      </div>
+    )
+  }
+
   return (
-    <div className='glory-page glory-home-page'>
+    <div className='glory-page glory-home-page glory-home-v2'>
       <Navbar />
 
-      <section className='glory-hero'>
-        <video
-          autoPlay
-          muted
-          loop
-          playsInline
-          className='glory-hero-video'
-        >
-          <source src='https://res.cloudinary.com/dd8y3dijs/video/upload/v1780042517/5937414-uhd_2160_3840_24fps_i28m6z.mp4' type='video/mp4' />
-        </video>
-        <div className='glory-hero-scrim' />
-        <div className='glory-hero-content'>
-          <div className='glory-eyebrow glory-hero-kicker'>Canada's home for global beauty</div>
-          <h1 className='glory-hero-title'>Glow. Shine. Glory.</h1>
-          <p className='glory-hero-copy'>
-            Discover authentic beauty products from independent sellers and loved brands, curated for every shade, texture and tradition across Canada.
-          </p>
-          <div className='glory-actions'>
-            <button className='glory-hero-primary' onClick={() => navigate('/products')}>
-              <FiShoppingBag size={18} />
-              Shop now
-            </button>
-            <button className='glory-hero-secondary' onClick={() => navigate('/sell-on-glory')}>
-              Start selling
-              <FiArrowRight size={17} />
-            </button>
+      <main>
+        <section className='glory-campaign-hero' aria-labelledby='glory-home-title'>
+          <img
+            className='glory-campaign-hero-image'
+            src='/images/home/glory-editorial-hero.jpg'
+            alt='Two women beside an edit of skincare and makeup'
+            width='1672'
+            height='940'
+            fetchpriority='high'
+          />
+          <div className='glory-campaign-hero-wash' />
+          <div className='glory-campaign-hero-inner'>
+            <span className='glory-home-label'>Glory beauty, Canada</span>
+            <h1 id='glory-home-title'>Beauty, in all your glory.</h1>
+            <p>
+              Authentic beauty for every shade, texture and ritual, selected from independent sellers and loved brands.
+            </p>
+            <div className='glory-campaign-actions'>
+              <button type='button' className='is-primary' onClick={() => navigate('/products')}>
+                <FiShoppingBag size={17} />
+                Shop now
+              </button>
+              <button type='button' className='is-secondary' onClick={() => navigate('/sell-on-glory')}>
+                Start selling
+                <FiArrowRight size={17} />
+              </button>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section className='glory-marquee' aria-label='Store benefits'>
-        <div className='glory-marquee-track'>
-          {[...Array(3)].map((_, index) => (
-            <span key={index} className='glory-marquee-group'>
-              <span>Beauty across every texture and tone</span>
-              <span>Independent beauty sellers</span>
-              <span>Curated departments</span>
-              <span>Made for beauty shoppers in Canada</span>
-            </span>
-          ))}
-        </div>
-      </section>
+        <section className='glory-home-section glory-department-section' aria-labelledby='glory-departments-title'>
+          <div className='glory-home-shell'>
+            <div className='glory-home-heading-row'>
+              <div>
+                <span className='glory-home-label'>Find your department</span>
+                <h2 id='glory-departments-title'>The beauty edit</h2>
+              </div>
+              <button type='button' className='glory-home-view-all' onClick={() => navigate('/products')}>
+                Shop all
+                <FiArrowRight size={16} />
+              </button>
+            </div>
 
-      <section className='glory-section glory-category-showcase'>
-        <div className='glory-section-inner'>
-          <div className='glory-home-heading'>
-            <span className='glory-eyebrow'>Shop by category</span>
-            <h2>Shop the beauty edit.</h2>
-            <p>Find the department that fits your routine, from everyday essentials to the finishing details.</p>
+            <div className='glory-department-rail'>
+              {categoryTiles.map((category) => (
+                <button
+                  key={category.name}
+                  type='button'
+                  className='glory-department'
+                  onClick={() => shopCategory(category.name)}
+                  aria-label={`Shop ${category.name}`}
+                >
+                  <span className='glory-department-image'>
+                    <img
+                      src={category.image}
+                      alt=''
+                      loading='lazy'
+                      width='480'
+                      height='480'
+                      style={{ objectPosition: category.imagePosition }}
+                    />
+                  </span>
+                  <strong>{category.name}</strong>
+                  <small>
+                    {categoryCounts[category.name]
+                      ? `${categoryCounts[category.name]} products`
+                      : category.note}
+                  </small>
+                </button>
+              ))}
+            </div>
           </div>
+        </section>
 
-          <div className='glory-category-grid glory-category-grid-rich'>
-            {categoryTiles.map((category, index) => (
+        <section className='glory-home-section glory-home-products' aria-labelledby='glory-new-in-title'>
+          <div className='glory-home-shell'>
+            <div className='glory-home-heading-row'>
+              <div>
+                <span className='glory-home-label'>Just landed</span>
+                <h2 id='glory-new-in-title'>New in</h2>
+                <p>Recently approved products, refreshed automatically from the Glory marketplace.</p>
+              </div>
+              <button type='button' className='glory-home-view-all' onClick={() => navigate('/products')}>
+                View all
+                <FiArrowRight size={16} />
+              </button>
+            </div>
+
+            {arrivalCategories.length > 1 && (
+              <div className='glory-home-filter' aria-label='Filter new arrivals by category'>
+                {arrivalCategories.map((category) => (
+                  <button
+                    key={category}
+                    type='button'
+                    className={arrivalCategory === category ? 'is-active' : ''}
+                    onClick={() => setArrivalCategory(category)}
+                    aria-pressed={arrivalCategory === category}
+                  >
+                    {category}
+                    {category !== 'All' && <span>{categoryCounts[category]}</span>}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {renderCatalogState(latestProducts, 'New arrivals are being prepared.')}
+          </div>
+        </section>
+
+        <section className='glory-home-section glory-campaigns-section' aria-label='Featured beauty edits'>
+          <div className='glory-home-shell glory-campaign-grid'>
+            {editorialCampaigns.map((campaign) => (
               <button
-                key={category.name}
-                className={`glory-category-card glory-category-card-rich ${index < 2 ? 'glory-category-featured' : ''}`}
-                onClick={() => shopCategory(category.name)}
-                aria-label={`Shop ${category.name}`}
+                key={campaign.title}
+                type='button'
+                className={`glory-editorial-campaign is-${campaign.tone}`}
+                onClick={() => shopCategory(campaign.category)}
+                aria-label={`Shop ${campaign.category}: ${campaign.title}`}
               >
                 <img
-                  src={category.image}
-                  alt={`${category.name} beauty products`}
+                  src={campaign.image}
+                  alt=''
                   loading='lazy'
-                  width='900'
-                  height='1080'
-                  style={{ objectPosition: category.imagePosition }}
+                  width='1536'
+                  height='1024'
                 />
-                <span className='glory-category-gradient' />
-                <span className='glory-category-content'>
-                  <span className='glory-category-kicker'>{category.kicker}</span>
-                  <span className='glory-category-name'>{category.name}</span>
-                  <span className='glory-category-copy'>{category.copy}</span>
-                  <span className='glory-category-link'>
-                    Shop {category.name}
+                <span className='glory-editorial-campaign-wash' />
+                <span className='glory-editorial-campaign-copy'>
+                  <span>{campaign.eyebrow}</span>
+                  <strong>{campaign.title}</strong>
+                  <small>{campaign.copy}</small>
+                  <b>
+                    Shop {campaign.category}
                     <FiArrowRight size={16} />
-                  </span>
+                  </b>
                 </span>
               </button>
             ))}
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section className='glory-section-tight glory-arrivals-section'>
-        <div className='glory-section-inner'>
-          <div className='glory-section-header glory-section-header-rich'>
-            <div>
-              <span className='glory-eyebrow'>Just dropped</span>
-              <h2 className='glory-section-title'>New in</h2>
-              <p className='glory-section-subtitle'>The latest approved beauty, with quick filters to take you straight to your department.</p>
-            </div>
-            <button className='glory-text-link' onClick={() => navigate('/products')}>
-              View all
-              <FiArrowRight size={16} />
-            </button>
-          </div>
-
-          {arrivalCategories.length > 1 && (
-            <div className='glory-arrival-filter glory-arrival-filter-light' aria-label='Filter new arrivals by category'>
-              {arrivalCategories.map((category) => (
-                <button
-                  key={category}
-                  type='button'
-                  className={arrivalCategory === category ? 'is-active' : ''}
-                  onClick={() => setArrivalCategory(category)}
-                >
-                  {category}
-                  {category !== 'All' && <span>{categoryCounts[category]}</span>}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {loading ? (
-            <Loader />
-          ) : catalogError ? (
-            <div className='glory-catalog-alert glory-catalog-alert-wide'>
-              <FiRefreshCw size={22} aria-hidden='true' />
-              <strong>The live edit is taking a short pause.</strong>
-              <span>{catalogError}</span>
-              <button type='button' onClick={loadProducts}>Try again</button>
-            </div>
-          ) : latestProducts.length > 0 ? (
-            <div className='glory-product-grid'>
-              {latestProducts.map((product) => (
-                <ProductCard key={product._id} product={product} />
-              ))}
-            </div>
-          ) : (
-            <div className='glory-editorial-grid'>
-              {categoryTiles.slice(0, 4).map((item) => (
-                <button
-                  className='glory-editorial-card glory-curated-category-card'
-                  key={item.name}
-                  onClick={() => shopCategory(item.name)}
-                >
-                  <span className='glory-editorial-media'>
-                    <img src={item.image} alt={`${item.name} category`} loading='lazy' width='640' height='520' />
-                  </span>
-                  <span className='glory-editorial-body'>
-                    <span>Explore the edit</span>
-                    <strong>{item.name}</strong>
-                    <small>{item.kicker}</small>
-                    <b>Shop category <FiArrowRight size={14} /></b>
-                  </span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
-
-      <section className='glory-section'>
-        <div className='glory-section-inner'>
-          <div className='glory-section-header glory-section-header-rich'>
-            <div>
-              <span className='glory-eyebrow'>Most loved</span>
-              <h2 className='glory-section-title'>Bestsellers</h2>
-            </div>
-            <button className='glory-text-link' onClick={() => navigate('/products')}>
-              View all
-              <FiArrowRight size={16} />
-            </button>
-          </div>
-
-          {loading ? (
-            <Loader />
-          ) : catalogError ? (
-            <div className='glory-brand-strip'>
+        <section className='glory-home-section glory-home-products glory-bestsellers-section' aria-labelledby='glory-bestsellers-title'>
+          <div className='glory-home-shell'>
+            <div className='glory-home-heading-row'>
               <div>
-                <FiRefreshCw size={22} />
-                <strong>Bestsellers will return with the live catalogue.</strong>
-                <span>Explore Glory's beauty departments while the product service is paused.</span>
+                <span className='glory-home-label'>The community edit</span>
+                <h2 id='glory-bestsellers-title'>Most loved</h2>
+                <p>Top-rated products and current marketplace favourites.</p>
               </div>
-              <button type='button' onClick={loadProducts}>Try again</button>
+              <button type='button' className='glory-home-view-all' onClick={() => navigate('/products')}>
+                View all
+                <FiArrowRight size={16} />
+              </button>
             </div>
-          ) : bestsellerProducts.length > 0 ? (
-            <div className='glory-product-grid'>
-              {bestsellerProducts.map((product) => (
-                <ProductCard key={product._id} product={product} />
-              ))}
+
+            {renderCatalogState(bestsellerProducts, 'Community favourites are coming soon.')}
+          </div>
+        </section>
+
+        <section className='glory-home-seller'>
+          <div className='glory-home-shell glory-home-seller-inner'>
+            <div>
+              <span className='glory-home-label'>For independent beauty brands</span>
+              <h2>Your next customer is already looking.</h2>
             </div>
-          ) : (
-            <div className='glory-brand-strip'>
-              <div>
-                <FiHeart size={22} />
-                <strong>More products coming next.</strong>
-                <span>Once we add more database items, this section will automatically become a real bestseller grid.</span>
-              </div>
-              <button onClick={() => navigate('/products')}>
-                Browse current products
+            <div>
+              <p>
+                Build a verified Glory storefront, submit products for review and sell to beauty shoppers across Canada.
+              </p>
+              <button type='button' onClick={() => navigate('/sell-on-glory')}>
+                Sell on Glory
                 <FiArrowRight size={17} />
               </button>
             </div>
-          )}
-        </div>
-      </section>
-
-      <section className='glory-sell-banner'>
-        <div className='glory-sell-banner-inner'>
-          <span className='glory-eyebrow'>For independent beauty brands</span>
-          <h2>Build your storefront on Glory.</h2>
-          <p>
-            Create a seller account, complete verification and submit products for review before they reach shoppers.
-          </p>
-          <button onClick={() => navigate('/register')}>
-            Apply to sell
-            <FiArrowRight size={17} />
-          </button>
-        </div>
-      </section>
-
-      <section className='glory-trust-strip'>
-        {[
-          { Icon: FiCheckCircle, title: 'Reviewed listings', sub: 'Products are checked before going live' },
-          { Icon: FiShield, title: 'Secure accounts', sub: 'Email verification and optional 2FA' },
-          { Icon: FiTruck, title: 'Canada-first', sub: 'Built for beauty shoppers across Canada' },
-          { Icon: FiHeart, title: 'Beauty for more people', sub: 'Across shades, textures and traditions' },
-        ].map((item) => (
-          <div key={item.title} className='glory-trust-item'>
-            <span>
-              <item.Icon size={20} />
-            </span>
-            <div>
-              <strong>{item.title}</strong>
-              <small>{item.sub}</small>
-            </div>
           </div>
-        ))}
-      </section>
+        </section>
+
+        <section className='glory-home-trust' aria-label='Why shop with Glory'>
+          <div className='glory-home-shell glory-home-trust-grid'>
+            {[
+              { Icon: FiCheckCircle, title: 'Reviewed listings', sub: 'Products are checked before going live' },
+              { Icon: FiShield, title: 'Secure accounts', sub: 'Email verification and optional 2FA' },
+              { Icon: FiTruck, title: 'Canada-first', sub: 'Built for beauty shoppers across Canada' },
+              { Icon: FiHeart, title: 'Beauty for more people', sub: 'Across shades, textures and traditions' },
+            ].map((item) => (
+              <div key={item.title} className='glory-home-trust-item'>
+                <item.Icon size={21} aria-hidden='true' />
+                <div>
+                  <strong>{item.title}</strong>
+                  <small>{item.sub}</small>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      </main>
 
       <Footer />
     </div>
