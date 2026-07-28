@@ -110,7 +110,7 @@ const ProductCard = ({ product }) => {
           {product.variants?.length ? 'Select options' : added ? 'Added!' : 'Add to Bag'}
         </button>
       </div>
-      <div style={{ padding: '12px 14px' }}>
+      <div className='glory-product-card-content' style={{ padding: '12px 14px' }}>
         <button
           type='button'
           onClick={(event) => {
@@ -125,24 +125,24 @@ const ProductCard = ({ product }) => {
         }}>
           {product.brand}
         </button>
-        <div style={{
+        <div className='glory-product-card-name' style={{
           fontSize: '13px', color: '#111',
           fontWeight: '500', marginBottom: '2px',
           lineHeight: '1.35'
         }}>
           {product.name}
         </div>
-        <div style={{
+        <div className='glory-product-card-category' style={{
           fontSize: '11px', color: '#999',
           marginBottom: '8px'
         }}>
           {product.category}
         </div>
-        <div style={{
+        <div className='glory-product-card-footer' style={{
           display: 'flex', alignItems: 'center',
           justifyContent: 'space-between'
         }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', flexWrap: 'wrap' }}>
+          <div className='glory-product-card-prices' style={{ display: 'flex', alignItems: 'baseline', gap: '6px', flexWrap: 'wrap' }}>
             <strong style={{ fontSize: '14px', fontWeight: '700', color: '#111' }}>
               {formatCurrency(product.price)}
             </strong>

@@ -6861,3 +6861,369 @@ select:focus-visible,
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* Fluid layout hardening */
+html {
+  width: 100%;
+  max-width: 100%;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body,
+#root,
+#glory-main,
+.glory-page {
+  min-width: 0;
+  max-width: 100%;
+}
+
+#root,
+#glory-main {
+  width: 100%;
+}
+
+button,
+input,
+select,
+textarea,
+fieldset {
+  max-width: 100%;
+}
+
+button {
+  white-space: normal;
+}
+
+.glory-page main,
+.glory-page section,
+.glory-page article,
+.glory-page aside,
+.glory-page header,
+.glory-page footer,
+.glory-page form,
+.glory-page div {
+  min-width: 0;
+}
+
+.glory-announcement-bar {
+  overflow-wrap: anywhere;
+}
+
+.glory-navbar-main-row,
+.glory-navbar-actions,
+.glory-navbar-search,
+.glory-navbar-mobile-search {
+  min-width: 0;
+}
+
+.glory-navbar-icon-button {
+  flex: 0 0 44px;
+}
+
+.glory-navbar-action {
+  flex: 0 0 auto;
+}
+
+.glory-catalog-hero-inner > *,
+.glory-catalog-search-v2,
+.glory-catalog-mobile-tools,
+.glory-catalog-results-v2 {
+  min-width: 0;
+  width: 100%;
+}
+
+.glory-catalog-search-submit {
+  flex: 0 0 auto;
+}
+
+.glory-product-card-content,
+.glory-product-card-name,
+.glory-product-card-category,
+.glory-product-card-footer,
+.glory-product-card-prices {
+  min-width: 0;
+}
+
+.glory-product-card-name {
+  min-height: 2.7em;
+  display: -webkit-box;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.glory-product-brand-link {
+  max-width: 100%;
+  overflow: hidden;
+  color: #8a837e !important;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.glory-auth-page {
+  width: 100%;
+  min-height: 100dvh !important;
+}
+
+.glory-auth-card {
+  min-width: 0;
+  max-width: min(440px, 100%) !important;
+}
+
+.glory-google-auth-fallback {
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid #d7d2ce;
+  border-radius: 999px;
+  background: #fff;
+  color: #272321;
+  padding: 0 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 650;
+  transition: border-color 180ms ease, background 180ms ease;
+}
+
+.glory-google-auth-fallback:hover {
+  border-color: #8f8882;
+  background: #faf9f7;
+}
+
+.glory-google-auth-fallback:disabled {
+  cursor: not-allowed;
+  opacity: 0.52;
+}
+
+@media (max-width: 1024px) {
+  .glory-navbar-main-row {
+    padding-right: clamp(8px, 2vw, 16px) !important;
+    padding-left: clamp(8px, 2vw, 16px) !important;
+    gap: clamp(2px, 1.5vw, 12px) !important;
+  }
+
+  .glory-navbar-actions {
+    gap: clamp(0px, 1.5vw, 16px) !important;
+  }
+
+  .glory-navbar-action {
+    flex: 0 0 44px;
+  }
+}
+
+@media (max-width: 720px) {
+  .glory-product-cta {
+    position: absolute !important;
+    right: 8px !important;
+    bottom: 8px !important;
+    left: 8px !important;
+    width: auto !important;
+    min-height: 44px !important;
+    margin: 0 !important;
+    padding: 8px !important;
+  }
+
+  .glory-cart-item-media {
+    width: 82px !important;
+    height: 96px !important;
+  }
+
+  .glory-checkout-panel button,
+  .glory-summary-card button {
+    line-height: 1.35;
+  }
+}
+
+@media (max-width: 680px) {
+  .glory-catalog-mobile-tools {
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: 10px;
+  }
+
+  .glory-catalog-mobile-tools > button,
+  .glory-catalog-mobile-tools label {
+    width: 100%;
+  }
+
+  .glory-catalog-search-v2 {
+    box-sizing: border-box;
+  }
+}
+
+@media (max-width: 480px) {
+  .glory-auth-page {
+    align-items: flex-start !important;
+    padding: 24px 16px !important;
+  }
+
+  .glory-auth-card {
+    margin: auto 0;
+    padding: 36px 28px !important;
+    border-radius: 18px !important;
+  }
+
+  .glory-register-card {
+    padding-top: 32px !important;
+    padding-bottom: 32px !important;
+  }
+
+  .glory-product-card-content {
+    padding: 10px !important;
+  }
+
+  .glory-product-card-category {
+    font-size: 10px !important;
+  }
+
+  .glory-product-card-footer {
+    gap: 6px;
+  }
+
+  .glory-product-card-prices {
+    gap: 3px !important;
+  }
+
+  .glory-cart-item {
+    grid-template-columns: 72px minmax(0, 1fr) !important;
+    gap: 12px !important;
+    padding: 14px !important;
+  }
+
+  .glory-cart-item-media {
+    width: 72px !important;
+    height: 88px !important;
+  }
+
+  .glory-operations-queue {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 390px) {
+  .glory-announcement-bar {
+    padding-right: 8px !important;
+    padding-left: 8px !important;
+    font-size: 9px !important;
+  }
+
+  .glory-navbar-main-row {
+    padding-right: 8px !important;
+    padding-left: 8px !important;
+    gap: 2px !important;
+  }
+
+  .glory-navbar-actions {
+    gap: 0 !important;
+  }
+
+  .glory-navbar-logo {
+    font-size: 17px !important;
+  }
+
+  .glory-navbar-mobile-search {
+    padding-right: 10px !important;
+    padding-left: 10px !important;
+  }
+
+  .glory-campaign-hero {
+    width: calc(100% - 16px);
+  }
+
+  .glory-campaign-hero-inner {
+    padding-right: 18px;
+    padding-left: 18px;
+  }
+
+  .glory-campaign-hero h1 {
+    font-size: clamp(42px, 14vw, 45px);
+  }
+
+  .glory-catalog-search-v2 {
+    gap: 7px;
+    padding-left: 11px;
+  }
+
+  .glory-catalog-search-submit {
+    padding-right: 10px;
+    padding-left: 10px;
+  }
+
+  .glory-catalog-mobile-tools {
+    grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr);
+    gap: 8px;
+  }
+
+  .glory-catalog-mobile-tools > button {
+    padding-right: 10px;
+    padding-left: 10px;
+  }
+
+  .glory-catalog-mobile-tools select {
+    padding-right: 40px;
+    padding-left: 12px;
+    background-position: right 12px center;
+  }
+
+  .glory-info-hero-v2 h1 {
+    font-size: clamp(42px, 14vw, 49px);
+    overflow-wrap: anywhere;
+  }
+
+  .glory-auth-card {
+    padding: 30px 20px !important;
+  }
+
+  .glory-register-card {
+    padding-top: 28px !important;
+    padding-bottom: 28px !important;
+  }
+}
+
+@media (max-width: 340px) {
+  .glory-navbar-logo {
+    font-size: 16px !important;
+  }
+
+  .glory-catalog-search-v2 > svg {
+    display: none;
+  }
+
+  .glory-product-card-footer {
+    align-items: flex-start !important;
+    flex-direction: column;
+  }
+
+  .glory-product-card-name {
+    font-size: 12px !important;
+  }
+
+  .glory-product-cta {
+    right: 6px !important;
+    left: 6px !important;
+    gap: 4px !important;
+    font-size: 10px !important;
+  }
+}
+
+@media (max-height: 500px) and (orientation: landscape) and (max-width: 900px) {
+  .glory-campaign-hero,
+  .glory-campaign-hero-inner {
+    min-height: 520px;
+  }
+
+  .glory-campaign-hero-inner {
+    padding-top: 32px;
+    padding-bottom: 32px;
+  }
+
+  .glory-info-hero-v2,
+  .glory-info-hero-v2.has-image {
+    min-height: 500px;
+  }
+}

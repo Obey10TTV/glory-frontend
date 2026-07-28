@@ -195,7 +195,7 @@ const Navbar = () => {
   return (
     <>
       {/* TOP BAR */}
-      <div style={{
+      <div className='glory-announcement-bar' style={{
         background: '#111', color: 'rgba(255,255,255,0.8)',
         fontSize: isMobile ? '10px' : '11px',
         textAlign: 'center', padding: isMobile ? '7px 10px' : '9px',
@@ -218,13 +218,13 @@ const Navbar = () => {
       </div>
 
       {/* MAIN NAV */}
-      <nav style={{
+      <nav className='glory-navbar' style={{
         background: '#fff',
         borderBottom: '1px solid #e5e5e5',
         position: 'sticky', top: 0, zIndex: 1000,
       }}>
         {/* TOP ROW */}
-        <div style={{
+        <div className='glory-navbar-main-row' style={{
           display: 'flex', alignItems: 'center',
           justifyContent: 'space-between',
           padding: isMobile ? '0 16px' : '0 40px',
@@ -233,6 +233,7 @@ const Navbar = () => {
         }}>
           {isMobile && (
             <button
+              className='glory-navbar-icon-button'
               onClick={() => setDrawerOpen(true)}
               aria-label='Open navigation menu'
               aria-expanded={drawerOpen}
@@ -247,7 +248,7 @@ const Navbar = () => {
           )}
 
           {/* LOGO */}
-          <Link to='/' style={{
+          <Link className='glory-navbar-logo' to='/' style={{
             fontFamily: "'Inter', sans-serif",
             fontWeight: '900', fontSize: isMobile ? '18px' : '24px',
             color: '#111', textDecoration: 'none',
@@ -273,7 +274,7 @@ const Navbar = () => {
 
           {/* DESKTOP SEARCH BAR */}
           {!isMobile && (
-            <div style={{ flex: 1, maxWidth: '600px', position: 'relative' }}>
+            <div className='glory-navbar-search' style={{ flex: 1, maxWidth: '600px', position: 'relative' }}>
               <div style={{
                 display: 'flex', alignItems: 'center',
                 background: '#f5f5f5', borderRadius: '999px',
@@ -311,9 +312,10 @@ const Navbar = () => {
           )}
 
           {/* RIGHT ICONS */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '16px' : '20px', flexShrink: 0 }}>
+          <div className='glory-navbar-actions' style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '16px' : '20px', flexShrink: 0 }}>
             {isMobile && (
               <button
+                className='glory-navbar-icon-button'
                 onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
                 aria-label={mobileSearchOpen ? 'Close search' : 'Open search'}
                 aria-expanded={mobileSearchOpen}
@@ -335,6 +337,7 @@ const Navbar = () => {
                 onClick={() => isMobile && setMenuOpen(!menuOpen)}
               >
                 <div
+                  className='glory-navbar-action'
                   role='button'
                   tabIndex={0}
                   aria-label='Open account menu'
@@ -394,6 +397,7 @@ const Navbar = () => {
               </div>
             ) : (
               <div
+                className='glory-navbar-action'
                 onClick={() => navigate('/login')}
                 role='button'
                 tabIndex={0}
@@ -410,6 +414,7 @@ const Navbar = () => {
 
             {!isMobile && (
               <div
+                className='glory-navbar-action'
                 style={{
                   position: 'relative', cursor: 'pointer', minWidth: '44px', minHeight: '44px',
                   display: 'flex', alignItems: 'center', justifyContent: 'center'
@@ -425,6 +430,7 @@ const Navbar = () => {
             )}
 
             <div
+              className='glory-navbar-action'
               style={{
                 position: 'relative', cursor: 'pointer',
                 minWidth: '44px', minHeight: '44px',
@@ -454,7 +460,7 @@ const Navbar = () => {
 
         {/* MOBILE SEARCH ROW */}
         {isMobile && mobileSearchOpen && (
-          <div style={{ padding: '0 16px 14px', position: 'relative' }}>
+          <div className='glory-navbar-mobile-search' style={{ padding: '0 16px 14px', position: 'relative' }}>
             <div style={{
               display: 'flex', alignItems: 'center',
               background: '#f5f5f5', borderRadius: '999px',
@@ -487,7 +493,7 @@ const Navbar = () => {
 
         {/* DESKTOP BOTTOM NAV ROW */}
         {!isMobile && (
-          <div style={{
+          <div className='glory-navbar-desktop-links' style={{
             display: 'flex', alignItems: 'center',
             justifyContent: 'center',
             padding: '0 40px',
@@ -617,7 +623,7 @@ const Navbar = () => {
               background: 'rgba(17,17,17,0.52)', zIndex: 1998
             }}
           />
-          <div style={{
+          <div className='glory-mobile-drawer' style={{
             position: 'fixed', top: 0, left: 0, height: '100dvh',
             width: '86%', maxWidth: '360px', background: '#fff',
             zIndex: 1999, overflowY: 'auto',

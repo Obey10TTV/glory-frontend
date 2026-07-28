@@ -11,7 +11,7 @@ import {
 } from '../api'
 import Message from '../components/Message'
 import { FiEye, FiEyeOff, FiMail, FiPackage, FiRefreshCw, FiShield, FiShoppingBag } from 'react-icons/fi'
-import GoogleSignInButton, { googleAuthConfigured } from '../components/GoogleSignInButton'
+import GoogleSignInButton from '../components/GoogleSignInButton'
 
 const passwordIsStrong = (value) => (
   value.length >= 10
@@ -187,8 +187,8 @@ const RegisterPage = () => {
     || (pendingVerification?.type === '2fa' && /^[A-F0-9]{6}-[A-F0-9]{6}$/.test(otp))
 
   return (
-    <div style={pageStyle}>
-      <div style={cardStyle}>
+    <div className='glory-auth-page' style={pageStyle}>
+      <div className='glory-auth-card glory-register-card' style={cardStyle}>
         <div style={{ textAlign: 'center', marginBottom: '8px' }}>
           <Link to='/' style={logoStyle}>
             GLORY.
@@ -327,17 +327,13 @@ const RegisterPage = () => {
               </div>
             </div>
 
-            {googleAuthConfigured && (
-              <>
-                <GoogleSignInButton
-                  text='signup_with'
-                  disabled={loading}
-                  onCredential={handleGoogleCredential}
-                  onError={setError}
-                />
-                <Divider text='or use email' />
-              </>
-            )}
+            <GoogleSignInButton
+              text='signup_with'
+              disabled={loading}
+              onCredential={handleGoogleCredential}
+              onError={setError}
+            />
+            <Divider text='or use email' />
 
             <button
               onClick={() => setUseEmail(true)}

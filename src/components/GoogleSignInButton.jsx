@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { FcGoogle } from 'react-icons/fc'
 
 const GOOGLE_SCRIPT_ID = 'glory-google-identity'
 const GOOGLE_SCRIPT_URL = 'https://accounts.google.com/gsi/client'
@@ -72,7 +73,7 @@ const GoogleSignInButton = ({
 
         const width = Math.min(
           400,
-          Math.max(240, Math.floor(buttonRef.current.getBoundingClientRect().width))
+          Math.max(200, Math.floor(buttonRef.current.getBoundingClientRect().width))
         )
         buttonRef.current.replaceChildren()
         google.accounts.id.renderButton(buttonRef.current, {
@@ -98,7 +99,19 @@ const GoogleSignInButton = ({
   }, [text])
 
   if (!googleAuthConfigured) {
-    return null
+    return (
+      <button
+        type='button'
+        className='glory-google-auth-fallback'
+        disabled={disabled}
+        onClick={() => errorHandlerRef.current?.(
+          'Google sign-in is not connected yet. Please use email while the secure Google client is configured.'
+        )}
+      >
+        <FcGoogle size={20} aria-hidden='true' />
+        <span>{text === 'signup_with' ? 'Sign up with Google' : 'Continue with Google'}</span>
+      </button>
+    )
   }
 
   return (

@@ -11,7 +11,7 @@ import {
 } from '../api'
 import Message from '../components/Message'
 import { FiEye, FiEyeOff, FiRefreshCw, FiShield } from 'react-icons/fi'
-import GoogleSignInButton, { googleAuthConfigured } from '../components/GoogleSignInButton'
+import GoogleSignInButton from '../components/GoogleSignInButton'
 
 const LoginPage = () => {
   const navigate = useNavigate()
@@ -179,8 +179,8 @@ const LoginPage = () => {
     || (pendingAuth?.type === '2fa' && /^[A-F0-9]{6}-[A-F0-9]{6}$/.test(otp))
 
   return (
-    <div style={pageStyle}>
-      <div style={cardStyle}>
+    <div className='glory-auth-page' style={pageStyle}>
+      <div className='glory-auth-card' style={cardStyle}>
         <div style={{ textAlign: 'center', marginBottom: '8px' }}>
           <Link to='/' style={logoStyle}>
             GLORY.
@@ -199,16 +199,12 @@ const LoginPage = () => {
 
         {!useEmail ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {googleAuthConfigured && (
-              <>
-                <GoogleSignInButton
-                  disabled={loading}
-                  onCredential={handleGoogleCredential}
-                  onError={setError}
-                />
-                <Divider text='or use email' />
-              </>
-            )}
+            <GoogleSignInButton
+              disabled={loading}
+              onCredential={handleGoogleCredential}
+              onError={setError}
+            />
+            <Divider text='or use email' />
 
             <button
               onClick={() => setUseEmail(true)}
