@@ -6972,6 +6972,54 @@ button {
   max-width: min(440px, 100%) !important;
 }
 
+.glory-register-card {
+  max-width: min(500px, 100%) !important;
+}
+
+.glory-register-flow,
+.glory-register-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.glory-register-account-type {
+  min-width: 0;
+  min-height: 72px;
+}
+
+.glory-register-password-hint {
+  margin-top: -10px;
+  color: #777;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.glory-register-otp-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: #6e6864;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.glory-register-otp-note svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+
+.glory-register-submit {
+  width: 100%;
+  min-height: 48px;
+  padding: 13px;
+  font-size: 13px;
+}
+
+.glory-register-submit:disabled {
+  opacity: 0.7;
+}
+
 .glory-google-auth-fallback {
   width: 100%;
   min-height: 46px;
@@ -7057,6 +7105,60 @@ button {
 }
 
 @media (max-width: 480px) {
+  .glory-campaign-hero,
+  .glory-campaign-hero-inner {
+    min-height: 500px;
+  }
+
+  .glory-campaign-hero {
+    width: calc(100% - 16px);
+    margin-top: 8px;
+  }
+
+  .glory-campaign-hero-image {
+    object-position: 64% center;
+  }
+
+  .glory-campaign-hero-wash {
+    background: linear-gradient(
+      180deg,
+      rgba(249, 247, 244, 0.01) 0%,
+      rgba(249, 247, 244, 0.08) 32%,
+      rgba(249, 247, 244, 0.89) 62%,
+      rgba(249, 247, 244, 0.99) 100%
+    );
+  }
+
+  .glory-campaign-hero-inner {
+    padding: 26px 20px;
+  }
+
+  .glory-campaign-hero h1 {
+    max-width: 330px;
+    margin: 8px 0 12px;
+    font-size: 44px;
+  }
+
+  .glory-campaign-hero-inner > p {
+    max-width: 340px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .glory-campaign-actions button {
+    min-height: 46px;
+  }
+
+  .glory-home-section {
+    padding-top: 48px;
+    padding-bottom: 48px;
+  }
+
+  .glory-department-rail {
+    grid-auto-columns: 42%;
+  }
+
   .glory-cookie-card {
     right: 10px;
     bottom: max(10px, env(safe-area-inset-bottom));
@@ -7105,18 +7207,22 @@ button {
 
   .glory-auth-page {
     align-items: flex-start !important;
-    padding: 24px 16px !important;
+    background: #fff !important;
+    padding: 0 !important;
   }
 
   .glory-auth-card {
-    margin: auto 0;
-    padding: 36px 28px !important;
-    border-radius: 18px !important;
+    min-height: 100dvh;
+    margin: 0;
+    padding: 32px 24px !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
   }
 
   .glory-register-card {
-    padding-top: 32px !important;
-    padding-bottom: 32px !important;
+    padding-top: max(28px, env(safe-area-inset-top)) !important;
+    padding-bottom: max(28px, env(safe-area-inset-bottom)) !important;
   }
 
   .glory-product-card-content {
@@ -7187,7 +7293,15 @@ button {
   }
 
   .glory-campaign-hero h1 {
-    font-size: clamp(42px, 14vw, 45px);
+    font-size: 41px;
+  }
+
+  .glory-campaign-actions {
+    flex-direction: row;
+  }
+
+  .glory-campaign-actions button {
+    width: auto;
   }
 
   .glory-catalog-search-v2 {
@@ -7222,16 +7336,31 @@ button {
   }
 
   .glory-auth-card {
-    padding: 30px 20px !important;
+    padding: 26px 20px !important;
   }
 
   .glory-register-card {
-    padding-top: 28px !important;
-    padding-bottom: 28px !important;
+    padding-top: max(24px, env(safe-area-inset-top)) !important;
+    padding-bottom: max(24px, env(safe-area-inset-bottom)) !important;
   }
 }
 
 @media (max-width: 340px) {
+  .glory-campaign-hero,
+  .glory-campaign-hero-inner {
+    min-height: 430px;
+  }
+
+  .glory-register-card {
+    padding-right: 16px !important;
+    padding-left: 16px !important;
+  }
+
+  .glory-register-account-type {
+    padding-right: 8px !important;
+    padding-left: 8px !important;
+  }
+
   .glory-navbar-logo {
     font-size: 16px !important;
   }

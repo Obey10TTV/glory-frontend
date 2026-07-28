@@ -34,7 +34,6 @@ const RegisterPage = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-  const [useEmail, setUseEmail] = useState(false)
   const [pendingVerification, setPendingVerification] = useState(null)
   const [pendingGoogleLink, setPendingGoogleLink] = useState(null)
   const [googleCredential, setGoogleCredential] = useState('')
@@ -103,7 +102,9 @@ const RegisterPage = () => {
     }
   }
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (event) => {
+    event?.preventDefault()
+
     if (password !== confirmPassword) {
       setError('Passwords do not match')
       return
@@ -303,8 +304,8 @@ const RegisterPage = () => {
               Use a different sign-up method
             </button>
           </form>
-        ) : !useEmail ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        ) : (
+          <div className='glory-register-flow'>
             <div style={accountTypeStyle}>
               <div style={{ fontSize: '12px', fontWeight: '600', color: '#444', marginBottom: '12px' }}>
                 I want to
@@ -333,104 +334,72 @@ const RegisterPage = () => {
               onCredential={handleGoogleCredential}
               onError={setError}
             />
-            <Divider text='or use email' />
 
-            <button
-              onClick={() => setUseEmail(true)}
-              className='glory-btn'
-              style={{ width: '100%', padding: '13px', fontSize: '13px' }}
-            >
-              Sign up with Email
-            </button>
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div style={accountTypeStyle}>
-              <div style={{ fontSize: '12px', fontWeight: '600', color: '#444', marginBottom: '12px' }}>
-                I want to
-              </div>
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <AccountTypeButton
-                  active={!isSeller}
-                  icon={<FiShoppingBag size={20} />}
-                  title='Shop'
-                  text='Buy products'
-                  onClick={() => setIsSeller(false)}
-                />
-                <AccountTypeButton
-                  active={isSeller}
-                  icon={<FiPackage size={20} />}
-                  title='Sell'
-                  text='Start my store'
-                  onClick={() => setIsSeller(true)}
+            <Divider text='or sign up with email' />
+
+            <form className='glory-register-form' onSubmit={handleSubmit}>
+              <div>
+                <label style={labelStyle}>Full name</label>
+                <input
+                  type='text'
+                  autoComplete='name'
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  placeholder='Your full name'
+                  style={inputStyle}
+                  required
                 />
               </div>
-            </div>
 
-            <div>
-              <label style={labelStyle}>Full name</label>
-              <input
-                type='text'
-                autoComplete='name'
-                value={name}
-                onChange={e => setName(e.target.value)}
-                placeholder='Your full name'
-                style={inputStyle}
+              <div>
+                <label style={labelStyle}>Email address</label>
+                <input
+                  type='email'
+                  autoComplete='email'
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder='you@example.com'
+                  style={inputStyle}
+                  required
+                />
+              </div>
+
+              <PasswordField
+                label='Password'
+                value={password}
+                onChange={setPassword}
+                show={showPassword}
+                setShow={setShowPassword}
+                placeholder='Create a strong password'
+                autoComplete='new-password'
               />
-            </div>
+              <div className='glory-register-password-hint'>
+                Use 10+ characters with uppercase, lowercase, a number and a special character.
+              </div>
 
-            <div>
-              <label style={labelStyle}>Email address</label>
-              <input
-                type='email'
-                autoComplete='email'
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                placeholder='you@example.com'
-                style={inputStyle}
+              <PasswordField
+                label='Confirm password'
+                value={confirmPassword}
+                onChange={setConfirmPassword}
+                show={showConfirmPassword}
+                setShow={setShowConfirmPassword}
+                placeholder='Confirm your password'
+                autoComplete='new-password'
               />
-            </div>
 
-            <PasswordField
-              label='Password'
-              value={password}
-              onChange={setPassword}
-              show={showPassword}
-              setShow={setShowPassword}
-              placeholder='Create a strong password'
-              autoComplete='new-password'
-            />
-            <div style={{ marginTop: '-10px', color: '#777', fontSize: '11px', lineHeight: '1.5' }}>
-              Use 10+ characters with uppercase, lowercase, a number and a special character.
-            </div>
+              <div className='glory-register-otp-note'>
+                <FiMail size={15} aria-hidden='true' />
+                <span>We will email you a one-time code before the account becomes active.</span>
+              </div>
 
-            <PasswordField
-              label='Confirm password'
-              value={confirmPassword}
-              onChange={setConfirmPassword}
-              show={showConfirmPassword}
-              setShow={setShowConfirmPassword}
-              placeholder='Confirm your password'
-              autoComplete='new-password'
-            />
-
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '11px', color: '#777', lineHeight: '1.6' }}>
-              <FiMail size={15} style={{ flex: '0 0 auto', marginTop: '2px' }} />
-              <span>We will email you a one-time code before the account becomes active.</span>
-            </div>
-
-            <button
-              onClick={handleSubmit}
-              disabled={loading}
-              className='glory-btn'
-              style={{ width: '100%', padding: '13px', fontSize: '13px', opacity: loading ? 0.7 : 1 }}
-            >
-              {loading ? 'Creating account...' : 'Create Account'}
-            </button>
-
-            <button onClick={() => setUseEmail(false)} style={plainButtonStyle}>
-              Back to sign up options
-            </button>
+              <button
+                type='submit'
+                disabled={loading}
+                className='glory-btn glory-register-submit'
+              >
+                {loading ? 'Creating account...' : 'Create Account'}
+              </button>
+            </form>
 
             {isSeller && (
               <div style={sellerNoteStyle}>
@@ -461,6 +430,7 @@ const AccountTypeButton = ({ active, icon, title, text, onClick }) => (
   <button
     type='button'
     onClick={onClick}
+    className='glory-register-account-type'
     style={{
       flex: 1,
       padding: '12px',
