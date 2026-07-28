@@ -7057,6 +7057,52 @@ button {
 }
 
 @media (max-width: 480px) {
+  .glory-cookie-card {
+    right: 10px;
+    bottom: max(10px, env(safe-area-inset-bottom));
+    left: 10px;
+    width: auto;
+    border-radius: 14px;
+    padding: 14px;
+  }
+
+  .glory-cookie-icon {
+    width: 36px;
+    height: 36px;
+    margin-bottom: 8px;
+  }
+
+  .glory-cookie-copy {
+    padding-right: 24px;
+  }
+
+  .glory-cookie-copy strong {
+    margin-bottom: 4px;
+    font-size: 14px;
+  }
+
+  .glory-cookie-copy p {
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  .glory-cookie-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .glory-cookie-actions button {
+    width: 100%;
+    min-height: 44px;
+    padding: 0 10px;
+  }
+
+  .glory-cookie-actions button:first-child {
+    grid-column: 1 / -1;
+  }
+
   .glory-auth-page {
     align-items: flex-start !important;
     padding: 24px 16px !important;
