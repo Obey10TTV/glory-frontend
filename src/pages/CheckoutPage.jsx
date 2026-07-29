@@ -1,10 +1,15 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import { useCart } from '../context/CartContext'
 import { useUser } from '../context/UserContext'
-import { createOrder, getStripeStatus, initializeStripePayment } from '../api'
+import {
+  createOrder,
+  getCheckoutOptions,
+  getStripeStatus,
+  initializeStripePayment
+} from '../api'
 import Message from '../components/Message'
 import { FiCheck, FiCreditCard } from 'react-icons/fi'
 import { formatCurrency } from '../utils/currency'
@@ -25,12 +30,24 @@ const CheckoutPage = () => {
   const [phone, setPhone] = useState('')
   const [paymentMethod, setPaymentMethod] = useState('Stripe')
   const [stripeAvailable, setStripeAvailable] = useState(null)
+  const [checkoutOptions, setCheckoutOptions] = useState(null)
+  const [checkoutOptionsLoading, setCheckoutOptionsLoading] = useState(true)
+  const [checkoutOptionsError, setCheckoutOptionsError] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const idempotencyKey = useRef(crypto.randomUUID())
 
-  const shippingPrice = getShippingPrice(totalPrice, country)
-  const totalAmount = totalPrice + shippingPrice
+  const orderItemsRequest = useMemo(() => cartItems.map(item => ({
+    product: item._id,
+    quantity: item.quantity,
+    variantId: item.variantId || undefined
+  })), [cartItems])
+  const cartFingerprint = JSON.stringify(orderItemsRequest)
+  const shippingPrice = checkoutOptions?.shippingPrice ?? getShippingPrice(totalPrice, country)
+  const itemsAmount = checkoutOptions?.itemsPrice ?? totalPrice
+  const totalAmount = checkoutOptions?.totalPrice ?? (totalPrice + shippingPrice)
+  const cardCompatible = checkoutOptions?.compatibleMethods?.includes('card') ?? true
+  const cardAvailable = stripeAvailable === true && cardCompatible
 
   useEffect(() => {
     let active = true
@@ -46,13 +63,53 @@ const CheckoutPage = () => {
     }
   }, [])
 
+  useEffect(() => {
+    let active = true
+    setCheckoutOptionsLoading(true)
+    setCheckoutOptionsError('')
+
+    const timer = window.setTimeout(() => {
+      getCheckoutOptions({
+        orderItems: orderItemsRequest,
+        shippingAddress: { country }
+      })
+        .then(({ data }) => {
+          if (!active) return
+          setCheckoutOptions(data)
+          if (!data.compatibleMethods?.length) {
+            setCheckoutOptionsError(
+              'This basket does not currently have one secure payment method shared by every seller.'
+            )
+          }
+        })
+        .catch((err) => {
+          if (!active) return
+          setCheckoutOptions(null)
+          setCheckoutOptionsError(
+            err.response?.data?.message || 'Glory could not verify payment options for this basket.'
+          )
+        })
+        .finally(() => {
+          if (active) setCheckoutOptionsLoading(false)
+        })
+    }, 250)
+
+    return () => {
+      active = false
+      window.clearTimeout(timer)
+    }
+  }, [cartFingerprint, country])
+
   const handlePlaceOrder = async () => {
     if (!user) {
       navigate('/login')
       return
     }
-    if (!stripeAvailable) {
-      setError('UK card checkout is not available yet. Please try again after payment setup is complete.')
+    if (!cardAvailable) {
+      setError(
+        checkoutOptionsError
+        || 'Secure card checkout is not available for every product in this basket.'
+      )
       setStep(2)
       return
     }
@@ -60,17 +117,10 @@ const CheckoutPage = () => {
     setError('')
     try {
       const orderData = {
-        orderItems: cartItems.map(item => ({
-          name: item.name,
-          quantity: item.quantity,
-          image: item.image,
-          price: item.price,
-          product: item._id,
-          variantId: item.variantId || undefined
-        })),
+        orderItems: orderItemsRequest,
         shippingAddress: { fullName, address, city, state, postalCode, country, phone },
         paymentMethod,
-        itemsPrice: totalPrice,
+        itemsPrice: itemsAmount,
         shippingPrice,
         totalPrice: totalAmount
       }
@@ -180,8 +230,9 @@ const CheckoutPage = () => {
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                   <div>
-                    <label style={labelStyle}>Full Name</label>
+                    <label htmlFor='checkout-full-name' style={labelStyle}>Full Name</label>
                     <input
+                      id='checkout-full-name'
                       className='glory-input'
                       value={fullName}
                       onChange={e => setFullName(e.target.value)}
@@ -190,8 +241,9 @@ const CheckoutPage = () => {
                     />
                   </div>
                   <div>
-                    <label style={labelStyle}>Destination Country</label>
+                    <label htmlFor='checkout-country' style={labelStyle}>Destination Country</label>
                     <input
+                      id='checkout-country'
                       className='glory-input'
                       value={country}
                       onChange={e => setCountry(e.target.value)}
@@ -213,8 +265,9 @@ const CheckoutPage = () => {
                     </small>
                   </div>
                   <div>
-                    <label style={labelStyle}>Phone Number</label>
+                    <label htmlFor='checkout-phone' style={labelStyle}>Phone Number</label>
                     <input
+                      id='checkout-phone'
                       className='glory-input'
                       value={phone}
                       onChange={e => setPhone(e.target.value)}
@@ -223,8 +276,9 @@ const CheckoutPage = () => {
                     />
                   </div>
                   <div>
-                    <label style={labelStyle}>Street Address</label>
+                    <label htmlFor='checkout-address' style={labelStyle}>Street Address</label>
                     <input
+                      id='checkout-address'
                       className='glory-input'
                       value={address}
                       onChange={e => setAddress(e.target.value)}
@@ -234,8 +288,9 @@ const CheckoutPage = () => {
                   </div>
                   <div className='glory-form-grid' style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                     <div>
-                      <label style={labelStyle}>City</label>
+                      <label htmlFor='checkout-city' style={labelStyle}>City</label>
                       <input
+                        id='checkout-city'
                         className='glory-input'
                         value={city}
                         onChange={e => setCity(e.target.value)}
@@ -244,8 +299,9 @@ const CheckoutPage = () => {
                       />
                     </div>
                     <div>
-                      <label style={labelStyle}>County / State / Region</label>
+                      <label htmlFor='checkout-region' style={labelStyle}>County / State / Region</label>
                       <input
+                        id='checkout-region'
                         className='glory-input'
                         value={state}
                         onChange={e => setState(e.target.value)}
@@ -255,8 +311,9 @@ const CheckoutPage = () => {
                     </div>
                   </div>
                   <div>
-                    <label style={labelStyle}>Postcode / ZIP Code</label>
+                    <label htmlFor='checkout-postcode' style={labelStyle}>Postcode / ZIP Code</label>
                     <input
+                      id='checkout-postcode'
                       className='glory-input'
                       value={postalCode}
                       onChange={e => setPostalCode(e.target.value.toUpperCase())}
@@ -301,9 +358,13 @@ const CheckoutPage = () => {
                     {
                       value: 'Stripe',
                       label: 'Secure card payment',
-                      sub: stripeAvailable === false
-                        ? 'UK card checkout is being configured. No order will be placed until it is ready.'
-                        : 'Pay securely in GBP with Stripe, then return for confirmation.',
+                      sub: checkoutOptionsLoading
+                        ? 'Checking this basket with every seller...'
+                        : !cardCompatible
+                          ? 'Not accepted by every seller in this basket.'
+                          : stripeAvailable === false
+                            ? 'UK card checkout is being configured. No order will be placed until it is ready.'
+                            : 'Visa, Mastercard and other supported cards in GBP through Stripe.',
                       icon: <FiCreditCard size={22} />
                     }
                   ].map(method => (
@@ -365,21 +426,21 @@ const CheckoutPage = () => {
                   </button>
                   <button
                     onClick={() => setStep(3)}
-                    disabled={stripeAvailable !== true}
+                    disabled={!cardAvailable || checkoutOptionsLoading}
                     className='glory-btn'
                     style={{
                       flex: 2,
                       padding: '14px',
                       fontSize: '14px',
-                      opacity: stripeAvailable === true ? 1 : 0.55,
-                      cursor: stripeAvailable === true ? 'pointer' : 'not-allowed'
+                      opacity: cardAvailable && !checkoutOptionsLoading ? 1 : 0.55,
+                      cursor: cardAvailable && !checkoutOptionsLoading ? 'pointer' : 'not-allowed'
                     }}
                   >
-                    {stripeAvailable === null
+                    {checkoutOptionsLoading || stripeAvailable === null
                       ? 'Checking payment...'
-                      : stripeAvailable
+                      : cardAvailable
                         ? 'Review Order →'
-                        : 'Card checkout unavailable'}
+                        : 'No shared payment method'}
                   </button>
                 </div>
               </div>
@@ -449,7 +510,12 @@ const CheckoutPage = () => {
                     </span>
                   </div>
                   <div style={{ fontSize: '13px', color: '#555' }}>
-                    Secure card payment
+                    Secure card payment in GBP
+                    {checkoutOptions?.sellerCount > 1 && (
+                      <span style={{ display: 'block', marginTop: '5px', color: '#777' }}>
+                        One payment covers {checkoutOptions.sellerCount} sellers. Glory allocates each seller&apos;s share.
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -565,6 +631,12 @@ const CheckoutPage = () => {
               <span>Total</span>
               <span>{formatCurrency(totalAmount)}</span>
             </div>
+
+            {checkoutOptionsError && (
+              <div className='glory-checkout-method-warning' role='status'>
+                {checkoutOptionsError}
+              </div>
+            )}
 
             <div style={{
               marginTop: '20px', padding: '14px',

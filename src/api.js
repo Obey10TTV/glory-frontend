@@ -127,6 +127,7 @@ export const deleteProduct = (id) => API.delete(`/products/${id}`)
 export const createOrder = (data, idempotencyKey) => API.post('/orders', data, {
   headers: idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : undefined
 })
+export const getCheckoutOptions = (data) => API.post('/orders/checkout-options', data)
 export const getMyOrders = () => API.get('/orders/myorders')
 export const getSellerOrders = () => API.get('/orders/seller')
 export const getOrder = (id) => API.get(`/orders/${id}`)
@@ -148,6 +149,10 @@ export const uploadSellerDocument = (data) => API.post('/upload/seller-document'
 export const initializeStripePayment = (data) => API.post('/stripe/initialize', data)
 export const verifyStripePayment = (sessionId) => API.get(`/stripe/verify/${sessionId}`)
 export const getStripeStatus = () => API.get('/stripe/status')
+export const getSellerPaymentStatus = () => API.get('/stripe/seller/status')
+export const initializeSellerActivation = () => API.post('/stripe/seller/activation')
+export const verifySellerActivation = (sessionId) => API.get(`/stripe/seller/activation/verify/${sessionId}`)
+export const initializeSellerPayouts = () => API.post('/stripe/connect/onboard')
 export const initializePayment = (data) => API.post('/paystack/initialize', data)
 export const verifyPayment = (reference) => API.get(`/paystack/verify/${reference}`)
 

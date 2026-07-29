@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { useNavigate } from 'react-router'
+import { useNavigate, useSearchParams } from 'react-router'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import Loader from '../components/Loader'
@@ -9,17 +9,22 @@ import {
   createProduct,
   deleteProduct,
   getMySellerProducts,
+  getSellerPaymentStatus,
   getSellerOrders,
   getUserProfile,
+  initializeSellerActivation,
+  initializeSellerPayouts,
   updateSellerOrderStatus,
   updateProduct,
   updateSellerProfile,
   uploadImage,
-  uploadSellerDocument
+  uploadSellerDocument,
+  verifySellerActivation
 } from '../api'
 import {
   FiCheckCircle,
   FiClock,
+  FiCreditCard,
   FiDollarSign,
   FiEdit3,
   FiFileText,
@@ -45,8 +50,28 @@ const emptySellerProfile = {
   country: 'United Kingdom',
   website: '',
   instagram: '',
+  acceptedPaymentMethods: ['card'],
+  activationStatus: 'unpaid',
+  payoutStatus: 'not_started',
   verificationStatus: 'incomplete',
   verificationNote: ''
+}
+
+const emptySellerPayments = {
+  activation: {
+    required: true,
+    feePence: 2000,
+    currency: 'GBP',
+    status: 'unpaid'
+  },
+  payouts: {
+    status: 'not_started',
+    detailsSubmitted: false,
+    chargesEnabled: false,
+    payoutsEnabled: false
+  },
+  acceptedPaymentMethods: ['card'],
+  paymentMethods: []
 }
 
 const priceGuidance = {
@@ -57,6 +82,7 @@ const priceGuidance = {
 
 const SellerDashboardPage = () => {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const { user, login } = useUser()
   const userId = user?._id
   const userIsSeller = user?.isSeller
@@ -71,6 +97,8 @@ const SellerDashboardPage = () => {
   const [submitting, setSubmitting] = useState(false)
   const [profileSubmitting, setProfileSubmitting] = useState(false)
   const [sellerProfile, setSellerProfile] = useState(emptySellerProfile)
+  const [sellerPayments, setSellerPayments] = useState(emptySellerPayments)
+  const [paymentAction, setPaymentAction] = useState('')
   const [documentUploading, setDocumentUploading] = useState('')
   const [trackingByItem, setTrackingByItem] = useState({})
   const [orderUpdating, setOrderUpdating] = useState('')
@@ -105,6 +133,17 @@ const SellerDashboardPage = () => {
     ...emptySellerProfile,
     ...profile
   })
+
+  const refreshSellerPaymentStatus = useCallback(async () => {
+    const { data } = await getSellerPaymentStatus()
+    setSellerPayments({
+      ...emptySellerPayments,
+      ...data,
+      activation: { ...emptySellerPayments.activation, ...(data.activation || {}) },
+      payouts: { ...emptySellerPayments.payouts, ...(data.payouts || {}) }
+    })
+    return data
+  }, [])
 
   const fetchProducts = useCallback(async () => {
     try {
@@ -141,10 +180,19 @@ const SellerDashboardPage = () => {
 
     const fetchSellerProfile = async () => {
       try {
-        const { data } = await getUserProfile()
+        const [{ data }, paymentData] = await Promise.all([
+          getUserProfile(),
+          refreshSellerPaymentStatus().catch(() => null)
+        ])
         if (!active) return
         setSellerProfile(normalizeSellerProfile(data.sellerProfile))
         login(data)
+        if (paymentData?.acceptedPaymentMethods) {
+          setSellerProfile(current => ({
+            ...current,
+            acceptedPaymentMethods: paymentData.acceptedPaymentMethods
+          }))
+        }
       } catch (err) {
         if (active) {
           setSellerProfile(emptySellerProfile)
@@ -157,7 +205,42 @@ const SellerDashboardPage = () => {
     return () => {
       active = false
     }
-  }, [userId, userIsSeller, login])
+  }, [userId, userIsSeller, login, refreshSellerPaymentStatus])
+
+  useEffect(() => {
+    const sessionId = searchParams.get('session_id')
+    if (!userIsSeller || searchParams.get('activation') !== 'success' || !sessionId) return
+
+    let active = true
+    setPaymentAction('activation-verify')
+    verifySellerActivation(sessionId)
+      .then(async () => {
+        if (!active) return
+        await refreshSellerPaymentStatus()
+        const { data } = await getUserProfile()
+        if (!active) return
+        setSellerProfile(normalizeSellerProfile(data.sellerProfile))
+        login(data)
+        setSuccess('Seller activation payment confirmed.')
+        setSearchParams({}, { replace: true })
+      })
+      .catch((err) => {
+        if (active) setError(err.response?.data?.message || 'Could not verify seller activation payment')
+      })
+      .finally(() => {
+        if (active) setPaymentAction('')
+      })
+
+    return () => {
+      active = false
+    }
+  }, [
+    userIsSeller,
+    searchParams,
+    setSearchParams,
+    refreshSellerPaymentStatus,
+    login
+  ])
 
   const resetProductForm = () => {
     setName('')
@@ -185,8 +268,11 @@ const SellerDashboardPage = () => {
   const openNewProductForm = () => {
     const profileVerified = sellerProfile.verificationStatus === 'verified'
     const accountSecured = Boolean(user?.twoFactorEnabled)
-    if (!user?.isAdmin && (!profileVerified || !accountSecured)) {
-      setError('Complete seller verification and enable two-factor authentication before adding products.')
+    const activationComplete = !sellerPayments.activation.required
+      || ['paid', 'waived'].includes(sellerPayments.activation.status)
+    const payoutsComplete = sellerPayments.payouts.status === 'active'
+    if (!user?.isAdmin && (!profileVerified || !accountSecured || !activationComplete || !payoutsComplete)) {
+      setError('Complete verification, activation, two-factor authentication and payout onboarding before adding products.')
       return
     }
     resetProductForm()
@@ -372,6 +458,21 @@ const SellerDashboardPage = () => {
     }))
   }
 
+  const handlePaymentMethodToggle = (method) => {
+    const enabled = sellerPayments.paymentMethods.find(item => item.code === method)?.enabled
+    if (!enabled) return
+    setSellerProfile(current => {
+      const selected = current.acceptedPaymentMethods || ['card']
+      const next = selected.includes(method)
+        ? selected.filter(item => item !== method)
+        : [...selected, method]
+      return {
+        ...current,
+        acceptedPaymentMethods: next.length ? next : selected
+      }
+    })
+  }
+
   const handleDocumentUpload = async (type, file) => {
     if (!file) return
     setDocumentUploading(type)
@@ -427,6 +528,36 @@ const SellerDashboardPage = () => {
     }
   }
 
+  const handleSellerActivation = async () => {
+    setPaymentAction('activation')
+    setError('')
+    try {
+      const { data } = await initializeSellerActivation()
+      if (data.alreadyActive) {
+        await refreshSellerPaymentStatus()
+        setSuccess('Your seller account is already activated.')
+        setPaymentAction('')
+        return
+      }
+      window.location.assign(data.url)
+    } catch (err) {
+      setError(err.response?.data?.message || 'Could not start seller activation payment')
+      setPaymentAction('')
+    }
+  }
+
+  const handlePayoutOnboarding = async () => {
+    setPaymentAction('payout')
+    setError('')
+    try {
+      const { data } = await initializeSellerPayouts()
+      window.location.assign(data.url)
+    } catch (err) {
+      setError(err.response?.data?.message || 'Could not start secure payout onboarding')
+      setPaymentAction('')
+    }
+  }
+
   const statusMeta = (status = 'pending') => {
     if (status === 'approved') {
       return { label: 'Approved', color: '#2ecc71', icon: <FiCheckCircle size={14} />, note: 'Live in the storefront.' }
@@ -456,14 +587,19 @@ const SellerDashboardPage = () => {
   const inventoryValue = products.reduce((sum, product) => sum + Number(product.price || 0) * Number(product.countInStock || 0), 0)
   const sellerMeta = sellerStatusMeta(sellerProfile.verificationStatus)
   const twoFactorEnabled = Boolean(user?.twoFactorEnabled)
+  const activationReady = !sellerPayments.activation.required
+    || ['paid', 'waived'].includes(sellerPayments.activation.status)
+  const payoutReady = sellerPayments.payouts.status === 'active'
   const sellerCanSubmitProducts = Boolean(
     user?.isAdmin
     || (user?.isEmailVerified !== false
       && sellerProfile.verificationStatus === 'verified'
+      && activationReady
+      && payoutReady
       && twoFactorEnabled)
   )
   const documentRequirements = [
-    { type: 'identity', label: 'Government ID', help: 'Passport, driver licence, or provincial photo ID.' },
+    { type: 'identity', label: 'Government ID', help: 'Passport, UK driving licence, or accepted national photo ID.' },
     { type: 'business', label: 'Business document', help: 'Registration, incorporation, or sole proprietor record.' },
     { type: 'address', label: 'Proof of address', help: 'Recent utility, bank, or official address statement.' }
   ]
@@ -517,7 +653,7 @@ const SellerDashboardPage = () => {
             <div>
               <strong>Finish seller security before listing products.</strong>
               <span>
-                Glory requires an approved store profile and two-factor authentication before product submissions open.
+                Glory requires an approved store, 2FA, seller activation and secure payout onboarding before product submissions open.
               </span>
             </div>
             <div className='glory-dashboard-security-actions'>
@@ -532,6 +668,16 @@ const SellerDashboardPage = () => {
               {!twoFactorEnabled && (
                 <button type='button' onClick={() => navigate('/account')}>
                   Set up 2FA
+                </button>
+              )}
+              {sellerProfile.verificationStatus === 'verified' && twoFactorEnabled && !activationReady && (
+                <button type='button' onClick={handleSellerActivation}>
+                  Activate selling
+                </button>
+              )}
+              {sellerProfile.verificationStatus === 'verified' && twoFactorEnabled && activationReady && !payoutReady && (
+                <button type='button' onClick={handlePayoutOnboarding}>
+                  Set up payouts
                 </button>
               )}
             </div>
@@ -583,11 +729,11 @@ const SellerDashboardPage = () => {
             <div className='glory-form-grid'>
               <div>
                 <label style={labelStyle}>Phone</label>
-                <input value={sellerProfile.phone} onChange={event => handleProfileChange('phone', event.target.value)} placeholder='(416) 555-0123' type='tel' style={inputStyle} />
+                <input value={sellerProfile.phone} onChange={event => handleProfileChange('phone', event.target.value)} placeholder='+44 7700 900000' type='tel' style={inputStyle} />
               </div>
               <div>
                 <label style={labelStyle}>City</label>
-                <input value={sellerProfile.city} onChange={event => handleProfileChange('city', event.target.value)} placeholder='Toronto' style={inputStyle} />
+                <input value={sellerProfile.city} onChange={event => handleProfileChange('city', event.target.value)} placeholder='London' style={inputStyle} />
               </div>
             </div>
 
@@ -663,6 +809,140 @@ const SellerDashboardPage = () => {
                 <FiShield size={15} /> Submit for Verification
               </button>
             </div>
+          </div>
+        </section>
+
+        <section className='glory-dashboard-panel glory-commerce-panel'>
+          <div className='glory-dashboard-panel-header glory-dashboard-panel-header-split'>
+            <div>
+              <span>Payments & Payouts</span>
+              <small>One buyer payment, with each seller share recorded and paid separately.</small>
+            </div>
+            <FiCreditCard size={19} />
+          </div>
+
+          <div className='glory-commerce-grid'>
+            <article className='glory-commerce-card'>
+              <div className='glory-commerce-card-heading'>
+                <span><FiDollarSign size={18} /></span>
+                <div>
+                  <strong>Seller activation</strong>
+                  <small>One-time access fee</small>
+                </div>
+              </div>
+              <div className='glory-commerce-amount'>
+                {formatCurrency(sellerPayments.activation.feePence / 100)}
+              </div>
+              <p>
+                The amount is configurable and can be changed before launch without rebuilding checkout.
+              </p>
+              <span className={`glory-commerce-status is-${sellerPayments.activation.status}`}>
+                {sellerPayments.activation.status === 'paid'
+                  ? 'Paid'
+                  : sellerPayments.activation.status === 'waived'
+                    ? 'Waived'
+                    : sellerPayments.activation.status === 'pending'
+                      ? 'Confirmation pending'
+                      : 'Payment required'}
+              </span>
+              {!activationReady && (
+                <button
+                  type='button'
+                  onClick={handleSellerActivation}
+                  disabled={
+                    paymentAction !== ''
+                    || sellerProfile.verificationStatus !== 'verified'
+                    || !twoFactorEnabled
+                  }
+                  className='glory-btn'
+                >
+                  {paymentAction.startsWith('activation') ? 'Checking payment...' : 'Pay activation fee'}
+                </button>
+              )}
+            </article>
+
+            <article className='glory-commerce-card'>
+              <div className='glory-commerce-card-heading'>
+                <span><FiShield size={18} /></span>
+                <div>
+                  <strong>Secure payouts</strong>
+                  <small>Stripe Connect verification</small>
+                </div>
+              </div>
+              <p>
+                Stripe verifies payout identity and bank details. Glory never stores a seller&apos;s raw bank credentials.
+              </p>
+              <span className={`glory-commerce-status is-${sellerPayments.payouts.status}`}>
+                {payoutReady
+                  ? 'Payouts active'
+                  : sellerPayments.payouts.status === 'restricted'
+                    ? 'More details required'
+                    : sellerPayments.payouts.status === 'pending'
+                      ? 'Onboarding incomplete'
+                      : 'Not connected'}
+              </span>
+              {!payoutReady && (
+                <button
+                  type='button'
+                  onClick={handlePayoutOnboarding}
+                  disabled={
+                    paymentAction !== ''
+                    || sellerProfile.verificationStatus !== 'verified'
+                    || !twoFactorEnabled
+                    || !activationReady
+                  }
+                  className='glory-btn'
+                >
+                  {paymentAction === 'payout' ? 'Opening Stripe...' : 'Set up secure payouts'}
+                </button>
+              )}
+            </article>
+
+            <article className='glory-commerce-card glory-commerce-methods'>
+              <div className='glory-commerce-card-heading'>
+                <span><FiCreditCard size={18} /></span>
+                <div>
+                  <strong>Buyer payment methods</strong>
+                  <small>Applied to products in this store</small>
+                </div>
+              </div>
+              <div className='glory-commerce-method-list'>
+                {(sellerPayments.paymentMethods.length
+                  ? sellerPayments.paymentMethods
+                  : [{
+                      code: 'card',
+                      label: 'Credit or debit card',
+                      description: 'Visa, Mastercard and supported cards through Stripe.',
+                      enabled: true
+                    }]
+                ).map(method => (
+                  <button
+                    key={method.code}
+                    type='button'
+                    className={`glory-commerce-method ${method.enabled ? '' : 'is-disabled'}`}
+                    onClick={() => handlePaymentMethodToggle(method.code)}
+                    disabled={!method.enabled}
+                  >
+                    <span className='glory-commerce-method-check'>
+                      {sellerProfile.acceptedPaymentMethods?.includes(method.code) && <FiCheckCircle size={16} />}
+                    </span>
+                    <span>
+                      <strong>{method.label}</strong>
+                      <small>{method.description}</small>
+                    </span>
+                    {!method.enabled && <em>Planned</em>}
+                  </button>
+                ))}
+              </div>
+              <button
+                type='button'
+                className='glory-secondary-button'
+                disabled={profileSubmitting}
+                onClick={() => handleSaveSellerProfile(false)}
+              >
+                <FiSave size={15} /> Save payment preference
+              </button>
+            </article>
           </div>
         </section>
 

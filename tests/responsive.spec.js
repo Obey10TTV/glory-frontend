@@ -71,10 +71,15 @@ const sellerProfile = {
   name: 'Responsive Seller',
   email: 'seller@example.com',
   isSeller: true,
+  isEmailVerified: true,
+  twoFactorEnabled: true,
   sellerProfile: {
     storeName: 'Responsive Beauty',
     country: 'United Kingdom',
-    verificationStatus: 'approved',
+    verificationStatus: 'verified',
+    activationStatus: 'paid',
+    payoutStatus: 'active',
+    acceptedPaymentMethods: ['card'],
   },
 }
 
@@ -154,7 +159,41 @@ const findLayoutIssues = () => {
 const mockApiResponse = (pathname, profile) => {
   if (pathname.endsWith('/users/profile')) return profile
   if (pathname.endsWith('/users/csrf')) return { csrfToken: 'responsive-test-token' }
-  if (pathname.endsWith('/stripe/status')) return { enabled: false }
+  if (pathname.endsWith('/stripe/seller/status')) {
+    return {
+      activation: { required: true, feePence: 2000, currency: 'GBP', status: 'paid' },
+      payouts: {
+        status: 'active',
+        detailsSubmitted: true,
+        chargesEnabled: true,
+        payoutsEnabled: true,
+      },
+      acceptedPaymentMethods: ['card'],
+      paymentMethods: [{
+        code: 'card',
+        label: 'Credit or debit card',
+        description: 'Visa, Mastercard and supported cards through Stripe.',
+        enabled: true,
+      }],
+    }
+  }
+  if (pathname.endsWith('/stripe/status')) {
+    return {
+      enabled: true,
+      currency: 'GBP',
+      paymentMethods: [{ code: 'card', enabled: true }],
+    }
+  }
+  if (pathname.endsWith('/orders/checkout-options')) {
+    return {
+      currency: 'GBP',
+      itemsPrice: 25,
+      shippingPrice: 4.95,
+      totalPrice: 29.95,
+      compatibleMethods: ['card'],
+      sellerCount: 2,
+    }
+  }
   if (pathname.includes('/stripe/verify/')) return { message: 'Payment verification test state' }
   if (pathname.endsWith('/admin/stats')) return {}
   if (pathname.endsWith('/admin/audit')) return { items: [] }

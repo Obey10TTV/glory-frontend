@@ -3,14 +3,9 @@ import { FiFacebook, FiInstagram, FiTwitter, FiYoutube } from 'react-icons/fi'
 import UnitedKingdomFlag from './UnitedKingdomFlag'
 import {
   SiAmericanexpress,
-  SiBitcoin,
-  SiEthereum,
   SiMastercard,
-  SiSolana,
   SiStripe,
-  SiTether,
-  SiVisa,
-  SiXrp
+  SiVisa
 } from 'react-icons/si'
 
 const shopLinks = [
@@ -70,12 +65,7 @@ const paymentBadges = [
   { label: 'Stripe', Icon: SiStripe, color: '#635BFF' },
   { label: 'Visa', Icon: SiVisa, color: '#1A1F71' },
   { label: 'Mastercard', Icon: SiMastercard, color: '#EB001B' },
-  { label: 'Amex', Icon: SiAmericanexpress, color: '#2E77BC' },
-  { label: 'BTC', Icon: SiBitcoin, color: '#F7931A' },
-  { label: 'ETH', Icon: SiEthereum, color: '#627EEA' },
-  { label: 'USDT', Icon: SiTether, color: '#26A17B' },
-  { label: 'SOL', Icon: SiSolana, color: '#14F195' },
-  { label: 'XRP', Icon: SiXrp, color: '#23292F' }
+  { label: 'Amex', Icon: SiAmericanexpress, color: '#2E77BC' }
 ]
 
 const Footer = () => {
@@ -252,7 +242,7 @@ const Footer = () => {
             letterSpacing: '0.15em',
             marginBottom: '16px'
           }}>
-            ACCEPTED PAYMENTS
+            SECURE CARD PAYMENTS
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
             {paymentBadges.map(({ label, Icon, color }) => (

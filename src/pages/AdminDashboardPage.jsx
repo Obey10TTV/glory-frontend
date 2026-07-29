@@ -344,7 +344,7 @@ const Overview = ({ stats, orders }) => (
         { label: 'Total users', value: stats?.totalUsers || 0, icon: <FiUsers size={21} /> },
         { label: 'Products', value: stats?.totalProducts || 0, icon: <FiPackage size={21} /> },
         { label: 'Orders', value: stats?.totalOrders || 0, icon: <FiShoppingBag size={21} /> },
-        { label: 'Paid revenue', value: formatCurrency(stats?.totalRevenue || 0), icon: <FiDollarSign size={21} /> }
+        { label: 'Marketplace sales', value: formatCurrency(stats?.totalRevenue || 0), icon: <FiDollarSign size={21} /> }
       ].map(stat => <div key={stat.label} className='glory-dashboard-stat'><div>{stat.icon}</div><strong>{stat.value}</strong><span>{stat.label}</span></div>)}
     </div>
     <div className='glory-operations-queue'>
@@ -353,6 +353,11 @@ const Overview = ({ stats, orders }) => (
         { label: 'Active disputes', value: stats?.activeDisputes || 0, icon: <FiMessageSquare /> },
         { label: 'Low-stock products', value: stats?.lowStockProducts || 0, icon: <FiAlertTriangle /> },
         { label: 'Seller reviews', value: stats?.pendingSellers || 0, icon: <FiShield /> },
+        {
+          label: 'Platform fees collected',
+          value: formatCurrency((stats?.platformFeesCollectedPence || 0) / 100),
+          icon: <FiDollarSign />
+        },
         { label: 'Privacy requests', value: stats?.privacyRequests || 0, icon: <FiFileText /> }
       ].map(item => <div key={item.label}>{item.icon}<span><strong>{item.value}</strong><small>{item.label}</small></span></div>)}
     </div>
