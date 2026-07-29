@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router'
 import {
   FiArrowRight,
   FiCheckCircle,
@@ -198,7 +198,7 @@ const HomePage = () => {
             alt='Two women beside an edit of skincare and makeup'
             width='1672'
             height='940'
-            fetchpriority='high'
+            fetchPriority='high'
           />
           <div className='glory-campaign-hero-wash' />
           <div className='glory-campaign-hero-inner'>

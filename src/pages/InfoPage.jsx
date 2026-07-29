@@ -1,4 +1,4 @@
-import { Link, Navigate } from 'react-router-dom'
+import { Link, Navigate } from 'react-router'
 import { FiArrowRight, FiCheckCircle, FiMail } from 'react-icons/fi'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
@@ -26,7 +26,7 @@ const InfoPage = ({ slug }) => {
                 alt='Independent beauty founder preparing products for her store'
                 width='1672'
                 height='940'
-                fetchpriority='high'
+                fetchPriority='high'
               />
               <span className='glory-info-hero-wash' />
             </>

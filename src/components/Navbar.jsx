@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router'
 import { useUser } from '../context/UserContext'
 import { useCart } from '../context/CartContext'
 import { useState, useEffect, useRef } from 'react'

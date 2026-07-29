@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router'
 import {
   FiCheck,
   FiChevronRight,
@@ -154,7 +154,7 @@ const ProductDetailPage = () => {
                 alt={product.name}
                 width='900'
                 height='900'
-                fetchpriority='high'
+                fetchPriority='high'
               />
               <button
                 type='button'

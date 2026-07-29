@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react'
-import { BrowserRouter as Router, Navigate, Routes, Route, useLocation } from 'react-router-dom'
+import { BrowserRouter as Router, Navigate, Routes, Route, useLocation } from 'react-router'
 import './App.css'
 import CookieConsent from './components/CookieConsent'
 import ScrollToTop from './components/ScrollToTop'
@@ -45,7 +45,7 @@ function App() {
     }
   }
   return (
-    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+    <Router>
       <a className='glory-skip-link' href='#glory-main' onClick={focusMainContent}>Skip to main content</a>
       <ScrollToTop />
       <SeoManager />

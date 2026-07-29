@@ -1,5 +1,5 @@
 import React from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import { FiGlobe, FiInstagram, FiLinkedin, FiShield, FiShoppingBag, FiTwitter } from 'react-icons/fi'

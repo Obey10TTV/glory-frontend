@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router'
 import { useCart } from '../context/CartContext'
 import { useState } from 'react'
 import { FiHeart, FiShoppingBag, FiStar } from 'react-icons/fi'

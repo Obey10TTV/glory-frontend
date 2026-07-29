@@ -6865,7 +6865,9 @@ select:focus-visible,
 /* Fluid layout hardening */
 html {
   width: 100%;
+  min-height: 100%;
   max-width: 100%;
+  overflow-x: hidden;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
 }
@@ -6874,13 +6876,27 @@ body,
 #root,
 #glory-main,
 .glory-page {
+  width: 100%;
   min-width: 0;
   max-width: 100%;
 }
 
+body {
+  min-height: 100%;
+  position: relative;
+}
+
 #root,
 #glory-main {
-  width: 100%;
+  min-height: 100%;
+  display: block;
+}
+
+@supports (overflow: clip) {
+  html,
+  body {
+    overflow-x: clip;
+  }
 }
 
 button,
