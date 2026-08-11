@@ -9034,3 +9034,86 @@ button {
     transition: none;
   }
 }
+
+/* Full-bleed release-carousel treatment for the Glory home page. */
+.glory-home-stage {
+  padding-top: 0;
+}
+
+.glory-home-stage .glory-home-shell-v3 {
+  width: 100%;
+  max-width: none;
+}
+
+.glory-home-stage-frame {
+  min-height: min(720px, calc(100svh - 86px));
+  border: 0;
+  border-radius: 0;
+}
+
+.glory-home-stage-copy {
+  min-height: min(720px, calc(100svh - 86px));
+  width: min(100%, 1280px);
+  max-width: none;
+  margin: 0 auto;
+  padding-right: 64px;
+  padding-left: 64px;
+}
+
+.glory-home-product-grid-v3 {
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, calc((100% - 54px) / 4));
+  grid-template-columns: none !important;
+  gap: 18px !important;
+  padding-bottom: 6px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+}
+
+.glory-home-product-grid-v3::-webkit-scrollbar {
+  display: none;
+}
+
+.glory-home-product-grid-v3 .glory-product-card {
+  scroll-snap-align: start;
+}
+
+@media (max-width: 820px) {
+  .glory-home-stage-frame,
+  .glory-home-stage-copy {
+    min-height: min(640px, calc(100svh - 86px));
+  }
+
+  .glory-home-stage-copy {
+    padding-right: 40px;
+    padding-left: 40px;
+  }
+
+  .glory-home-product-grid-v3 {
+    grid-auto-columns: minmax(0, calc((100% - 28px) / 3));
+  }
+}
+
+@media (max-width: 640px) {
+  .glory-home-stage {
+    padding-top: 0;
+  }
+
+  .glory-home-stage-frame,
+  .glory-home-stage-copy {
+    min-height: max(548px, calc(100svh - 86px));
+  }
+
+  .glory-home-stage-copy {
+    width: 100%;
+    margin: 0;
+    padding-right: 22px;
+    padding-left: 22px;
+  }
+
+  .glory-home-product-grid-v3 {
+    grid-auto-columns: minmax(0, calc((100% - 14px) / 2.08));
+    gap: 14px !important;
+  }
+}
