@@ -8448,7 +8448,7 @@ button {
 
 /* Glory footer */
 .glory-footer-v2 {
-  background: var(--glory-deep-espresso);
+  background: #171514;
   color: #fff;
 }
 
@@ -8482,8 +8482,8 @@ button {
 }
 
 .glory-footer-invite-link {
-  border-color: var(--glory-deep-espresso);
-  background: var(--glory-deep-espresso);
+  border-color: #171514;
+  background: #171514;
   color: #fff;
 }
 
