@@ -8293,7 +8293,6 @@ button {
   background: #303033;
 }
 
-.glory-home-motion-media > img,
 .glory-home-motion-media video {
   position: absolute;
   inset: 0;
@@ -8301,15 +8300,6 @@ button {
   height: 100%;
   display: block;
   object-fit: cover;
-}
-
-.glory-home-motion-media video {
-  opacity: 0;
-  transition: opacity 260ms ease;
-}
-
-.glory-home-motion-media video.is-ready {
-  opacity: 1;
 }
 
 .glory-home-motion-copy {
@@ -9025,8 +9015,7 @@ button {
 @media (prefers-reduced-motion: reduce) {
   .glory-home-stage-image,
   .glory-home-department-image img,
-  .glory-home-story > img,
-  .glory-home-motion-media video {
+  .glory-home-story > img {
     transition: none;
   }
 }

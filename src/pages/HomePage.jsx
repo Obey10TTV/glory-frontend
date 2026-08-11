@@ -145,7 +145,6 @@ const HomePage = () => {
   const [activeSlide, setActiveSlide] = useState(0)
   const [heroPaused, setHeroPaused] = useState(false)
   const [reducedMotion, setReducedMotion] = useState(false)
-  const [videoReady, setVideoReady] = useState(false)
   const heroSwipeStartX = useRef(null)
 
   const loadProducts = useCallback(async () => {
@@ -477,17 +476,13 @@ const HomePage = () => {
         <section className='glory-home-motion' aria-labelledby='glory-motion-title'>
           <div className='glory-home-motion-frame'>
             <div className='glory-home-motion-media'>
-              <img src='/images/home/skincare-edit.jpg' alt='A skincare ritual in soft daylight' width='1536' height='1024' loading='lazy' />
               <video
-                className={videoReady ? 'is-ready' : ''}
                 muted
                 loop
                 playsInline
                 autoPlay={!reducedMotion}
                 preload='metadata'
                 aria-label='A woman practising a skincare ritual'
-                onCanPlay={() => setVideoReady(true)}
-                onError={() => setVideoReady(false)}
               >
                 <source src='https://videos.pexels.com/video-files/8154464/8154464-sd_960_506_25fps.mp4' type='video/mp4' />
               </video>
