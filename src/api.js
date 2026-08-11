@@ -152,6 +152,13 @@ export const payOrder = (id, data) => API.put(`/orders/${id}/pay`, data)
 export const addReview = (productId, data) => API.post(`/reviews/${productId}`, data)
 export const getReviews = (productId) => API.get(`/reviews/${productId}`)
 
+// PROMOTIONS
+export const getPromotionPlans = () => API.get('/promotions/plans')
+export const getHomepagePromotions = () => API.get('/promotions/homepage')
+export const getMyPromotions = () => API.get('/promotions/mine')
+export const initializeHomepagePromotion = (data) => API.post('/stripe/seller/promotions/homepage', data)
+export const verifyHomepagePromotion = (sessionId) => API.get(`/stripe/seller/promotions/homepage/verify/${sessionId}`)
+
 // UPLOAD
 export const uploadImage = (data) => API.post('/upload', data)
 export const uploadSellerDocument = (data) => API.post('/upload/seller-document', data)

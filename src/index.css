@@ -9794,3 +9794,52 @@ button {
     max-width: 88%;
   }
 }
+.glory-product-sponsored-badge {
+  position: absolute;
+  z-index: 2;
+  top: 10px;
+  left: 10px;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: #171514;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.glory-home-sponsored {
+  border-block: 1px solid #ece5e1;
+  background: #fbf8f6;
+}
+
+.glory-promotion-card {
+  align-content: start;
+}
+
+.glory-promotion-listing-select {
+  display: grid;
+  gap: 6px;
+  margin: 2px 0 4px;
+  color: #524b47;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.glory-promotion-listing-select select {
+  width: 100%;
+  min-height: 42px;
+  padding: 0 38px 0 12px;
+  border: 1px solid #d9d0ca;
+  border-radius: 6px;
+  background: #fff;
+  color: #171514;
+  font: inherit;
+}
+
+.glory-promotion-listing-select select:focus-visible {
+  outline: 2px solid #8f2648;
+  outline-offset: 2px;
+}

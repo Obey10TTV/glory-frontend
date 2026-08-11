@@ -56,6 +56,9 @@ const ProductCard = ({ product }) => {
             objectFit: 'cover', display: 'block'
           }}
         />
+        {product.isSponsored && (
+          <span className='glory-product-sponsored-badge'>Sponsored</span>
+        )}
         <button
           className='glory-icon-button'
           onClick={handleWishlist}

@@ -37,6 +37,27 @@ const sellerAccessStatus = {
   directCheckoutEnabled: false,
 }
 
+const approvedListing = {
+  _id: 'approved-listing',
+  name: 'Barrier Repair Serum',
+  brand: 'Ava Beauty',
+  category: 'Skincare',
+  image: 'https://images.pexels.com/photos/4041392/pexels-photo-4041392.jpeg',
+  price: 24,
+  countInStock: 8,
+  approvalStatus: 'approved',
+}
+
+const homepagePromotionPlan = {
+  code: 'homepage_featured',
+  placement: 'homepage_featured',
+  label: 'Homepage featured placement',
+  description: 'A clearly labelled sponsored placement.',
+  feePence: 999,
+  currency: 'GBP',
+  durationDays: 7,
+}
+
 const installApiMocks = async (page, profile) => {
   await page.route('**/api/**', async (route) => {
     const pathname = new URL(route.request().url()).pathname
@@ -45,7 +66,13 @@ const installApiMocks = async (page, profile) => {
     if (pathname.endsWith('/users/profile')) body = profile
     if (pathname.endsWith('/stripe/seller/status')) body = sellerAccessStatus
     if (pathname.endsWith('/stripe/status')) body = { enabled: true, currency: 'GBP', marketplaceMode: 'classified', directCheckoutEnabled: false }
-    if (pathname.endsWith('/products/mine') || pathname.endsWith('/conversations')) body = []
+    if (pathname.endsWith('/products/mine')) body = [approvedListing]
+    if (pathname.endsWith('/products')) body = [approvedListing]
+    if (pathname.endsWith('/promotions/plans')) body = { items: [homepagePromotionPlan] }
+    if (pathname.endsWith('/promotions/mine') || pathname.endsWith('/conversations')) body = []
+    if (pathname.endsWith('/promotions/homepage')) body = {
+      items: [{ id: 'homepage-promotion', placement: 'homepage_featured', label: 'Sponsored', listing: approvedListing }],
+    }
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -72,7 +99,9 @@ test('seller sees platform access and private buyer enquiries, not payout setup'
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/seller', { waitUntil: 'domcontentloaded' })
 
-  await expect(page.getByText('Marketplace access', { exact: true })).toBeVisible()
+  await expect(page.getByText('Marketplace access', { exact: true })).toBeVisible({ timeout: 15000 })
+  await expect(page.getByText('Homepage featured', { exact: true })).toBeVisible()
+  await expect(page.getByText('\u00A39.99', { exact: true })).toBeVisible()
   await expect(page.getByText('£20.00', { exact: true })).toBeVisible()
   await expect(page.getByText('Buyer enquiries', { exact: true })).toBeVisible()
   await expect(page.getByText('Secure payouts', { exact: true })).toHaveCount(0)
@@ -81,6 +110,18 @@ test('seller sees platform access and private buyer enquiries, not payout setup'
     path: path.join('test-results', 'seller-classified-marketplace-390.png'),
     fullPage: true,
   })
+})
+
+test('homepage clearly labels active paid placement as sponsored', async ({ page }) => {
+  await installApiMocks(page, customer)
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+
+  const sponsoredSection = page.locator('.glory-home-sponsored')
+  await expect(sponsoredSection).toBeVisible({ timeout: 15000 })
+  await expect(sponsoredSection.getByRole('heading', { name: 'Featured by beauty brands.' })).toBeVisible()
+  await expect(sponsoredSection.locator('.glory-product-sponsored-badge')).toHaveText('Sponsored')
+  await expect(sponsoredSection.getByText('Barrier Repair Serum', { exact: true })).toBeVisible()
 })
 
 test('legacy checkout route redirects buyers to listings', async ({ page }) => {

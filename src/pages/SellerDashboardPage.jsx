@@ -8,15 +8,19 @@ import { useUser } from '../context/UserContext'
 import {
   createProduct,
   deleteProduct,
+  getMyPromotions,
+  getPromotionPlans,
   getMySellerProducts,
   getSellerPaymentStatus,
   getUserProfile,
   initializeSellerActivation,
+  initializeHomepagePromotion,
   updateProduct,
   updateSellerProfile,
   uploadImage,
   uploadSellerDocument,
-  verifySellerActivation
+  verifySellerActivation,
+  verifyHomepagePromotion
 } from '../api'
 import {
   FiCheckCircle,
@@ -30,6 +34,7 @@ import {
   FiPlus,
   FiSave,
   FiShield,
+  FiTrendingUp,
   FiTrash2,
   FiX,
   FiXCircle
@@ -101,6 +106,9 @@ const SellerDashboardPage = () => {
   const [profileSubmitting, setProfileSubmitting] = useState(false)
   const [sellerProfile, setSellerProfile] = useState(emptySellerProfile)
   const [sellerPayments, setSellerPayments] = useState(emptySellerPayments)
+  const [promotionPlans, setPromotionPlans] = useState([])
+  const [promotions, setPromotions] = useState([])
+  const [selectedPromotionListingId, setSelectedPromotionListingId] = useState('')
   const [paymentAction, setPaymentAction] = useState('')
   const [documentUploading, setDocumentUploading] = useState('')
 
@@ -147,6 +155,15 @@ const SellerDashboardPage = () => {
     return data
   }, [])
 
+  const refreshPromotions = useCallback(async () => {
+    const [plansResponse, promotionsResponse] = await Promise.all([
+      getPromotionPlans(),
+      getMyPromotions()
+    ])
+    setPromotionPlans(Array.isArray(plansResponse.data?.items) ? plansResponse.data.items : [])
+    setPromotions(Array.isArray(promotionsResponse.data) ? promotionsResponse.data : [])
+  }, [])
+
   const fetchProducts = useCallback(async () => {
     try {
       setLoading(true)
@@ -169,7 +186,17 @@ const SellerDashboardPage = () => {
       return
     }
     fetchProducts()
-  }, [userId, userIsSeller, navigate, fetchProducts])
+    refreshPromotions().catch(() => undefined)
+  }, [userId, userIsSeller, navigate, fetchProducts, refreshPromotions])
+
+  useEffect(() => {
+    const eligibleListings = products.filter((product) => (
+      product.approvalStatus === 'approved' && Number(product.countInStock || 0) > 0
+    ))
+    if (!eligibleListings.some((product) => product._id === selectedPromotionListingId)) {
+      setSelectedPromotionListingId(eligibleListings[0]?._id || '')
+    }
+  }, [products, selectedPromotionListingId])
 
   useEffect(() => {
     if (!userIsSeller) return
@@ -239,6 +266,35 @@ const SellerDashboardPage = () => {
     refreshSellerPaymentStatus,
     login
   ])
+
+  useEffect(() => {
+    const sessionId = searchParams.get('session_id')
+    if (!userIsSeller || searchParams.get('promotion') !== 'success' || !sessionId) return
+
+    let active = true
+    setPaymentAction('promotion-verify')
+    verifyHomepagePromotion(sessionId)
+      .then(async ({ data }) => {
+        if (!active) return
+        await refreshPromotions()
+        if (data?.promotionStatus === 'active') {
+          setSuccess('Your sponsored homepage placement is now active and clearly labelled for shoppers.')
+        } else {
+          setError('Your payment was received, but this promotion needs a Trust & Safety review before it can appear.')
+        }
+        setSearchParams({}, { replace: true })
+      })
+      .catch((err) => {
+        if (active) setError(err.response?.data?.message || 'Could not verify the promotion payment')
+      })
+      .finally(() => {
+        if (active) setPaymentAction('')
+      })
+
+    return () => {
+      active = false
+    }
+  }, [userIsSeller, searchParams, setSearchParams, refreshPromotions])
 
   const resetProductForm = () => {
     setName('')
@@ -533,6 +589,33 @@ const SellerDashboardPage = () => {
     }
   }
 
+  const handleHomepagePromotion = async () => {
+    const plan = promotionPlans.find((item) => item.placement === 'homepage_featured')
+    if (!plan || !selectedPromotionListingId) {
+      setError('Choose an approved, in-stock listing before starting a homepage promotion.')
+      return
+    }
+
+    setPaymentAction('promotion')
+    setError('')
+    try {
+      const { data } = await initializeHomepagePromotion({
+        listingId: selectedPromotionListingId,
+        planCode: plan.code
+      })
+      if (data.alreadyActive) {
+        await refreshPromotions()
+        setSuccess('This listing already has an active sponsored homepage placement.')
+        setPaymentAction('')
+        return
+      }
+      window.location.assign(data.url)
+    } catch (err) {
+      setError(err.response?.data?.message || 'Could not start the sponsored placement payment')
+      setPaymentAction('')
+    }
+  }
+
   const statusMeta = (status = 'pending') => {
     if (status === 'approved') {
       return { label: 'Approved', color: '#2ecc71', icon: <FiCheckCircle size={14} />, note: 'Live in the storefront.' }
@@ -557,6 +640,7 @@ const SellerDashboardPage = () => {
   }
 
   const approvedProducts = products.filter(product => product.approvalStatus === 'approved')
+  const promotableProducts = approvedProducts.filter(product => Number(product.countInStock || 0) > 0)
   const pendingProducts = products.filter(product => product.approvalStatus === 'pending' || !product.approvalStatus)
   const rejectedProducts = products.filter(product => product.approvalStatus === 'rejected')
   const inventoryValue = products.reduce((sum, product) => sum + Number(product.price || 0) * Number(product.countInStock || 0), 0)
@@ -564,6 +648,12 @@ const SellerDashboardPage = () => {
   const twoFactorEnabled = Boolean(user?.twoFactorEnabled)
   const activationReady = !sellerPayments.activation.required
     || ['paid', 'waived'].includes(sellerPayments.activation.status)
+  const homepagePromotionPlan = promotionPlans.find((plan) => plan.placement === 'homepage_featured')
+  const activeHomepagePromotion = promotions.find((promotion) => (
+    promotion.placement === 'homepage_featured'
+    && promotion.status === 'active'
+    && new Date(promotion.endsAt).getTime() > Date.now()
+  ))
   const sellerCanSubmitProducts = Boolean(
     user?.isAdmin
     || (user?.isEmailVerified !== false
@@ -821,6 +911,60 @@ const SellerDashboardPage = () => {
                 >
                   {paymentAction.startsWith('activation') ? 'Checking payment...' : 'Pay activation fee'}
                 </button>
+              )}
+            </article>
+
+            <article className='glory-commerce-card glory-promotion-card'>
+              <div className='glory-commerce-card-heading'>
+                <span><FiTrendingUp size={18} /></span>
+                <div>
+                  <strong>Homepage featured</strong>
+                  <small>Clearly labelled sponsored placement</small>
+                </div>
+              </div>
+              {homepagePromotionPlan ? (
+                <>
+                  <div className='glory-commerce-amount'>
+                    {formatCurrency(homepagePromotionPlan.feePence / 100)}
+                  </div>
+                  <p>
+                    Feature one approved listing in Glory&apos;s Sponsored home-page edit for {homepagePromotionPlan.durationDays} days. Paid placement never changes your verification status.
+                  </p>
+                  {activeHomepagePromotion && (
+                    <span className='glory-commerce-status is-paid'>
+                      Live until {new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' }).format(new Date(activeHomepagePromotion.endsAt))}
+                    </span>
+                  )}
+                  {promotableProducts.length > 0 ? (
+                    <label className='glory-promotion-listing-select'>
+                      <span>Approved listing</span>
+                      <select
+                        value={selectedPromotionListingId}
+                        onChange={(event) => setSelectedPromotionListingId(event.target.value)}
+                      >
+                        {promotableProducts.map((product) => (
+                          <option key={product._id} value={product._id}>{product.name}</option>
+                        ))}
+                      </select>
+                    </label>
+                  ) : (
+                    <small className='glory-dashboard-note'>Approve and stock a listing before buying a homepage placement.</small>
+                  )}
+                  <button
+                    type='button'
+                    onClick={handleHomepagePromotion}
+                    disabled={
+                      paymentAction !== ''
+                      || !sellerCanSubmitProducts
+                      || !selectedPromotionListingId
+                    }
+                    className='glory-btn'
+                  >
+                    <FiTrendingUp size={15} /> {paymentAction.startsWith('promotion') ? 'Checking payment...' : 'Feature on homepage'}
+                  </button>
+                </>
+              ) : (
+                <p>Homepage advertising will appear here once Glory&apos;s promotion plans are available.</p>
               )}
             </article>
 

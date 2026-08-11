@@ -99,6 +99,27 @@ const protectedRoutes = [
   { route: '/admin', profile: adminProfile },
 ]
 
+const responsiveListing = {
+  _id: 'responsive-listing',
+  name: 'Daily Barrier Serum',
+  brand: 'Responsive Beauty',
+  category: 'Skincare',
+  image: 'https://images.pexels.com/photos/4041392/pexels-photo-4041392.jpeg',
+  price: 24,
+  countInStock: 8,
+  approvalStatus: 'approved',
+}
+
+const homepagePromotionPlan = {
+  code: 'homepage_featured',
+  placement: 'homepage_featured',
+  label: 'Homepage featured placement',
+  description: 'A clearly labelled sponsored placement.',
+  feePence: 999,
+  currency: 'GBP',
+  durationDays: 7,
+}
+
 const heightForWidth = (width) => {
   if (width <= 340) return 568
   if (width <= 390) return 667
@@ -195,14 +216,26 @@ const mockApiResponse = (pathname, profile) => {
     }
   }
   if (pathname.includes('/stripe/verify/')) return { message: 'Payment verification test state' }
-  if (pathname === '/api/products' || pathname.includes('/reviews')) return []
+  if (pathname === '/api/products') return [responsiveListing]
+  if (pathname.endsWith('/products/mine')) return [responsiveListing]
+  if (pathname.endsWith('/promotions/plans')) return { items: [homepagePromotionPlan] }
+  if (pathname.endsWith('/promotions/homepage')) {
+    return {
+      items: [{
+        id: 'responsive-homepage-promotion',
+        placement: 'homepage_featured',
+        label: 'Sponsored',
+        listing: responsiveListing,
+      }]
+    }
+  }
+  if (pathname.endsWith('/promotions/mine') || pathname.includes('/reviews')) return []
   if (pathname.endsWith('/admin/stats')) return {}
   if (pathname.endsWith('/admin/audit')) return { items: [] }
   if (
     pathname.endsWith('/users/sessions')
     || pathname.endsWith('/orders/myorders')
     || pathname.endsWith('/orders/seller')
-    || pathname.endsWith('/products/mine')
     || pathname.endsWith('/admin/users')
     || pathname.endsWith('/admin/orders')
     || pathname.endsWith('/admin/products')

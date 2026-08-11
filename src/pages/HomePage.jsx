@@ -14,7 +14,7 @@ import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import ProductCard from '../components/ProductCard'
 import Loader from '../components/Loader'
-import { getProducts } from '../api'
+import { getHomepagePromotions, getProducts } from '../api'
 
 const categoryTiles = [
   {
@@ -139,6 +139,7 @@ const getProductTime = (product) => {
 const HomePage = () => {
   const navigate = useNavigate()
   const [products, setProducts] = useState([])
+  const [sponsoredProducts, setSponsoredProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [catalogError, setCatalogError] = useState('')
   const [arrivalCategory, setArrivalCategory] = useState('All')
@@ -161,9 +162,22 @@ const HomePage = () => {
     }
   }, [])
 
+  const loadSponsoredProducts = useCallback(async () => {
+    try {
+      const { data } = await getHomepagePromotions()
+      const items = Array.isArray(data?.items) ? data.items : []
+      setSponsoredProducts(items
+        .filter((item) => item?.listing)
+        .map((item) => ({ ...item.listing, isSponsored: true, promotionEndsAt: item.endsAt })))
+    } catch (error) {
+      setSponsoredProducts([])
+    }
+  }, [])
+
   useEffect(() => {
     loadProducts()
-  }, [loadProducts])
+    loadSponsoredProducts()
+  }, [loadProducts, loadSponsoredProducts])
 
   useEffect(() => {
     const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
@@ -440,6 +454,27 @@ const HomePage = () => {
             {renderCatalogState(latestProducts, 'New arrivals are being prepared.')}
           </div>
         </section>
+
+        {sponsoredProducts.length > 0 && (
+          <section className='glory-home-section-v3 glory-home-sponsored' aria-labelledby='glory-sponsored-title'>
+            <div className='glory-home-shell-v3'>
+              <div className='glory-home-section-heading-v3'>
+                <div>
+                  <span className='glory-home-kicker'>Sponsored</span>
+                  <h2 id='glory-sponsored-title'>Featured by beauty brands.</h2>
+                  <p>Paid placements are always labelled and never change a seller&apos;s verification status.</p>
+                </div>
+                <button type='button' className='glory-home-text-link' onClick={() => navigate('/products')}>
+                  Discover all beauty
+                  <FiArrowRight size={16} aria-hidden='true' />
+                </button>
+              </div>
+              <div className='glory-product-grid glory-home-product-grid-v3 glory-home-sponsored-grid'>
+                {sponsoredProducts.map((product) => <ProductCard key={`sponsored-${product._id}`} product={product} />)}
+              </div>
+            </div>
+          </section>
+        )}
 
         <section className='glory-home-section-v3 glory-home-stories' aria-labelledby='glory-stories-title'>
           <div className='glory-home-shell-v3'>
