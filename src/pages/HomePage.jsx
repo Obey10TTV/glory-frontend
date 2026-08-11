@@ -459,33 +459,31 @@ const HomePage = () => {
         </section>
 
         <section className='glory-home-motion' aria-labelledby='glory-motion-title'>
-          <div className='glory-home-shell-v3'>
-            <div className='glory-home-motion-frame'>
-              <div className='glory-home-motion-media'>
-                <img src='/images/home/skincare-edit.jpg' alt='A skincare ritual in soft daylight' width='1536' height='1024' loading='lazy' />
-                <video
-                  className={videoReady ? 'is-ready' : ''}
-                  muted
-                  loop
-                  playsInline
-                  autoPlay={!reducedMotion}
-                  preload='metadata'
-                  aria-label='A quiet skincare ritual'
-                  onCanPlay={() => setVideoReady(true)}
-                  onError={() => setVideoReady(false)}
-                >
-                  <source src='https://content.pexels.com/aigc-bundle/videos/d26ca852-08e7-416a-a3af-884866dfbbf4.mp4' type='video/mp4' />
-                </video>
-              </div>
-              <div className='glory-home-motion-copy'>
-                <span className='glory-home-kicker'>Glory in motion</span>
-                <h2 id='glory-motion-title'>Take your time with it.</h2>
-                <p>Beauty is personal. Discover products, people and routines with room to linger.</p>
-                <button type='button' onClick={() => navigate('/products?category=Skincare')}>
-                  Explore skincare
-                  <FiArrowRight size={17} aria-hidden='true' />
-                </button>
-              </div>
+          <div className='glory-home-motion-frame'>
+            <div className='glory-home-motion-media'>
+              <img src='/images/home/skincare-edit.jpg' alt='A skincare ritual in soft daylight' width='1536' height='1024' loading='lazy' />
+              <video
+                className={videoReady ? 'is-ready' : ''}
+                muted
+                loop
+                playsInline
+                autoPlay={!reducedMotion}
+                preload='metadata'
+                aria-label='A woman practising a skincare ritual'
+                onCanPlay={() => setVideoReady(true)}
+                onError={() => setVideoReady(false)}
+              >
+                <source src='https://videos.pexels.com/video-files/8154464/8154464-sd_960_506_25fps.mp4' type='video/mp4' />
+              </video>
+            </div>
+            <div className='glory-home-motion-copy'>
+              <span className='glory-home-kicker'>Glory in motion</span>
+              <h2 id='glory-motion-title'>Take your time with it.</h2>
+              <p>Beauty is personal. Discover products, people and routines with room to linger.</p>
+              <button type='button' onClick={() => navigate('/products?category=Skincare')}>
+                Explore skincare
+                <FiArrowRight size={17} aria-hidden='true' />
+              </button>
             </div>
           </div>
         </section>

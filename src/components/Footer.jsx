@@ -1,7 +1,7 @@
 import { Link } from 'react-router'
 import { FiArrowRight, FiFacebook, FiInstagram, FiTwitter, FiYoutube } from 'react-icons/fi'
 import UnitedKingdomFlag from './UnitedKingdomFlag'
-import { SiAmericanexpress, SiMastercard, SiStripe, SiVisa } from 'react-icons/si'
+import { SiAmericanexpress, SiBitcoin, SiEthereum, SiMastercard, SiSolana, SiStripe, SiVisa, SiXrp } from 'react-icons/si'
 
 const footerGroups = [
   {
@@ -66,6 +66,10 @@ const paymentBadges = [
   { label: 'Visa', Icon: SiVisa },
   { label: 'Mastercard', Icon: SiMastercard },
   { label: 'American Express', Icon: SiAmericanexpress },
+  { label: 'Bitcoin', Icon: SiBitcoin, className: 'is-bitcoin' },
+  { label: 'Ethereum', Icon: SiEthereum, className: 'is-ethereum' },
+  { label: 'Solana', Icon: SiSolana, className: 'is-solana' },
+  { label: 'XRP', Icon: SiXrp, className: 'is-xrp' },
 ]
 
 const Footer = () => (
@@ -117,7 +121,9 @@ const Footer = () => (
 
           <div className='glory-footer-right'>
             <div className='glory-footer-payments' aria-label='Supported payment providers'>
-              {paymentBadges.map(({ label, Icon }) => <Icon key={label} title={label} aria-label={label} size={24} />)}
+              {paymentBadges.map(({ label, Icon, className = '' }) => (
+                <Icon key={label} className={`glory-payment-icon ${className}`} title={label} aria-label={label} size={24} />
+              ))}
             </div>
             <div className='glory-footer-socials'>
               {socials.map(({ Icon, label, to }) => (
