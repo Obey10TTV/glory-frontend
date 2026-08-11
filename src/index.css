@@ -7647,6 +7647,7 @@ button {
   isolation: isolate;
   min-height: 640px;
   overflow: hidden;
+  touch-action: pan-y;
   border: 1px solid rgba(23, 21, 20, 0.1);
   border-radius: 8px;
   background: #ebe6e1;
@@ -7834,8 +7835,7 @@ button {
   gap: 8px;
 }
 
-.glory-home-round-button,
-.glory-home-stage-toggle {
+.glory-home-round-button {
   width: 44px;
   height: 44px;
   border: 1px solid rgba(255, 255, 255, 0.74);
@@ -7849,22 +7849,19 @@ button {
   transition: background 180ms ease, border-color 180ms ease, color 180ms ease;
 }
 
-.glory-home-round-button:hover,
-.glory-home-stage-toggle:hover {
+.glory-home-round-button:hover {
   border-color: #fff;
   background: #fff;
   color: #171514;
 }
 
-.glory-home-stage.is-light .glory-home-round-button,
-.glory-home-stage.is-light .glory-home-stage-toggle {
+.glory-home-stage.is-light .glory-home-round-button {
   border-color: rgba(23, 21, 20, 0.46);
   color: #171514;
   background: rgba(255, 255, 255, 0.68);
 }
 
-.glory-home-stage.is-light .glory-home-round-button:hover,
-.glory-home-stage.is-light .glory-home-stage-toggle:hover {
+.glory-home-stage.is-light .glory-home-round-button:hover {
   border-color: #171514;
   background: #171514;
   color: #fff;
@@ -8805,8 +8802,7 @@ button {
     gap: 10px;
   }
 
-  .glory-home-round-button,
-  .glory-home-stage-toggle {
+  .glory-home-round-button {
     width: 40px;
     height: 40px;
   }

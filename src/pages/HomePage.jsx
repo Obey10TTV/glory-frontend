@@ -1,12 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import {
   FiArrowLeft,
   FiArrowRight,
   FiCheckCircle,
   FiHeart,
-  FiPause,
-  FiPlay,
   FiRefreshCw,
   FiShield,
   FiShoppingBag,
@@ -148,6 +146,7 @@ const HomePage = () => {
   const [heroPaused, setHeroPaused] = useState(false)
   const [reducedMotion, setReducedMotion] = useState(false)
   const [videoReady, setVideoReady] = useState(false)
+  const heroSwipeStartX = useRef(null)
 
   const loadProducts = useCallback(async () => {
     setLoading(true)
@@ -175,13 +174,36 @@ const HomePage = () => {
     return () => motionQuery.removeEventListener('change', updateMotionPreference)
   }, [])
 
+  const moveHeroSlide = useCallback((direction) => {
+    setActiveSlide((current) => (current + direction + heroSlides.length) % heroSlides.length)
+  }, [])
+
   useEffect(() => {
     if (heroPaused || reducedMotion) return undefined
     const interval = window.setInterval(() => {
-      setActiveSlide((current) => (current + 1) % heroSlides.length)
-    }, 7200)
+      moveHeroSlide(1)
+    }, 2000)
     return () => window.clearInterval(interval)
-  }, [heroPaused, reducedMotion])
+  }, [heroPaused, moveHeroSlide, reducedMotion])
+
+  const handleHeroPointerDown = (event) => {
+    heroSwipeStartX.current = event.clientX
+    setHeroPaused(true)
+  }
+
+  const handleHeroPointerUp = (event) => {
+    const startX = heroSwipeStartX.current
+    heroSwipeStartX.current = null
+    setHeroPaused(false)
+
+    if (startX == null || Math.abs(event.clientX - startX) < 44) return
+    moveHeroSlide(event.clientX > startX ? -1 : 1)
+  }
+
+  const handleHeroPointerCancel = () => {
+    heroSwipeStartX.current = null
+    setHeroPaused(false)
+  }
 
   const sortedProducts = useMemo(
     () => products.slice().sort((a, b) => getProductTime(b) - getProductTime(a)),
@@ -271,6 +293,9 @@ const HomePage = () => {
           onBlur={(event) => {
             if (!event.currentTarget.contains(event.relatedTarget)) setHeroPaused(false)
           }}
+          onPointerDown={handleHeroPointerDown}
+          onPointerUp={handleHeroPointerUp}
+          onPointerCancel={handleHeroPointerCancel}
         >
           <div className='glory-home-shell-v3'>
             <div className='glory-home-stage-frame'>
@@ -288,7 +313,7 @@ const HomePage = () => {
                 />
               ))}
 
-              <div className='glory-home-stage-copy' aria-live='polite'>
+              <div className='glory-home-stage-copy'>
                 <span className='glory-home-kicker'>{selectedHero.eyebrow}</span>
                 <h1>{selectedHero.title}</h1>
                 <p>{selectedHero.copy}</p>
@@ -310,7 +335,7 @@ const HomePage = () => {
                     type='button'
                     className='glory-home-round-button'
                     aria-label='Previous featured collection'
-                    onClick={() => setActiveSlide((current) => (current - 1 + heroSlides.length) % heroSlides.length)}
+                    onClick={() => moveHeroSlide(-1)}
                   >
                     <FiArrowLeft size={18} aria-hidden='true' />
                   </button>
@@ -318,7 +343,7 @@ const HomePage = () => {
                     type='button'
                     className='glory-home-round-button'
                     aria-label='Next featured collection'
-                    onClick={() => setActiveSlide((current) => (current + 1) % heroSlides.length)}
+                    onClick={() => moveHeroSlide(1)}
                   >
                     <FiArrowRight size={18} aria-hidden='true' />
                   </button>
@@ -337,15 +362,6 @@ const HomePage = () => {
                     />
                   ))}
                 </div>
-
-                <button
-                  type='button'
-                  className='glory-home-stage-toggle'
-                  aria-label={heroPaused ? 'Resume carousel' : 'Pause carousel'}
-                  onClick={() => setHeroPaused((paused) => !paused)}
-                >
-                  {heroPaused ? <FiPlay size={15} aria-hidden='true' /> : <FiPause size={15} aria-hidden='true' />}
-                </button>
               </div>
             </div>
           </div>
