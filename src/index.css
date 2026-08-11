@@ -43,6 +43,11 @@ img, video {
   --glory-rose: #b85f83;
   --glory-sage: #416b5f;
   --glory-line: #e8e1dc;
+  --glory-deep-espresso: #2b2522;
+  --glory-deep-taupe: #5c4a42;
+  --glory-mulberry: #785361;
+  --glory-rose-soft: #f0adb9;
+  --glory-cream: #fffaf7;
   --glory-shadow: 0 18px 45px rgba(28, 21, 18, 0.08);
   --glory-shadow-soft: 0 10px 28px rgba(28, 21, 18, 0.07);
   --glory-radius: 18px;
@@ -1263,7 +1268,7 @@ select:focus-visible,
   align-items: flex-end;
   width: 100%;
   overflow: hidden;
-  background: #111;
+  background: var(--glory-deep-espresso);
 }
 
 .glory-hero-video,
@@ -2740,7 +2745,7 @@ select:focus-visible,
 .glory-sell-banner {
   position: relative;
   overflow: hidden;
-  background: #111 !important;
+  background: var(--glory-deep-taupe) !important;
   color: #fff;
   text-align: center;
 }
@@ -2866,7 +2871,7 @@ select:focus-visible,
 }
 
 .glory-info-hero {
-  background: #111;
+  background: var(--glory-deep-taupe);
   color: #fff;
   padding: clamp(72px, 10vw, 116px) var(--glory-gutter);
   position: relative;
@@ -3048,7 +3053,7 @@ select:focus-visible,
 }
 
 .glory-about-hero {
-  background: linear-gradient(135deg, #111 0%, #1a1517 100%);
+  background: linear-gradient(135deg, var(--glory-deep-taupe) 0%, var(--glory-deep-espresso) 100%);
   overflow: hidden;
   padding: clamp(72px, 8vw, 112px) var(--glory-gutter);
   position: relative;
@@ -3303,7 +3308,7 @@ select:focus-visible,
 }
 
 .glory-about-cta {
-  background: linear-gradient(135deg, #111 0%, #181315 100%);
+  background: linear-gradient(135deg, var(--glory-mulberry) 0%, var(--glory-deep-taupe) 100%);
   color: #fff;
   overflow: hidden;
   padding: clamp(56px, 6vw, 76px) var(--glory-gutter);
@@ -6110,7 +6115,7 @@ select:focus-visible,
   position: relative;
   min-height: 470px;
   overflow: hidden;
-  background: #111;
+  background: var(--glory-deep-taupe);
   color: #fff;
   padding: 72px 40px;
   display: flex;
@@ -6131,7 +6136,7 @@ select:focus-visible,
 }
 
 .glory-info-hero-wash {
-  background: linear-gradient(90deg, rgba(10, 9, 9, 0.96) 0%, rgba(10, 9, 9, 0.88) 34%, rgba(10, 9, 9, 0.12) 72%);
+  background: linear-gradient(90deg, rgba(43, 37, 34, 0.96) 0%, rgba(43, 37, 34, 0.88) 34%, rgba(43, 37, 34, 0.12) 72%);
   pointer-events: none;
 }
 
@@ -6655,7 +6660,7 @@ select:focus-visible,
   }
 
   .glory-info-hero-wash {
-    background: linear-gradient(180deg, rgba(10, 9, 9, 0.08) 0%, rgba(10, 9, 9, 0.35) 42%, rgba(10, 9, 9, 0.96) 100%);
+    background: linear-gradient(180deg, rgba(43, 37, 34, 0.08) 0%, rgba(43, 37, 34, 0.35) 42%, rgba(43, 37, 34, 0.96) 100%);
   }
 
   .glory-info-hero-v2 h1 {
@@ -7623,7 +7628,9 @@ button {
   --glory-home-paper: #f7f4f0;
   --glory-home-rose: #8e294b;
   --glory-home-line: #ddd6cf;
-  --glory-home-night: #201b1a;
+  --glory-home-night: var(--glory-deep-espresso);
+  --glory-home-plum: var(--glory-mulberry);
+  --glory-home-rose-soft: var(--glory-rose-soft);
   background: #fff !important;
 }
 
@@ -8308,6 +8315,7 @@ button {
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
+  background: var(--glory-home-plum);
   color: #fff;
 }
 
@@ -8337,6 +8345,10 @@ button {
   background: #f1d9e1;
 }
 
+.glory-home-motion-copy .glory-home-kicker {
+  color: var(--glory-home-rose-soft);
+}
+
 .glory-home-most-loved {
   background: var(--glory-home-paper);
 }
@@ -8344,7 +8356,7 @@ button {
 .glory-home-seller-v3 {
   padding: 84px 0;
   color: #fff;
-  background: #171514;
+  background: var(--glory-deep-taupe);
 }
 
 .glory-home-seller-inner-v3 {
@@ -8436,7 +8448,7 @@ button {
 
 /* Glory footer */
 .glory-footer-v2 {
-  background: #171514;
+  background: var(--glory-deep-espresso);
   color: #fff;
 }
 
@@ -8470,8 +8482,8 @@ button {
 }
 
 .glory-footer-invite-link {
-  border-color: #171514;
-  background: #171514;
+  border-color: var(--glory-deep-espresso);
+  background: var(--glory-deep-espresso);
   color: #fff;
 }
 
@@ -9166,4 +9178,19 @@ button {
   .glory-home-motion-copy {
     padding: 34px 24px 40px;
   }
+}
+
+/* Warm editorial colour across the remaining full-width dark bands. */
+.glory-announcement-bar {
+  background: var(--glory-deep-espresso) !important;
+}
+
+.glory-marquee,
+.glory-arrivals-feature {
+  background: var(--glory-deep-espresso);
+}
+
+.glory-sell-banner,
+.glory-home-seller {
+  background: var(--glory-deep-taupe);
 }
