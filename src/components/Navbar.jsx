@@ -1,8 +1,7 @@
 import { Link, useNavigate } from 'react-router'
 import { useUser } from '../context/UserContext'
-import { useCart } from '../context/CartContext'
 import { useState, useEffect, useRef } from 'react'
-import { FiUser, FiShoppingBag, FiHeart, FiX, FiChevronDown, FiMenu, FiSearch } from 'react-icons/fi'
+import { FiUser, FiHeart, FiX, FiChevronDown, FiMenu, FiMessageCircle, FiSearch } from 'react-icons/fi'
 import { getProducts } from '../api'
 import useIsMobile from '../hooks/useIsMobile'
 import UnitedKingdomFlag from './UnitedKingdomFlag'
@@ -11,7 +10,6 @@ import { getWishlistIds } from '../utils/wishlist'
 
 const Navbar = () => {
   const { user, logout } = useUser()
-  const { totalItems } = useCart()
   const navigate = useNavigate()
   const isMobile = useIsMobile(1024)
 
@@ -368,6 +366,7 @@ const Navbar = () => {
                     </div>
                     {[
                       { label: 'My Account', path: '/account' },
+                      { label: 'Messages', path: '/messages' },
                       ...(user.isSeller ? [{ label: 'Seller Dashboard', path: '/seller' }] : []),
                       ...(user.isAdmin ? [{ label: 'Admin Dashboard', path: '/admin' }] : []),
                     ].map(item => (
@@ -429,32 +428,21 @@ const Navbar = () => {
               </div>
             )}
 
-            <div
-              className='glory-navbar-action'
-              style={{
-                position: 'relative', cursor: 'pointer',
-                minWidth: '44px', minHeight: '44px',
-                display: 'flex', alignItems: 'center', justifyContent: 'center'
-              }}
-              onClick={() => navigate('/cart')}
-              role='button'
-              tabIndex={0}
-              aria-label={`Open cart with ${totalItems} items`}
-            >
-              <FiShoppingBag size={20} style={{ color: '#111' }} />
-              {totalItems > 0 && (
-                <span style={{
-                  position: 'absolute', top: '-8px', right: '-8px',
-                  background: '#111', color: '#fff',
-                  borderRadius: '50%', width: '18px', height: '18px',
-                  fontSize: '10px', display: 'flex',
-                  alignItems: 'center', justifyContent: 'center',
-                  fontWeight: '700'
-                }}>
-                  {totalItems}
-                </span>
-              )}
-            </div>
+            {user && (
+              <button
+                type='button'
+                className='glory-navbar-action glory-navbar-icon-button'
+                onClick={() => navigate('/messages')}
+                aria-label='Open Glory messages'
+                style={{
+                  background: 'none', border: 'none', position: 'relative', cursor: 'pointer',
+                  minWidth: '44px', minHeight: '44px', padding: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center'
+                }}
+              >
+                <FiMessageCircle size={20} style={{ color: '#111' }} />
+              </button>
+            )}
           </div>
         </div>
 
@@ -649,6 +637,19 @@ const Navbar = () => {
               </button>
             </div>
             <div style={{ padding: '8px 0' }}>
+              {user && (
+                <Link
+                  to='/messages'
+                  onClick={() => setDrawerOpen(false)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '10px', padding: '14px 20px',
+                    fontSize: '14px', fontWeight: '700', color: '#111', textDecoration: 'none',
+                    borderBottom: '1px solid #f5f5f5'
+                  }}
+                >
+                  <FiMessageCircle size={17} /> MESSAGES
+                </Link>
+              )}
               <Link
                 to='/wishlist'
                 onClick={() => setDrawerOpen(false)}

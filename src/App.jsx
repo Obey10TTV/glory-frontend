@@ -11,8 +11,6 @@ import { infoPageRoutes } from './data/infoPages'
 const HomePage = lazy(() => import('./pages/HomePage'))
 const ProductsPage = lazy(() => import('./pages/ProductsPage'))
 const ProductDetailPage = lazy(() => import('./pages/ProductDetailPage'))
-const CartPage = lazy(() => import('./pages/CartPage'))
-const CheckoutPage = lazy(() => import('./pages/CheckoutPage'))
 const LoginPage = lazy(() => import('./pages/LoginPage'))
 const RegisterPage = lazy(() => import('./pages/RegisterPage'))
 const AccountPage = lazy(() => import('./pages/AccountPage'))
@@ -21,7 +19,7 @@ const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'))
 const AboutPage = lazy(() => import('./pages/AboutPage'))
 const InfoPage = lazy(() => import('./pages/InfoPage'))
 const WishlistPage = lazy(() => import('./pages/WishlistPage'))
-const PaymentVerifyPage = lazy(() => import('./pages/PaymentVerifyPage'))
+const MessagesPage = lazy(() => import('./pages/MessagesPage'))
 const ChatBot = lazy(() => import('./components/ChatBot'))
 
 const RequireAccess = ({ children, role }) => {
@@ -56,10 +54,11 @@ function App() {
             <Route path='/products' element={<ProductsPage />} />
             <Route path='/brands/:brand' element={<ProductsPage />} />
             <Route path='/products/:id' element={<ProductDetailPage />} />
-            <Route path='/cart' element={<CartPage />} />
+            <Route path='/cart' element={<Navigate to='/products' replace />} />
             <Route path='/wishlist' element={<WishlistPage />} />
-            <Route path='/checkout' element={<RequireAccess><CheckoutPage /></RequireAccess>} />
-            <Route path='/payment/verify' element={<RequireAccess><PaymentVerifyPage /></RequireAccess>} />
+            <Route path='/checkout' element={<Navigate to='/products' replace />} />
+            <Route path='/payment/verify' element={<Navigate to='/products' replace />} />
+            <Route path='/messages' element={<RequireAccess><MessagesPage /></RequireAccess>} />
             <Route path='/login' element={<LoginPage />} />
             <Route path='/register' element={<RegisterPage />} />
             <Route path='/account' element={<RequireAccess><AccountPage /></RequireAccess>} />

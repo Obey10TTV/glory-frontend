@@ -10,11 +10,8 @@ import {
   deleteProduct,
   getMySellerProducts,
   getSellerPaymentStatus,
-  getSellerOrders,
   getUserProfile,
   initializeSellerActivation,
-  initializeSellerPayouts,
-  updateSellerOrderStatus,
   updateProduct,
   updateSellerProfile,
   uploadImage,
@@ -24,17 +21,16 @@ import {
 import {
   FiCheckCircle,
   FiClock,
-  FiCreditCard,
   FiDollarSign,
   FiEdit3,
   FiFileText,
   FiImage,
+  FiMessageCircle,
   FiPackage,
   FiPlus,
   FiSave,
   FiShield,
   FiTrash2,
-  FiTruck,
   FiX,
   FiXCircle
 } from 'react-icons/fi'
@@ -74,6 +70,14 @@ const emptySellerPayments = {
   paymentMethods: []
 }
 
+const emptyListingEvidence = {
+  condition: 'new_sealed',
+  batchCode: '',
+  responsiblePersonName: '',
+  packagingPhotosConfirmed: false,
+  declarationAccepted: false
+}
+
 const priceGuidance = {
   Skincare: [12, 95], Haircare: [10, 75], Makeup: [10, 85], Nails: [8, 55],
   Lashes: [8, 45], 'Body Care': [10, 70], 'Body Liquid': [8, 55],
@@ -87,7 +91,6 @@ const SellerDashboardPage = () => {
   const userId = user?._id
   const userIsSeller = user?.isSeller
   const [products, setProducts] = useState([])
-  const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [showProductForm, setShowProductForm] = useState(false)
   const [editingProduct, setEditingProduct] = useState(null)
@@ -100,8 +103,6 @@ const SellerDashboardPage = () => {
   const [sellerPayments, setSellerPayments] = useState(emptySellerPayments)
   const [paymentAction, setPaymentAction] = useState('')
   const [documentUploading, setDocumentUploading] = useState('')
-  const [trackingByItem, setTrackingByItem] = useState({})
-  const [orderUpdating, setOrderUpdating] = useState('')
 
   const [name, setName] = useState('')
   const [price, setPrice] = useState('')
@@ -122,6 +123,7 @@ const SellerDashboardPage = () => {
   const [image, setImage] = useState('')
   const [images, setImages] = useState([])
   const [variants, setVariants] = useState([])
+  const [listingEvidence, setListingEvidence] = useState({ ...emptyListingEvidence })
 
   const categories = [
     'Skincare', 'Haircare', 'Makeup', 'Nails', 'Lashes',
@@ -148,12 +150,8 @@ const SellerDashboardPage = () => {
   const fetchProducts = useCallback(async () => {
     try {
       setLoading(true)
-      const [productResponse, orderResponse] = await Promise.all([
-        getMySellerProducts(),
-        getSellerOrders()
-      ])
+      const productResponse = await getMySellerProducts()
       setProducts(Array.isArray(productResponse.data) ? productResponse.data : [])
-      setOrders(Array.isArray(orderResponse.data) ? orderResponse.data : [])
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load seller products')
     } finally {
@@ -262,6 +260,7 @@ const SellerDashboardPage = () => {
     setImage('')
     setImages([])
     setVariants([])
+    setListingEvidence({ ...emptyListingEvidence })
     setEditingProduct(null)
   }
 
@@ -270,9 +269,8 @@ const SellerDashboardPage = () => {
     const accountSecured = Boolean(user?.twoFactorEnabled)
     const activationComplete = !sellerPayments.activation.required
       || ['paid', 'waived'].includes(sellerPayments.activation.status)
-    const payoutsComplete = sellerPayments.payouts.status === 'active'
-    if (!user?.isAdmin && (!profileVerified || !accountSecured || !activationComplete || !payoutsComplete)) {
-      setError('Complete verification, activation, two-factor authentication and payout onboarding before adding products.')
+    if (!user?.isAdmin && (!profileVerified || !accountSecured || !activationComplete)) {
+      setError('Complete seller verification, email security, two-factor authentication and platform activation before adding a listing.')
       return
     }
     resetProductForm()
@@ -308,6 +306,14 @@ const SellerDashboardPage = () => {
       countInStock: variant.countInStock ?? 0,
       image: variant.image || ''
     })))
+    setListingEvidence({
+      ...emptyListingEvidence,
+      condition: product.listingEvidence?.condition || emptyListingEvidence.condition,
+      batchCode: product.listingEvidence?.batchCode || '',
+      responsiblePersonName: product.listingEvidence?.responsiblePersonName || '',
+      packagingPhotosConfirmed: Boolean(product.listingEvidence?.packagingPhotosConfirmed),
+      declarationAccepted: Boolean(product.listingEvidence?.declarationAccepted)
+    })
     setError('')
     setShowProductForm(true)
   }
@@ -373,6 +379,10 @@ const SellerDashboardPage = () => {
       return { error: 'Complete the required listing details, add two benefits, and upload a primary plus gallery image.' }
     }
 
+    if (!listingEvidence.batchCode.trim() || !listingEvidence.responsiblePersonName.trim() || !listingEvidence.packagingPhotosConfirmed || !listingEvidence.declarationAccepted) {
+      return { error: 'Add the packaging batch or lot code, the named Responsible Person or brand, and both evidence confirmations before submitting.' }
+    }
+
     if (numericPrice <= 0 || numericStock < 0 || numericLowStockThreshold < 0) {
       return { error: 'Please enter a valid price and stock quantity' }
     }
@@ -401,6 +411,13 @@ const SellerDashboardPage = () => {
         lowStockThreshold: numericLowStockThreshold,
         image,
         images,
+        listingEvidence: {
+          condition: listingEvidence.condition,
+          batchCode: listingEvidence.batchCode.trim(),
+          responsiblePersonName: listingEvidence.responsiblePersonName.trim(),
+          packagingPhotosConfirmed: listingEvidence.packagingPhotosConfirmed,
+          declarationAccepted: listingEvidence.declarationAccepted
+        },
         variants: variants.map(variant => ({
           name: variant.name.trim(),
           sku: variant.sku.trim(),
@@ -458,21 +475,6 @@ const SellerDashboardPage = () => {
     }))
   }
 
-  const handlePaymentMethodToggle = (method) => {
-    const enabled = sellerPayments.paymentMethods.find(item => item.code === method)?.enabled
-    if (!enabled) return
-    setSellerProfile(current => {
-      const selected = current.acceptedPaymentMethods || ['card']
-      const next = selected.includes(method)
-        ? selected.filter(item => item !== method)
-        : [...selected, method]
-      return {
-        ...current,
-        acceptedPaymentMethods: next.length ? next : selected
-      }
-    })
-  }
-
   const handleDocumentUpload = async (type, file) => {
     if (!file) return
     setDocumentUploading(type)
@@ -491,21 +493,6 @@ const SellerDashboardPage = () => {
       setError(err.response?.data?.message || 'Verification document upload failed')
     } finally {
       setDocumentUploading('')
-    }
-  }
-
-  const handleFulfillment = async (orderId, itemId, status) => {
-    const trackingNumber = trackingByItem[itemId] || ''
-    setOrderUpdating(itemId)
-    setError('')
-    try {
-      const { data } = await updateSellerOrderStatus(orderId, { itemId, status, trackingNumber })
-      setOrders(current => current.map(order => order._id === orderId ? data : order))
-      setSuccess(status === 'Shipped' ? 'Shipment and tracking saved.' : 'Order item marked delivered.')
-    } catch (err) {
-      setError(err.response?.data?.message || 'Could not update fulfilment')
-    } finally {
-      setOrderUpdating('')
     }
   }
 
@@ -546,18 +533,6 @@ const SellerDashboardPage = () => {
     }
   }
 
-  const handlePayoutOnboarding = async () => {
-    setPaymentAction('payout')
-    setError('')
-    try {
-      const { data } = await initializeSellerPayouts()
-      window.location.assign(data.url)
-    } catch (err) {
-      setError(err.response?.data?.message || 'Could not start secure payout onboarding')
-      setPaymentAction('')
-    }
-  }
-
   const statusMeta = (status = 'pending') => {
     if (status === 'approved') {
       return { label: 'Approved', color: '#2ecc71', icon: <FiCheckCircle size={14} />, note: 'Live in the storefront.' }
@@ -589,13 +564,11 @@ const SellerDashboardPage = () => {
   const twoFactorEnabled = Boolean(user?.twoFactorEnabled)
   const activationReady = !sellerPayments.activation.required
     || ['paid', 'waived'].includes(sellerPayments.activation.status)
-  const payoutReady = sellerPayments.payouts.status === 'active'
   const sellerCanSubmitProducts = Boolean(
     user?.isAdmin
     || (user?.isEmailVerified !== false
       && sellerProfile.verificationStatus === 'verified'
       && activationReady
-      && payoutReady
       && twoFactorEnabled)
   )
   const documentRequirements = [
@@ -604,11 +577,6 @@ const SellerDashboardPage = () => {
     { type: 'address', label: 'Proof of address', help: 'Recent utility, bank, or official address statement.' }
   ]
   const sellerDocuments = sellerProfile.documents || []
-  const sellerOrderItems = (order) => order.orderItems.filter(item => {
-    const sellerId = item.seller?._id || item.seller
-    return user?.isAdmin || String(sellerId) === String(userId)
-  })
-
   return (
     <div className='glory-page'>
       <Navbar />
@@ -617,15 +585,15 @@ const SellerDashboardPage = () => {
         <div className='glory-dashboard-header'>
           <div>
             <h1>Seller Dashboard</h1>
-            <p>Welcome back, {user?.name}. Set up your store, submit products and track verification.</p>
+            <p>Welcome back, {user?.name}. Set up your store, submit listings and manage buyer enquiries.</p>
           </div>
           <button
             onClick={openNewProductForm}
             className='glory-btn glory-dashboard-primary-action'
             disabled={!sellerCanSubmitProducts}
-            title={sellerCanSubmitProducts ? 'Add a product' : 'Complete seller verification and 2FA first'}
+            title={sellerCanSubmitProducts ? 'Add a listing' : 'Complete seller verification and 2FA first'}
           >
-            <FiPlus size={16} /> Add Product
+            <FiPlus size={16} /> Add Listing
           </button>
         </div>
 
@@ -634,7 +602,7 @@ const SellerDashboardPage = () => {
 
         <div className='glory-dashboard-stats'>
           {[
-            { label: 'Total Products', value: products.length, icon: <FiPackage size={22} />, color: '#b85f83', bg: '#f8e8ee' },
+            { label: 'Total Listings', value: products.length, icon: <FiPackage size={22} />, color: '#b85f83', bg: '#f8e8ee' },
             { label: 'Approved Live', value: approvedProducts.length, icon: <FiCheckCircle size={22} />, color: '#2ecc71', bg: '#eef8f1' },
             { label: 'Pending Review', value: pendingProducts.length, icon: <FiClock size={22} />, color: '#f39c12', bg: '#fbf1dd' },
             { label: 'Inventory Value', value: formatCurrency(inventoryValue), icon: <FiPackage size={22} />, color: '#416b5f', bg: '#eef5f2' }
@@ -653,7 +621,7 @@ const SellerDashboardPage = () => {
             <div>
               <strong>Finish seller security before listing products.</strong>
               <span>
-                Glory requires an approved store, 2FA, seller activation and secure payout onboarding before product submissions open.
+                Glory requires an approved store, verified email, 2FA and platform activation before listing submissions open.
               </span>
             </div>
             <div className='glory-dashboard-security-actions'>
@@ -673,11 +641,6 @@ const SellerDashboardPage = () => {
               {sellerProfile.verificationStatus === 'verified' && twoFactorEnabled && !activationReady && (
                 <button type='button' onClick={handleSellerActivation}>
                   Activate selling
-                </button>
-              )}
-              {sellerProfile.verificationStatus === 'verified' && twoFactorEnabled && activationReady && !payoutReady && (
-                <button type='button' onClick={handlePayoutOnboarding}>
-                  Set up payouts
                 </button>
               )}
             </div>
@@ -815,10 +778,10 @@ const SellerDashboardPage = () => {
         <section className='glory-dashboard-panel glory-commerce-panel'>
           <div className='glory-dashboard-panel-header glory-dashboard-panel-header-split'>
             <div>
-              <span>Payments & Payouts</span>
-              <small>One buyer payment, with each seller share recorded and paid separately.</small>
+              <span>Marketplace access</span>
+              <small>Glory charges for its platform services, never for a buyer&apos;s product payment.</small>
             </div>
-            <FiCreditCard size={19} />
+            <FiShield size={19} />
           </div>
 
           <div className='glory-commerce-grid'>
@@ -834,7 +797,7 @@ const SellerDashboardPage = () => {
                 {formatCurrency(sellerPayments.activation.feePence / 100)}
               </div>
               <p>
-                The amount is configurable and can be changed before launch without rebuilding checkout.
+                This is a Glory platform access fee. It does not make Glory a party to any sale between you and a buyer.
               </p>
               <span className={`glory-commerce-status is-${sellerPayments.activation.status}`}>
                 {sellerPayments.activation.status === 'paid'
@@ -863,84 +826,21 @@ const SellerDashboardPage = () => {
 
             <article className='glory-commerce-card'>
               <div className='glory-commerce-card-heading'>
-                <span><FiShield size={18} /></span>
+                <span><FiMessageCircle size={18} /></span>
                 <div>
-                  <strong>Secure payouts</strong>
-                  <small>Stripe Connect verification</small>
+                  <strong>Buyer enquiries</strong>
+                  <small>Keep every listing conversation on Glory</small>
                 </div>
               </div>
               <p>
-                Stripe verifies payout identity and bank details. Glory never stores a seller&apos;s raw bank credentials.
+                Buyers contact you through Glory. Agree collection, delivery and payment directly, and never ask for passwords, card details or one-time codes.
               </p>
-              <span className={`glory-commerce-status is-${sellerPayments.payouts.status}`}>
-                {payoutReady
-                  ? 'Payouts active'
-                  : sellerPayments.payouts.status === 'restricted'
-                    ? 'More details required'
-                    : sellerPayments.payouts.status === 'pending'
-                      ? 'Onboarding incomplete'
-                      : 'Not connected'}
-              </span>
-              {!payoutReady && (
-                <button
-                  type='button'
-                  onClick={handlePayoutOnboarding}
-                  disabled={
-                    paymentAction !== ''
-                    || sellerProfile.verificationStatus !== 'verified'
-                    || !twoFactorEnabled
-                    || !activationReady
-                  }
-                  className='glory-btn'
-                >
-                  {paymentAction === 'payout' ? 'Opening Stripe...' : 'Set up secure payouts'}
-                </button>
-              )}
-            </article>
-
-            <article className='glory-commerce-card glory-commerce-methods'>
-              <div className='glory-commerce-card-heading'>
-                <span><FiCreditCard size={18} /></span>
-                <div>
-                  <strong>Buyer payment methods</strong>
-                  <small>Applied to products in this store</small>
-                </div>
-              </div>
-              <div className='glory-commerce-method-list'>
-                {(sellerPayments.paymentMethods.length
-                  ? sellerPayments.paymentMethods
-                  : [{
-                      code: 'card',
-                      label: 'Credit or debit card',
-                      description: 'Visa, Mastercard and supported cards through Stripe.',
-                      enabled: true
-                    }]
-                ).map(method => (
-                  <button
-                    key={method.code}
-                    type='button'
-                    className={`glory-commerce-method ${method.enabled ? '' : 'is-disabled'}`}
-                    onClick={() => handlePaymentMethodToggle(method.code)}
-                    disabled={!method.enabled}
-                  >
-                    <span className='glory-commerce-method-check'>
-                      {sellerProfile.acceptedPaymentMethods?.includes(method.code) && <FiCheckCircle size={16} />}
-                    </span>
-                    <span>
-                      <strong>{method.label}</strong>
-                      <small>{method.description}</small>
-                    </span>
-                    {!method.enabled && <em>Planned</em>}
-                  </button>
-                ))}
-              </div>
               <button
                 type='button'
                 className='glory-secondary-button'
-                disabled={profileSubmitting}
-                onClick={() => handleSaveSellerProfile(false)}
+                onClick={() => navigate('/messages')}
               >
-                <FiSave size={15} /> Save payment preference
+                <FiMessageCircle size={15} /> Open messages
               </button>
             </article>
           </div>
@@ -949,82 +849,30 @@ const SellerDashboardPage = () => {
         <section className='glory-dashboard-panel'>
           <div className='glory-dashboard-panel-header glory-dashboard-panel-header-split'>
             <div>
-              <span>Seller Orders ({orders.length})</span>
-              <small>Tracking updates are emailed to buyers.</small>
+              <span>Safe selling checklist</span>
+              <small>Protect your account and buyers before you arrange any transaction.</small>
             </div>
-            <FiTruck size={19} />
+            <FiShield size={19} />
           </div>
-          {orders.length === 0 ? (
-            <div className='glory-empty-state glory-seller-orders-empty'>
-              <FiTruck size={36} />
-              <strong>No seller orders yet</strong>
-              <span>Paid orders containing your products will appear here.</span>
-            </div>
-          ) : (
-            <div className='glory-seller-order-list'>
-              {orders.map(order => (
-                <article key={order._id} className='glory-seller-order'>
-                  <header>
-                    <div>
-                      <strong>Order #{order._id.slice(-8).toUpperCase()}</strong>
-                      <span>{order.buyer?.name || 'Customer'} - {new Date(order.createdAt).toLocaleDateString('en-GB')}</span>
-                    </div>
-                    <span className={`glory-order-state is-${String(order.status).toLowerCase()}`}>{order.status}</span>
-                  </header>
-                  {sellerOrderItems(order).map(item => (
-                    <div key={item._id} className='glory-seller-order-item'>
-                      <img src={item.image} alt={item.name} />
-                      <div className='glory-seller-order-copy'>
-                        <strong>{item.name} x {item.quantity}</strong>
-                        <span>{item.fulfillmentStatus || 'Pending'}{item.trackingNumber ? ` - ${item.trackingNumber}` : ''}</span>
-                      </div>
-                      {item.fulfillmentStatus === 'Processing' && (
-                        <div className='glory-fulfillment-actions'>
-                          <input
-                            value={trackingByItem[item._id] || ''}
-                            onChange={event => setTrackingByItem(current => ({ ...current, [item._id]: event.target.value }))}
-                            placeholder='Tracking number'
-                            aria-label={`Tracking number for ${item.name}`}
-                          />
-                          <button
-                            type='button'
-                            disabled={orderUpdating === item._id || !trackingByItem[item._id]?.trim()}
-                            onClick={() => handleFulfillment(order._id, item._id, 'Shipped')}
-                          >
-                            Mark shipped
-                          </button>
-                        </div>
-                      )}
-                      {item.fulfillmentStatus === 'Shipped' && (
-                        <button
-                          type='button'
-                          className='glory-delivered-action'
-                          disabled={orderUpdating === item._id}
-                          onClick={() => handleFulfillment(order._id, item._id, 'Delivered')}
-                        >
-                          Mark delivered
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </article>
-              ))}
-            </div>
-          )}
+          <div className='glory-empty-state glory-seller-orders-empty'>
+            <FiShield size={36} />
+            <strong>List accurately. Keep the chat on Glory.</strong>
+            <span>Use clear packaging photos, answer buyer questions honestly, and report suspicious behaviour rather than moving a conversation off-platform.</span>
+          </div>
         </section>
 
         <section className='glory-dashboard-panel'>
           <div className='glory-dashboard-panel-header'>
-            My Products ({products.length})
+            My Listings ({products.length})
           </div>
 
           {loading ? <Loader /> : products.length === 0 ? (
             <div className='glory-empty-state'>
               <FiPackage size={42} />
-              <strong>No products yet</strong>
-              <span>Upload your first product and the Glory team will review it before it goes live.</span>
+              <strong>No listings yet</strong>
+              <span>Upload your first listing and the Glory team will review the evidence before it goes live.</span>
               <button onClick={openNewProductForm} className='glory-btn'>
-                <FiPlus size={16} /> Add Your First Product
+                <FiPlus size={16} /> Add Your First Listing
               </button>
             </div>
           ) : (
@@ -1032,7 +880,7 @@ const SellerDashboardPage = () => {
               <table className='glory-dashboard-table'>
                 <thead>
                   <tr>
-                    {['Product', 'Price', 'Stock', 'Status', 'Notes', 'Actions'].map(header => (
+                    {['Listing', 'Price', 'Stock', 'Status', 'Notes', 'Actions'].map(header => (
                       <th key={header}>{header}</th>
                     ))}
                   </tr>
@@ -1101,11 +949,11 @@ const SellerDashboardPage = () => {
           <div className='glory-product-modal'>
             <div className='glory-modal-header'>
               <div>
-                <strong>{editingProduct ? 'Edit Product' : 'Add Product'}</strong>
+                <strong>{editingProduct ? 'Edit Listing' : 'Create Listing'}</strong>
                 <span>
                   {editingProduct
-                    ? 'Saving changes sends this product back to review.'
-                    : 'Products are reviewed before they appear in the storefront.'}
+                    ? 'Saving changes sends this listing back to review.'
+                    : 'Listings are reviewed before they appear in the storefront.'}
                 </span>
               </div>
               <button onClick={closeProductForm} aria-label='Close product form'>
@@ -1117,14 +965,14 @@ const SellerDashboardPage = () => {
 
             <div className='glory-product-form'>
               <div>
-                <label style={labelStyle}>Product Image</label>
+                <label style={labelStyle}>Primary Listing Image</label>
                 <div className='glory-upload-box'>
                   {image ? (
                     <img src={image} alt='Product preview' />
                   ) : (
                     <div>
                       <FiImage size={28} />
-                      <span>{uploading ? 'Uploading...' : 'Click to upload product image'}</span>
+                      <span>{uploading ? 'Uploading...' : 'Click to upload listing image'}</span>
                     </div>
                   )}
                   <input type='file' accept='image/*' onChange={handleImageUpload} />
@@ -1152,9 +1000,67 @@ const SellerDashboardPage = () => {
                 </div>
               </div>
 
+              <fieldset className='glory-listing-evidence-form'>
+                <legend>Evidence for Glory review</legend>
+                <p>Only Glory reviewers can see the batch or lot code and Responsible Person details. Use the gallery for clear front, back and label photos.</p>
+                <div className='glory-form-grid'>
+                  <div>
+                    <label style={labelStyle} htmlFor='listing-condition'>Product condition</label>
+                    <select
+                      id='listing-condition'
+                      value={listingEvidence.condition}
+                      onChange={event => setListingEvidence(current => ({ ...current, condition: event.target.value }))}
+                      style={inputStyle}
+                    >
+                      <option value='new_sealed'>New and sealed</option>
+                      <option value='new_unsealed'>New, unsealed</option>
+                      <option value='sample'>Sample or tester</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={labelStyle} htmlFor='listing-batch-code'>Batch or lot code</label>
+                    <input
+                      id='listing-batch-code'
+                      value={listingEvidence.batchCode}
+                      onChange={event => setListingEvidence(current => ({ ...current, batchCode: event.target.value }))}
+                      placeholder='Exactly as shown on the packaging'
+                      maxLength={80}
+                      style={inputStyle}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label style={labelStyle} htmlFor='listing-responsible-person'>Responsible Person or brand</label>
+                  <input
+                    id='listing-responsible-person'
+                    value={listingEvidence.responsiblePersonName}
+                    onChange={event => setListingEvidence(current => ({ ...current, responsiblePersonName: event.target.value }))}
+                    placeholder='Name printed on the product packaging'
+                    maxLength={160}
+                    style={inputStyle}
+                  />
+                </div>
+                <label className='glory-listing-evidence-check'>
+                  <input
+                    type='checkbox'
+                    checked={listingEvidence.packagingPhotosConfirmed}
+                    onChange={event => setListingEvidence(current => ({ ...current, packagingPhotosConfirmed: event.target.checked }))}
+                  />
+                  <span>I confirm the photos show the packaging, labels and batch or lot code clearly.</span>
+                </label>
+                <label className='glory-listing-evidence-check'>
+                  <input
+                    type='checkbox'
+                    checked={listingEvidence.declarationAccepted}
+                    onChange={event => setListingEvidence(current => ({ ...current, declarationAccepted: event.target.checked }))}
+                  />
+                  <span>I confirm this listing is accurate, the item is lawful to sell, and I can provide more evidence if Glory asks.</span>
+                </label>
+              </fieldset>
+
               <div className='glory-form-grid'>
                 <div>
-                  <label style={labelStyle}>Product Name</label>
+                  <label style={labelStyle}>Listing Title</label>
                   <input value={name} onChange={event => setName(event.target.value)} placeholder='e.g. Vitamin C Serum' style={inputStyle} />
                 </div>
                 <div>
@@ -1318,7 +1224,7 @@ const SellerDashboardPage = () => {
               >
                 {submitting
                   ? 'Saving...'
-                  : editingProduct ? 'Save and Resubmit' : 'Submit for Review'}
+                  : editingProduct ? 'Save and Resubmit Listing' : 'Submit Listing for Review'}
               </button>
             </div>
           </div>

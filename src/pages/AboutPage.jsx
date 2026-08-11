@@ -13,7 +13,7 @@ const values = [
   {
     Icon: FiShield,
     title: 'Safe & Secure',
-    text: 'Account safeguards, reviewed listings and server-verified checkout help protect every Glory purchase.',
+    text: 'Account safeguards, reviewed listings and confidential reporting help buyers and sellers make better decisions.',
   },
   {
     Icon: FiGlobe,
@@ -26,7 +26,7 @@ const stats = [
   { num: '500+', label: 'Products Listed' },
   { num: '12K+', label: 'Happy Customers' },
   { num: '4.8 stars', label: 'Average Rating' },
-  { num: '100%', label: 'Authentic Products' },
+  { num: 'Review-led', label: 'Marketplace Trust' },
 ]
 
 const socialList = [
@@ -52,7 +52,7 @@ const AboutPage = () => {
           </h1>
           <p className='glory-about-hero-copy'>
             Glory was born out of frustration. Too many talented beauty entrepreneurs
-            were selling in DMs, chasing payments manually, and building brands
+            were selling in scattered DMs, managing every buyer conversation manually, and building brands
             on borrowed platforms. We built something better.
           </p>
         </div>
@@ -66,8 +66,8 @@ const AboutPage = () => {
             <span>Start building a real business.</span>
           </h2>
           <p className='glory-about-body'>
-            Every beauty entrepreneur deserves a professional storefront,
-            seamless payments, and real analytics. Glory gives independent beauty
+            Every beauty entrepreneur deserves a professional listing space,
+            meaningful visibility, and real analytics. Glory gives independent beauty
             businesses in the UK and beyond the same tools that big brands have without
             the complexity or cost.
           </p>

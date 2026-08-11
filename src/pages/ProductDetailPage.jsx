@@ -1,22 +1,20 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import {
-  FiCheck,
+  FiAlertTriangle,
   FiChevronRight,
+  FiFlag,
   FiHeart,
-  FiMinus,
-  FiPlus,
+  FiMessageCircle,
   FiShield,
-  FiShoppingBag,
   FiStar,
-  FiTruck,
+  FiX,
 } from 'react-icons/fi'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import Loader from '../components/Loader'
 import Message from '../components/Message'
-import { getProduct, addReview, getReviews } from '../api'
-import { useCart } from '../context/CartContext'
+import { getProduct, getReviews, reportListing, startConversation } from '../api'
 import { useUser } from '../context/UserContext'
 import { formatCurrency } from '../utils/currency'
 import { isWishlisted, toggleWishlist } from '../utils/wishlist'
@@ -25,23 +23,24 @@ import { ProductSeo } from '../components/Seo'
 const ProductDetailPage = () => {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { addToCart } = useCart()
   const { user } = useUser()
 
   const [product, setProduct] = useState(null)
   const [reviews, setReviews] = useState([])
   const [loading, setLoading] = useState(true)
-  const [quantity, setQuantity] = useState(1)
   const [wished, setWished] = useState(() => isWishlisted(id))
-  const [added, setAdded] = useState(false)
-  const [rating, setRating] = useState(5)
-  const [comment, setComment] = useState('')
-  const [reviewLoading, setReviewLoading] = useState(false)
-  const [reviewError, setReviewError] = useState('')
-  const [reviewSuccess, setReviewSuccess] = useState('')
   const [activeTab, setActiveTab] = useState('description')
   const [activeImage, setActiveImage] = useState('')
   const [selectedVariant, setSelectedVariant] = useState(null)
+  const [enquiryOpen, setEnquiryOpen] = useState(false)
+  const [enquiryMessage, setEnquiryMessage] = useState('')
+  const [enquirySending, setEnquirySending] = useState(false)
+  const [enquiryError, setEnquiryError] = useState('')
+  const [reportOpen, setReportOpen] = useState(false)
+  const [reportReason, setReportReason] = useState('')
+  const [reportDetail, setReportDetail] = useState('')
+  const [reportSending, setReportSending] = useState(false)
+  const [reportFeedback, setReportFeedback] = useState('')
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -63,48 +62,56 @@ const ProductDetailPage = () => {
 
   const availableStock = selectedVariant ? selectedVariant.countInStock : product?.countInStock
 
-  const handleAddToCart = () => {
-    addToCart({
-      ...product,
-      quantity,
-      image: selectedVariant?.image || activeImage || product.image,
-      price: selectedVariant?.price || product.price,
-      countInStock: availableStock,
-      variantId: selectedVariant?._id,
-      variantName: selectedVariant?.name,
-      cartKey: `${product._id}:${selectedVariant?._id || 'default'}`,
-    })
-    setAdded(true)
-    setTimeout(() => setAdded(false), 2000)
-  }
-
-  const handleBuyNow = () => {
-    handleAddToCart()
-    navigate('/cart')
-  }
-
-  const handleReview = async () => {
+  const requireAccount = () => {
     if (!user) {
-      navigate('/login')
-      return
+      navigate('/login', { state: { from: `/products/${id}` } })
+      return false
     }
-    if (comment.trim().length < 10) {
-      setReviewError('Write at least 10 characters before submitting your review.')
-      return
-    }
-    setReviewLoading(true)
-    setReviewError('')
-    setReviewSuccess('')
+    return true
+  }
+
+  const openEnquiry = () => {
+    if (!requireAccount()) return
+    const option = selectedVariant?.name ? ` (${selectedVariant.name})` : ''
+    setEnquiryMessage(`Hi, I am interested in ${product.name}${option}. Is it still available?`)
+    setEnquiryError('')
+    setEnquiryOpen(true)
+  }
+
+  const submitEnquiry = async (event) => {
+    event.preventDefault()
+    if (!enquiryMessage.trim()) return
+    setEnquirySending(true)
+    setEnquiryError('')
     try {
-      await addReview(id, { rating, comment })
-      setReviewSuccess('Review added successfully!')
-      setComment('')
-      const { data: reviewData } = await getReviews(id)
-      setReviews(reviewData)
-    } catch (err) {
-      setReviewError(err.response?.data?.message || 'Could not add review')
+      const { data } = await startConversation({ listingId: id, message: enquiryMessage.trim() })
+      navigate(`/messages?thread=${data._id}`)
+    } catch (error) {
+      setEnquiryError(error.response?.data?.message || 'We could not start this conversation.')
     } finally {
-      setReviewLoading(false)
+      setEnquirySending(false)
+    }
+  }
+
+  const openReport = () => {
+    if (!requireAccount()) return
+    setReportFeedback('')
+    setReportOpen(true)
+  }
+
+  const submitReport = async (event) => {
+    event.preventDefault()
+    setReportSending(true)
+    setReportFeedback('')
+    try {
+      const { data } = await reportListing(id, { reason: reportReason, detail: reportDetail.trim() })
+      setReportFeedback(data.message)
+      setReportReason('')
+      setReportDetail('')
+    } catch (error) {
+      setReportFeedback(error.response?.data?.message || 'We could not submit this report.')
+    } finally {
+      setReportSending(false)
     }
   }
 
@@ -238,7 +245,6 @@ const ProductDetailPage = () => {
                       disabled={variant.countInStock === 0}
                       onClick={() => {
                         setSelectedVariant(variant)
-                        setQuantity(1)
                         if (variant.image) setActiveImage(variant.image)
                       }}
                     >
@@ -249,50 +255,27 @@ const ProductDetailPage = () => {
               </fieldset>
             )}
 
-            {availableStock > 0 && (
-              <div className='glory-product-quantity'>
-                <span>Quantity</span>
-                <div>
-                  <button
-                    type='button'
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    disabled={quantity <= 1}
-                    aria-label='Decrease quantity'
-                  >
-                    <FiMinus size={15} />
-                  </button>
-                  <output aria-live='polite'>{quantity}</output>
-                  <button
-                    type='button'
-                    onClick={() => setQuantity(Math.min(availableStock, quantity + 1))}
-                    disabled={quantity >= availableStock}
-                    aria-label='Increase quantity'
-                  >
-                    <FiPlus size={15} />
-                  </button>
-                </div>
-              </div>
-            )}
-
-            <div className='glory-product-actions-v2'>
+            <div className='glory-product-actions-v2 glory-listing-actions'>
               <button
                 type='button'
                 className='is-primary'
-                onClick={handleAddToCart}
+                onClick={openEnquiry}
                 disabled={availableStock === 0}
               >
-                {added ? <FiCheck size={17} /> : <FiShoppingBag size={17} />}
-                {added ? 'Added to bag' : 'Add to bag'}
+                <FiMessageCircle size={17} />
+                Contact seller
               </button>
               <button
                 type='button'
                 className='is-secondary'
-                onClick={handleBuyNow}
-                disabled={availableStock === 0}
+                onClick={openReport}
               >
-                Buy now
+                <FiFlag size={16} />
+                Report listing
               </button>
             </div>
+
+            <p className='glory-listing-payment-note'>Glory hosts this listing and conversation. Payment and delivery are agreed directly with the seller.</p>
 
             <div className='glory-product-confidence'>
               {[
@@ -300,18 +283,20 @@ const ProductDetailPage = () => {
                   Icon: FiShield,
                   title: product.seller?.sellerProfile?.verificationStatus === 'verified'
                     ? 'Verified seller'
-                    : 'Reviewed seller',
-                  text: product.seller?.sellerProfile?.storeName || 'Seller details reviewed by Glory',
+                    : 'Seller details pending',
+                  text: product.seller?.sellerProfile?.storeName || 'Identity and store details are reviewed before publishing.',
                 },
                 {
-                  Icon: FiShoppingBag,
-                  title: 'Confirmed checkout',
-                  text: 'Order totals are confirmed before payment',
+                  Icon: FiShield,
+                  title: product.listingEvidence?.status === 'reviewed' ? 'Listing evidence reviewed' : 'Listing under review',
+                  text: product.listingEvidence?.status === 'reviewed'
+                    ? 'Packaging, label details and seller declaration were reviewed by Glory.'
+                    : 'Check the listing details and ask the seller questions before you decide.',
                 },
                 {
-                  Icon: FiTruck,
-                  title: 'Delivery clarity',
-                  text: 'Delivery details are confirmed during checkout',
+                  Icon: FiAlertTriangle,
+                  title: 'Keep the deal safe',
+                  text: 'Never share passwords or one-time codes, and be careful with advance payments.',
                 },
               ].map(item => (
                 <div key={item.title}>
@@ -398,42 +383,11 @@ const ProductDetailPage = () => {
           {activeTab === 'reviews' && (
             <div className='glory-reviews-layout' role='tabpanel'>
               <div className='glory-review-form'>
-                <span className='glory-product-section-label'>Your experience</span>
-                <h2>Write a review</h2>
-                <p>Reviews are available to verified purchasers after payment or delivery.</p>
-
-                {reviewError && <Message type='error' text={reviewError} />}
-                {reviewSuccess && <Message type='success' text={reviewSuccess} />}
-
-                <fieldset>
-                  <legend>Your rating</legend>
-                  <div className='glory-review-stars'>
-                    {[1, 2, 3, 4, 5].map(star => (
-                      <button
-                        key={star}
-                        type='button'
-                        onClick={() => setRating(star)}
-                        aria-label={`${star} star${star === 1 ? '' : 's'}`}
-                        aria-pressed={rating === star}
-                      >
-                        <FiStar size={22} fill={star <= rating ? 'currentColor' : 'none'} />
-                      </button>
-                    ))}
-                  </div>
-                </fieldset>
-
-                <label>
-                  <span>Your review</span>
-                  <textarea
-                    value={comment}
-                    onChange={event => setComment(event.target.value)}
-                    placeholder='Share what you liked and how you used it.'
-                    rows={5}
-                  />
-                </label>
-
-                <button type='button' className='glory-review-submit' onClick={handleReview} disabled={reviewLoading}>
-                  {reviewLoading ? 'Submitting...' : 'Submit review'}
+                <span className='glory-product-section-label'>Trust & safety</span>
+                <h2>Reviews stay accountable.</h2>
+                <p>Glory will only publish feedback after its completed-sale confirmation flow is in place. Existing reviews remain visible for context.</p>
+                <button type='button' className='glory-review-submit' onClick={openReport}>
+                  Report a concern
                 </button>
               </div>
 
@@ -470,6 +424,61 @@ const ProductDetailPage = () => {
           )}
         </section>
       </main>
+
+      {enquiryOpen && (
+        <div className='glory-marketplace-modal-backdrop' role='presentation' onMouseDown={() => setEnquiryOpen(false)}>
+          <section className='glory-marketplace-modal' role='dialog' aria-modal='true' aria-labelledby='enquiry-title' onMouseDown={event => event.stopPropagation()}>
+            <button type='button' className='glory-marketplace-modal-close' onClick={() => setEnquiryOpen(false)} aria-label='Close enquiry form'>
+              <FiX size={18} />
+            </button>
+            <span>Secure enquiry</span>
+            <h2 id='enquiry-title'>Ask the seller about this listing.</h2>
+            <p>Your contact details stay private. Keep payment, delivery and any personal details inside this Glory conversation.</p>
+            {enquiryError && <Message type='error' text={enquiryError} />}
+            <form onSubmit={submitEnquiry}>
+              <label htmlFor='listing-enquiry'>Your message</label>
+              <textarea id='listing-enquiry' value={enquiryMessage} onChange={event => setEnquiryMessage(event.target.value)} minLength={10} maxLength={1200} rows={5} required />
+              <button type='submit' disabled={enquirySending || enquiryMessage.trim().length < 10}>
+                <FiMessageCircle size={16} />
+                {enquirySending ? 'Opening conversation...' : 'Send enquiry'}
+              </button>
+            </form>
+          </section>
+        </div>
+      )}
+
+      {reportOpen && (
+        <div className='glory-marketplace-modal-backdrop' role='presentation' onMouseDown={() => setReportOpen(false)}>
+          <section className='glory-marketplace-modal' role='dialog' aria-modal='true' aria-labelledby='report-title' onMouseDown={event => event.stopPropagation()}>
+            <button type='button' className='glory-marketplace-modal-close' onClick={() => setReportOpen(false)} aria-label='Close report form'>
+              <FiX size={18} />
+            </button>
+            <span>Confidential report</span>
+            <h2 id='report-title'>Tell Glory what looks wrong.</h2>
+            <p>Reports are private. A report does not automatically remove a listing; Trust & Safety reviews the evidence first.</p>
+            {reportFeedback && <Message type={reportFeedback.startsWith('Thanks') ? 'success' : 'error'} text={reportFeedback} />}
+            <form onSubmit={submitReport}>
+              <label htmlFor='listing-report-reason'>Reason</label>
+              <select id='listing-report-reason' value={reportReason} onChange={event => setReportReason(event.target.value)} required>
+                <option value=''>Choose a reason</option>
+                <option value='counterfeit'>Suspected counterfeit</option>
+                <option value='unsafe_product'>Unsafe or non-compliant product</option>
+                <option value='misleading_listing'>Misleading listing</option>
+                <option value='suspected_scam'>Suspected scam</option>
+                <option value='prohibited_item'>Prohibited item</option>
+                <option value='stolen_content'>Stolen images or content</option>
+                <option value='other'>Other</option>
+              </select>
+              <label htmlFor='listing-report-detail'>What did you notice? {reportReason === 'other' ? '(required)' : '(optional)'}</label>
+              <textarea id='listing-report-detail' value={reportDetail} onChange={event => setReportDetail(event.target.value)} minLength={reportReason === 'other' ? 10 : undefined} maxLength={1200} rows={4} required={reportReason === 'other'} />
+              <button type='submit' disabled={reportSending || !reportReason}>
+                <FiFlag size={16} />
+                {reportSending ? 'Sending report...' : 'Send confidential report'}
+              </button>
+            </form>
+          </section>
+        </div>
+      )}
 
       <Footer />
     </div>

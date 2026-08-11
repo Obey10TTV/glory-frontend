@@ -74,7 +74,7 @@ const CookieConsent = () => {
       <div className='glory-cookie-copy'>
         <strong>Your privacy on Glory</strong>
         <p>
-          We use essential storage for cart, login and security. You can allow optional analytics to help us improve the store experience.
+          We use essential storage for account security, marketplace messages and preferences. You can allow optional analytics to help us improve the marketplace experience.
         </p>
       </div>
 
@@ -83,7 +83,7 @@ const CookieConsent = () => {
           <label>
             <span>
               <b>Essential</b>
-              <small>Required for secure checkout, account sessions and cart.</small>
+              <small>Required for secure account sessions, safety reporting and marketplace messages.</small>
             </span>
             <input type='checkbox' checked readOnly />
           </label>

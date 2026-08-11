@@ -18,8 +18,6 @@ const seller = {
     country: 'United Kingdom',
     verificationStatus: 'verified',
     activationStatus: 'paid',
-    payoutStatus: 'active',
-    acceptedPaymentMethods: ['card'],
   },
 }
 
@@ -33,35 +31,10 @@ const customer = {
   twoFactorEnabled: false,
 }
 
-const paymentStatus = {
+const sellerAccessStatus = {
   activation: { required: true, feePence: 2000, currency: 'GBP', status: 'paid' },
-  payouts: {
-    status: 'active',
-    detailsSubmitted: true,
-    chargesEnabled: true,
-    payoutsEnabled: true,
-  },
-  acceptedPaymentMethods: ['card'],
-  paymentMethods: [
-    {
-      code: 'card',
-      label: 'Credit or debit card',
-      description: 'Visa, Mastercard and other supported cards through Stripe.',
-      enabled: true,
-    },
-    {
-      code: 'bank_transfer',
-      label: 'Bank payment',
-      description: 'Unavailable until provider reconciliation and refund handling are configured.',
-      enabled: false,
-    },
-    {
-      code: 'crypto',
-      label: 'Crypto payment',
-      description: 'Unavailable until a compliant payment provider and refund process are configured.',
-      enabled: false,
-    },
-  ],
+  marketplaceMode: 'classified',
+  directCheckoutEnabled: false,
 }
 
 const installApiMocks = async (page, profile) => {
@@ -70,23 +43,9 @@ const installApiMocks = async (page, profile) => {
     let body = {}
     if (pathname.endsWith('/users/csrf')) body = { csrfToken: 'marketplace-test-token' }
     if (pathname.endsWith('/users/profile')) body = profile
-    if (pathname.endsWith('/stripe/seller/status')) body = paymentStatus
-    if (pathname.endsWith('/stripe/status')) body = { enabled: true, currency: 'GBP' }
-    if (pathname.endsWith('/orders/checkout-options')) {
-      body = {
-        currency: 'GBP',
-        itemsPrice: 49,
-        shippingPrice: 4.95,
-        totalPrice: 53.95,
-        compatibleMethods: ['card'],
-        sellerCount: 2,
-      }
-    }
-    if (
-      pathname.endsWith('/products/mine')
-      || pathname.endsWith('/orders/seller')
-      || pathname.endsWith('/orders/myorders')
-    ) body = []
+    if (pathname.endsWith('/stripe/seller/status')) body = sellerAccessStatus
+    if (pathname.endsWith('/stripe/status')) body = { enabled: true, currency: 'GBP', marketplaceMode: 'classified', directCheckoutEnabled: false }
+    if (pathname.endsWith('/products/mine') || pathname.endsWith('/conversations')) body = []
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -105,7 +64,7 @@ test.beforeEach(async ({ page }) => {
   })
 })
 
-test('seller sees activation, payout and approved buyer payment states', async ({ page }) => {
+test('seller sees platform access and private buyer enquiries, not payout setup', async ({ page }) => {
   await page.addInitScript((profile) => {
     localStorage.setItem('gloryUser', JSON.stringify(profile))
   }, seller)
@@ -113,50 +72,25 @@ test('seller sees activation, payout and approved buyer payment states', async (
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/seller', { waitUntil: 'domcontentloaded' })
 
-  await expect(page.getByText('Payments & Payouts', { exact: true })).toBeVisible()
+  await expect(page.getByText('Marketplace access', { exact: true })).toBeVisible()
   await expect(page.getByText('£20.00', { exact: true })).toBeVisible()
-  await expect(page.getByText('Payouts active', { exact: true })).toBeVisible()
-  await expect(page.getByText('Bank payment', { exact: true })).toBeVisible()
-  await expect(page.getByText('Crypto payment', { exact: true })).toBeVisible()
+  await expect(page.getByText('Buyer enquiries', { exact: true })).toBeVisible()
+  await expect(page.getByText('Secure payouts', { exact: true })).toHaveCount(0)
+  await expect(page.getByText('Buyer payment methods', { exact: true })).toHaveCount(0)
   await page.screenshot({
-    path: path.join('test-results', 'seller-payments-390.png'),
+    path: path.join('test-results', 'seller-classified-marketplace-390.png'),
     fullPage: true,
   })
 })
 
-test('multi-seller checkout presents one compatible buyer payment', async ({ page }) => {
-  await page.addInitScript(({ profile, cart }) => {
+test('legacy checkout route redirects buyers to listings', async ({ page }) => {
+  await page.addInitScript((profile) => {
     localStorage.setItem('gloryUser', JSON.stringify(profile))
-    localStorage.setItem('gloryCart', JSON.stringify(cart))
-  }, {
-    profile: customer,
-    cart: [
-      {
-        _id: '111111111111111111111111',
-        name: 'Glow Serum',
-        image: 'https://images.pexels.com/photos/3762879/pexels-photo-3762879.jpeg',
-        price: 24,
-        quantity: 1,
-      },
-      {
-        _id: '222222222222222222222222',
-        name: 'Silk Hair Oil',
-        image: 'https://images.pexels.com/photos/3993449/pexels-photo-3993449.jpeg',
-        price: 25,
-        quantity: 1,
-      },
-    ],
-  })
+  }, customer)
   await installApiMocks(page, customer)
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/checkout', { waitUntil: 'domcontentloaded' })
 
-  const country = page.getByPlaceholder('United Kingdom', { exact: true })
-  await country.fill('United Kingdom')
-  await expect(page.getByText('£53.95', { exact: true })).toBeVisible()
-  await expect(page.getByText('Glory could not verify payment options for this basket.')).toHaveCount(0)
-  await page.screenshot({
-    path: path.join('test-results', 'multi-seller-checkout-390.png'),
-    fullPage: true,
-  })
+  await expect(page).toHaveURL(/\/products$/)
+  await expect(page.getByRole('heading', { name: /Beauty/i }).first()).toBeVisible()
 })

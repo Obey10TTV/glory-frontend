@@ -10,15 +10,14 @@ const pages = {
   '/': defaults,
   '/products': { title: 'Shop Beauty in the UK | Glory', description: 'Shop skincare, makeup, haircare, fragrance, nails and beauty essentials from reviewed sellers, with international delivery where available.' },
   '/about': { title: 'About Glory | UK Beauty, Global Community', description: 'Meet Glory, a UK-based marketplace created for global beauty, independent sellers and every beauty tradition.' },
-  '/sell-on-glory': { title: 'Sell Beauty Products on Glory', description: 'Build your beauty storefront on Glory with seller verification, product review and structured order management.' },
-  '/cart': { title: 'Your Bag | Glory', description: 'Review your selected Glory beauty products before checkout.' },
+  '/sell-on-glory': { title: 'Sell Beauty Products on Glory', description: 'Create beauty listings on Glory with seller verification, evidence review and private buyer conversations.' },
   '/wishlist': { title: 'Your Wishlist | Glory', description: 'Return to the beauty products you saved on Glory.' },
   '/login': { title: 'Sign In | Glory', description: 'Securely sign in to your Glory buyer or seller account.' },
   '/register': { title: 'Create a Glory Account', description: 'Join Glory to shop reviewed beauty listings or start a verified seller profile.' },
-  '/privacy': { title: 'Privacy Policy | Glory', description: 'Learn how Glory handles marketplace, account, order and seller information.' },
+  '/privacy': { title: 'Privacy Policy | Glory', description: 'Learn how Glory handles marketplace, account, seller and safety-report information.' },
   '/terms': { title: 'Terms & Conditions | Glory', description: 'Review the terms that apply when shopping or selling through Glory.' },
   '/cookies': { title: 'Cookie Policy | Glory', description: 'Review essential, analytics and marketing cookie choices on Glory.' },
-  '/returns': { title: 'Returns & Refunds | Glory', description: 'Understand Glory order cancellation, return, dispute and refund processes.' }
+  '/returns': { title: 'Seller Disputes | Glory', description: 'Understand how to resolve a concern with an independent seller and report a listing to Glory.' }
 }
 
 const setMeta = (selector, attribute, value) => {

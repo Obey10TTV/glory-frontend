@@ -18,9 +18,9 @@ const footerGroups = [
     title: 'Help',
     links: [
       { label: 'Contact us', to: '/contact' },
-      { label: 'Track an order', to: '/track-order' },
-      { label: 'Returns and refunds', to: '/returns' },
-      { label: 'Shipping information', to: '/shipping' },
+      { label: 'Marketplace safety', to: '/marketplace-safety' },
+      { label: 'How Glory works', to: '/faq' },
+      { label: 'Security', to: '/security' },
       { label: 'FAQs', to: '/faq' },
     ],
   },
@@ -92,7 +92,7 @@ const Footer = () => (
         <div className='glory-footer-topline'>
           <div className='glory-footer-brand'>
             <Link to='/' className='glory-footer-wordmark' aria-label='Glory home'>GLORY.</Link>
-            <p>The UK beauty marketplace for every shade, texture and ritual. Shop considered beauty from independent sellers and loved brands.</p>
+            <p>The UK beauty marketplace for every shade, texture and ritual. Discover independent sellers, ask thoughtful questions and buy with care.</p>
             <div className='glory-footer-market'>
               <UnitedKingdomFlag size={27} title='United Kingdom' />
               <span>United Kingdom marketplace<br />Worldwide delivery where available</span>
@@ -120,7 +120,7 @@ const Footer = () => (
           </div>
 
           <div className='glory-footer-right'>
-            <div className='glory-footer-payments' aria-label='Supported payment providers'>
+            <div className='glory-footer-payments' aria-label='Seller service payment and buyer payment options offered by independent sellers'>
               {paymentBadges.map(({ label, Icon, className = '' }) => (
                 <Icon key={label} className={`glory-payment-icon ${className}`} title={label} aria-label={label} size={24} />
               ))}

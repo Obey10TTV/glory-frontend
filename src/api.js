@@ -123,6 +123,17 @@ export const createProduct = (data) => API.post('/products', data)
 export const updateProduct = (id, data) => API.put(`/products/${id}`, data)
 export const deleteProduct = (id) => API.delete(`/products/${id}`)
 
+// MARKETPLACE CONVERSATIONS
+export const getConversations = () => API.get('/conversations')
+export const getConversation = (id) => API.get(`/conversations/${id}`)
+export const startConversation = (data) => API.post('/conversations', data)
+export const sendConversationMessage = (id, data) => API.post(`/conversations/${id}/messages`, data)
+export const closeConversation = (id) => API.patch(`/conversations/${id}/close`)
+
+// TRUST & SAFETY
+export const reportListing = (id, data) => API.post(`/reports/listings/${id}`, data)
+export const getMyListingReports = () => API.get('/reports/mine')
+
 // ORDERS
 export const createOrder = (data, idempotencyKey) => API.post('/orders', data, {
   headers: idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : undefined
@@ -172,5 +183,7 @@ export const resolveCancellation = (orderId, data) => API.put(`/admin/orders/${o
 export const resolveDispute = (orderId, data) => API.put(`/admin/orders/${orderId}/dispute`, data)
 export const addAdminOrderNote = (orderId, data) => API.post(`/admin/orders/${orderId}/notes`, data)
 export const getAdminAudit = (params) => API.get('/admin/audit', { params })
+export const getAdminListingReports = (params) => API.get('/reports/admin', { params })
+export const updateListingReport = (id, data) => API.put(`/reports/admin/${id}`, data)
 
 export default API

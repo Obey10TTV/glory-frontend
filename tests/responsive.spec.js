@@ -14,6 +14,7 @@ const publicRoutes = [
   '/shipping',
   '/faq',
   '/support',
+  '/marketplace-safety',
   '/careers',
   '/press',
   '/affiliates',
@@ -93,10 +94,9 @@ const adminProfile = {
 
 const protectedRoutes = [
   { route: '/account', profile: customerProfile },
-  { route: '/checkout', profile: customerProfile },
+  { route: '/messages', profile: customerProfile },
   { route: '/seller', profile: sellerProfile },
   { route: '/admin', profile: adminProfile },
-  { route: '/payment/verify?session_id=responsive-test', profile: customerProfile },
 ]
 
 const heightForWidth = (width) => {
@@ -195,6 +195,7 @@ const mockApiResponse = (pathname, profile) => {
     }
   }
   if (pathname.includes('/stripe/verify/')) return { message: 'Payment verification test state' }
+  if (pathname === '/api/products' || pathname.includes('/reviews')) return []
   if (pathname.endsWith('/admin/stats')) return {}
   if (pathname.endsWith('/admin/audit')) return { items: [] }
   if (
@@ -205,6 +206,8 @@ const mockApiResponse = (pathname, profile) => {
     || pathname.endsWith('/admin/users')
     || pathname.endsWith('/admin/orders')
     || pathname.endsWith('/admin/products')
+    || pathname.endsWith('/reports/admin')
+    || pathname.endsWith('/conversations')
   ) return []
   return {}
 }
@@ -217,7 +220,28 @@ test.beforeEach(async ({ page }) => {
       marketing: false,
     }))
   })
+
+  // Keep layout checks deterministic while the hosted API is unavailable or slow.
+  await page.route('**/api/**', async (requestRoute) => {
+    const pathname = new URL(requestRoute.request().url()).pathname
+    if (pathname.endsWith('/users/profile')) {
+      await requestRoute.fulfill({
+        status: 401,
+        contentType: 'application/json',
+        body: JSON.stringify({ message: 'Authentication required' }),
+      })
+      return
+    }
+
+    await requestRoute.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(mockApiResponse(pathname, {})),
+    })
+  })
 })
+
+test.describe.configure({ mode: 'parallel' })
 
 for (const route of publicRoutes) {
   const routeLabel = route === '/' ? 'home page' : route

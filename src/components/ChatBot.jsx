@@ -356,7 +356,7 @@ const ChatBot = () => {
 
               {[
                 { icon: <MdOutlineMailOutline size={20} color="#111" />, label: 'Email us', sub: 'ajokuobioma10@gmail.com', href: 'mailto:ajokuobioma10@gmail.com' },
-                { icon: <FaWhatsapp size={20} color="#25D366" />, label: 'Support page', sub: 'Orders, returns and seller help', href: '/support' },
+                { icon: <FaWhatsapp size={20} color="#25D366" />, label: 'Support page', sub: 'Marketplace safety and seller help', href: '/support' },
                 { icon: <FaInstagram size={20} color="#E1306C" />, label: 'Community', sub: 'Creator updates and beauty stories', href: '/community' },
               ].map((item, i) => (
                 <a key={i} href={item.href} style={{

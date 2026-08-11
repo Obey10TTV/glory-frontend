@@ -10,6 +10,7 @@ import {
   deleteAdminProduct,
   deleteUser,
   getAdminAudit,
+  getAdminListingReports,
   getAdminProducts,
   getAdminStats,
   getAllOrders,
@@ -19,6 +20,7 @@ import {
   resolveCancellation,
   resolveDispute,
   updateProductStatus,
+  updateListingReport,
   updateSellerDocumentStatus,
   updateSellerStatus
 } from '../api'
@@ -30,6 +32,7 @@ import {
   FiDollarSign,
   FiDownload,
   FiFileText,
+  FiFlag,
   FiMessageSquare,
   FiPackage,
   FiSearch,
@@ -65,7 +68,11 @@ const productQuality = (product) => {
     product.image,
     (product.images || []).length >= 2,
     (product.keyBenefits || []).length >= 2,
-    product.sku || product.barcode
+    product.sku || product.barcode,
+    product.listingEvidence?.packagingPhotosConfirmed,
+    product.listingEvidence?.batchCode,
+    product.listingEvidence?.responsiblePersonName,
+    product.listingEvidence?.declarationAccepted
   ]
   return Math.round((checks.filter(Boolean).length / checks.length) * 100)
 }
@@ -77,6 +84,7 @@ const AdminDashboardPage = () => {
   const [users, setUsers] = useState([])
   const [orders, setOrders] = useState([])
   const [products, setProducts] = useState([])
+  const [reports, setReports] = useState([])
   const [auditLogs, setAuditLogs] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('overview')
@@ -88,14 +96,15 @@ const AdminDashboardPage = () => {
   const fetchData = useCallback(async (showLoader = true) => {
     try {
       if (showLoader) setLoading(true)
-      const [statsRes, usersRes, ordersRes, productsRes, auditRes] = await Promise.all([
-        getAdminStats(), getAllUsers(), getAllOrders(), getAdminProducts(), getAdminAudit({ limit: 100 })
+      const [statsRes, usersRes, ordersRes, productsRes, auditRes, reportsRes] = await Promise.all([
+        getAdminStats(), getAllUsers(), getAllOrders(), getAdminProducts(), getAdminAudit({ limit: 100 }), getAdminListingReports().catch(() => ({ data: [] }))
       ])
       setStats(statsRes.data)
       setUsers(usersRes.data)
       setOrders(ordersRes.data)
       setProducts(productsRes.data)
       setAuditLogs(auditRes.data.items || [])
+      setReports(Array.isArray(reportsRes.data) ? reportsRes.data : [])
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load admin data')
     } finally {
@@ -190,6 +199,21 @@ const AdminDashboardPage = () => {
     }
   }
 
+  const handleListingReport = async (id, status, listingAction = 'none') => {
+    if (listingAction === 'remove' && !window.confirm('Remove this listing from Glory after the Trust & Safety review?')) return
+    const adminNote = window.prompt(
+      status === 'dismissed' ? 'Reason for dismissing this report:' : 'Trust & Safety review note:',
+      ''
+    )
+    if (adminNote === null) return
+    try {
+      await updateListingReport(id, { status, listingAction, adminNote })
+      await refreshAfter(`Listing report ${status}`)
+    } catch (err) {
+      setError(err.response?.data?.message || 'Could not update this listing report')
+    }
+  }
+
   const handleCancellation = async (orderId, payload) => {
     try {
       await resolveCancellation(orderId, payload)
@@ -239,6 +263,10 @@ const AdminDashboardPage = () => {
   const filteredAudit = useMemo(() => auditLogs.filter(log => !term || [
     log.action, log.summary, log.actor?.name, log.actor?.email, log.entityId
   ].some(value => String(value || '').toLowerCase().includes(term))), [auditLogs, term])
+  const filteredReports = useMemo(() => reports.filter(report => !term || [
+    report.reason, report.detail, report.status, report.listing?.name,
+    report.seller?.name, report.seller?.email, report.reporter?.name, report.reporter?.email
+  ].some(value => String(value || '').toLowerCase().includes(term))), [reports, term])
 
   const exportCurrent = () => {
     const date = new Date().toISOString().slice(0, 10)
@@ -257,6 +285,11 @@ const AdminDashboardPage = () => {
         ['Date', 'Actor', 'Action', 'Entity', 'Entity ID', 'Summary'],
         ...filteredAudit.map(log => [log.createdAt, log.actor?.email, log.action, log.entityType, log.entityId, log.summary])
       ])
+    } else if (activeTab === 'reports') {
+      downloadCsv(`glory-listing-reports-${date}.csv`, [
+        ['Date', 'Listing', 'Seller', 'Reporter', 'Reason', 'Status', 'Detail'],
+        ...filteredReports.map(report => [report.createdAt, report.listing?.name, report.seller?.email, report.reporter?.email, report.reason, report.status, report.detail])
+      ])
     } else {
       downloadCsv(`glory-orders-${date}.csv`, [
         ['Order', 'Customer', 'Email', 'Amount', 'Payment', 'Status', 'Refund status', 'Dispute', 'Date'],
@@ -265,8 +298,9 @@ const AdminDashboardPage = () => {
     }
   }
 
-  const tabs = ['overview', 'orders', 'products', 'users', 'audit']
+  const tabs = ['overview', 'reports', 'products', 'users', 'orders', 'audit']
   const pendingProducts = products.filter(product => product.approvalStatus === 'pending')
+  const openReports = reports.filter(report => ['received', 'in_review'].includes(report.status))
 
   return (
     <div className='glory-page'>
@@ -277,7 +311,7 @@ const AdminDashboardPage = () => {
             <h1>Admin operations</h1>
             <p>Review trust, inventory, support, and marketplace activity from one workspace.</p>
           </div>
-          <div className='glory-dashboard-pill'>{pendingProducts.length} awaiting product review</div>
+          <div className='glory-dashboard-pill'>{pendingProducts.length} listings and {openReports.length} reports awaiting review</div>
         </header>
 
         {error && <Message type='error' text={error} />}
@@ -325,6 +359,7 @@ const AdminDashboardPage = () => {
             {activeTab === 'products' && (
               <ProductsTable products={filteredProducts} onApprove={id => handleProductStatus(id, 'approved')} onReject={id => handleProductStatus(id, 'rejected')} onDelete={handleDeleteProduct} />
             )}
+            {activeTab === 'reports' && <ReportsTable reports={filteredReports} onReview={handleListingReport} />}
             {activeTab === 'users' && (
               <UsersTable users={filteredUsers} orders={orders} products={products} currentUserId={user?._id} onDelete={handleDeleteUser} onMakeSeller={handleMakeSeller} onSellerStatus={handleSellerStatus} onOpenDocument={handleOpenDocument} onDocumentStatus={handleDocumentStatus} />
             )}
@@ -451,6 +486,32 @@ const ProductsTable = ({ products, onApprove, onReject, onDelete }) => (
         </tr>
       })}</tbody>
     </table></div>
+  </section>
+)
+
+const ReportsTable = ({ reports, onReview }) => (
+  <section className='glory-dashboard-panel'>
+    <div className='glory-dashboard-panel-header'><FiFlag /> Listing reports ({reports.length})</div>
+    {reports.length === 0 ? <div className='glory-admin-empty'>No listing reports match this view.</div> : (
+      <div className='glory-table-wrap'><table className='glory-dashboard-table'>
+        <thead><tr>{['Listing', 'Report', 'Seller', 'Reporter', 'Status', 'Actions'].map(header => <th key={header}>{header}</th>)}</tr></thead>
+        <tbody>{reports.map(report => (
+          <tr key={report._id}>
+            <td><div className='glory-dashboard-product-cell'>{report.listing?.image && <img src={report.listing.image} alt='' loading='lazy' width='48' height='48' />}<div><strong>{report.listing?.name || 'Removed listing'}</strong><span>{report.listing?.brand || report.listing?.category || 'Listing unavailable'}</span></div></div></td>
+            <td><strong>{report.reason.replaceAll('_', ' ')}</strong><br /><span className='glory-dashboard-note'>{report.detail || 'No additional detail.'}</span></td>
+            <td>{report.seller?.sellerProfile?.storeName || report.seller?.name || 'Unknown seller'}<br /><small>{report.seller?.email || ''}</small></td>
+            <td>{report.reporter?.name || 'Confidential reporter'}<br /><small>{report.reporter?.email || ''}</small></td>
+            <td><span className='glory-status-chip'>{report.status.replaceAll('_', ' ')}</span></td>
+            <td><div className='glory-table-actions'>
+              {report.status === 'received' && <button type='button' className='neutral' onClick={() => onReview(report._id, 'in_review')} aria-label='Mark report under review'><FiClock /></button>}
+              {!['actioned', 'dismissed'].includes(report.status) && <button type='button' className='warning' onClick={() => onReview(report._id, 'actioned', 'pause')} aria-label='Pause listing for review'><FiAlertTriangle /></button>}
+              {!['actioned', 'dismissed'].includes(report.status) && <button type='button' className='danger' onClick={() => onReview(report._id, 'actioned', 'remove')} aria-label='Remove listing'><FiTrash2 /></button>}
+              {!['actioned', 'dismissed'].includes(report.status) && <button type='button' className='success' onClick={() => onReview(report._id, 'dismissed')} aria-label='Dismiss report'><FiCheckCircle /></button>}
+            </div></td>
+          </tr>
+        ))}</tbody>
+      </table></div>
+    )}
   </section>
 )
 

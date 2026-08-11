@@ -1,4 +1,5 @@
 const { defineConfig, devices } = require('@playwright/test')
+const baseURL = process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:3000'
 
 module.exports = defineConfig({
   testDir: './tests',
@@ -10,7 +11,7 @@ module.exports = defineConfig({
   workers: 1,
   reporter: 'line',
   use: {
-    baseURL: 'http://127.0.0.1:3000',
+    baseURL,
     colorScheme: 'light',
     reducedMotion: 'reduce',
     trace: 'retain-on-failure',
@@ -31,7 +32,7 @@ module.exports = defineConfig({
   ],
   webServer: {
     command: 'npm run dev',
-    url: 'http://127.0.0.1:3000',
+    url: baseURL,
     reuseExistingServer: true,
     timeout: 120000,
   },

@@ -1,26 +1,16 @@
 import { useNavigate } from 'react-router'
-import { useCart } from '../context/CartContext'
 import { useState } from 'react'
-import { FiHeart, FiShoppingBag, FiStar } from 'react-icons/fi'
+import { FiArrowRight, FiHeart, FiStar } from 'react-icons/fi'
 import { formatCurrency } from '../utils/currency'
 import { isWishlisted, toggleWishlist } from '../utils/wishlist'
 
 const ProductCard = ({ product }) => {
   const navigate = useNavigate()
-  const { addToCart } = useCart()
   const [wished, setWished] = useState(() => isWishlisted(product._id))
-  const [added, setAdded] = useState(false)
-  const [hovered, setHovered] = useState(false)
 
-  const handleAddToCart = (e) => {
+  const handleViewListing = (e) => {
     e.stopPropagation()
-    if (product.variants?.length) {
-      navigate(`/products/${product._id}`)
-      return
-    }
-    addToCart(product)
-    setAdded(true)
-    setTimeout(() => setAdded(false), 2000)
+    navigate(`/products/${product._id}`)
   }
 
   const handleWishlist = (e) => {
@@ -45,7 +35,7 @@ const ProductCard = ({ product }) => {
         cursor: 'pointer',
         position: 'relative',
         background: '#fff',
-        borderRadius: '12px',
+        borderRadius: '8px',
         overflow: 'hidden',
         border: '0.5px solid #f0f0f0',
       }}
@@ -89,16 +79,14 @@ const ProductCard = ({ product }) => {
         </button>
         <button
           className='glory-product-cta'
-          onClick={handleAddToCart}
-          aria-label={`Add ${product.name} to bag`}
-          onMouseEnter={() => setHovered(true)}
-          onMouseLeave={() => setHovered(false)}
+          onClick={handleViewListing}
+          aria-label={`View ${product.name} listing`}
           style={{
             position: 'absolute', bottom: '10px',
             left: '10px', right: '10px',
-            background: added ? '#2ecc71' : hovered ? '#2ecc71' : '#111',
+            background: '#171514',
             color: '#fff', border: 'none',
-            borderRadius: '999px', padding: '10px',
+            borderRadius: '6px', padding: '10px',
             fontSize: '11px', fontWeight: '600',
             cursor: 'pointer', fontFamily: 'inherit',
             display: 'flex', alignItems: 'center',
@@ -106,8 +94,8 @@ const ProductCard = ({ product }) => {
             transition: 'background 0.25s ease'
           }}
         >
-          <FiShoppingBag size={13} />
-          {product.variants?.length ? 'Select options' : added ? 'Added!' : 'Add to Bag'}
+          View listing
+          <FiArrowRight size={13} />
         </button>
       </div>
       <div className='glory-product-card-content' style={{ padding: '12px 14px' }}>
