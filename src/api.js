@@ -93,6 +93,7 @@ API.interceptors.response.use(
 // USERS
 export const registerUser = (data) => API.post('/users/register', data)
 export const loginUser = (data) => API.post('/users/login', data)
+export const getAuthOptions = () => API.get('/users/auth-options')
 export const authenticateWithGoogle = (data) => API.post('/users/google', data)
 export const linkGoogleAccount = (data) => API.post('/users/google/link', data)
 export const logoutUser = () => API.post('/users/logout')

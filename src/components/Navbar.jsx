@@ -19,6 +19,7 @@ const Navbar = () => {
   const [searchResults, setSearchResults] = useState([])
   const [allProducts, setAllProducts] = useState([])
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [mobileDepartmentOpen, setMobileDepartmentOpen] = useState(null)
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
   const [wishlistCount, setWishlistCount] = useState(() => getWishlistIds().length)
   const searchRef = useRef(null)
@@ -57,6 +58,7 @@ const Navbar = () => {
   useEffect(() => {
     if (!isMobile) {
       setDrawerOpen(false)
+      setMobileDepartmentOpen(null)
       setMobileSearchOpen(false)
     }
   }, [isMobile])
@@ -91,6 +93,42 @@ const Navbar = () => {
   }
 
   const getNavPath = (item) => navRoutes[item] || '/products'
+  const megaProductTypes = {
+    SKINCARE: {
+      Serums: 'Serum',
+      Moisturisers: 'Moisturiser',
+      Cleansers: 'Cleanser',
+      Toners: 'Toner',
+      Sunscreen: 'SPF',
+      'Eye Cream': 'Eye Care'
+    },
+    HAIRCARE: {
+      Shampoos: 'Shampoo',
+      Conditioners: 'Conditioner',
+      'Hair Oils': 'Hair Oil',
+      'Growth Serums': 'Growth Serum',
+      'Leave-In': 'Leave-in Conditioner',
+      'Heat Protectant': 'Heat Protectant'
+    },
+    MAKEUP: {
+      Foundation: 'Foundation',
+      Concealer: 'Concealer',
+      Blush: 'Blush',
+      Highlighter: 'Highlighter',
+      'Setting Powder': 'Powder',
+      Lipstick: 'Lipstick',
+      'Lip Gloss': 'Lip Gloss',
+      Mascara: 'Mascara',
+      Eyeshadow: 'Eyeshadow',
+      Eyeliner: 'Eyeliner'
+    }
+  }
+  const getMegaMenuPath = (category, link) => {
+    const productType = megaProductTypes[category]?.[link]
+    return productType
+      ? `${getNavPath(category)}&productType=${encodeURIComponent(productType)}`
+      : getNavPath(category)
+  }
 
   const megaMenus = {
     SKINCARE: {
@@ -539,7 +577,7 @@ const Navbar = () => {
                         {col.links.map(link => (
                           <Link
                             key={link}
-                            to={getNavPath(item)}
+                            to={getMegaMenuPath(item, link)}
                             style={{
                               display: 'block', fontSize: '14px',
                               fontWeight: '500', color: '#333',
@@ -661,23 +699,74 @@ const Navbar = () => {
               >
                 <FiHeart size={17} /> SAVED {wishlistCount > 0 ? `(${wishlistCount})` : ''}
               </Link>
-              {navItems.map(item => (
-                <Link
-                  key={item}
-                  to={getNavPath(item)}
-                  onClick={() => setDrawerOpen(false)}
-                  style={{
-                    display: 'block', padding: '14px 20px',
-                    fontSize: '14px', fontWeight: '700',
-                    color: item === 'SELL ON GLORY' ? '#c97a9a' : '#111',
-                    textDecoration: 'none',
-                    borderBottom: '1px solid #f5f5f5',
-                    letterSpacing: '0.02em'
-                  }}
-                >
-                  {item}
-                </Link>
-              ))}
+              {navItems.map(item => {
+                const productLinks = megaProductTypes[item]
+                const departmentIsOpen = mobileDepartmentOpen === item
+
+                if (!productLinks) {
+                  return (
+                    <Link
+                      key={item}
+                      to={getNavPath(item)}
+                      onClick={() => setDrawerOpen(false)}
+                      style={{
+                        display: 'block', padding: '14px 20px',
+                        fontSize: '14px', fontWeight: '700',
+                        color: item === 'SELL ON GLORY' ? '#c97a9a' : '#111',
+                        textDecoration: 'none',
+                        borderBottom: '1px solid #f5f5f5',
+                        letterSpacing: '0.02em'
+                      }}
+                    >
+                      {item}
+                    </Link>
+                  )
+                }
+
+                return (
+                  <div key={item} style={{ borderBottom: '1px solid #f5f5f5' }}>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      <Link
+                        to={getNavPath(item)}
+                        onClick={() => setDrawerOpen(false)}
+                        style={{
+                          flex: 1, padding: '14px 20px',
+                          fontSize: '14px', fontWeight: '700', color: '#111',
+                          textDecoration: 'none', letterSpacing: '0.02em'
+                        }}
+                      >
+                        {item}
+                      </Link>
+                      <button
+                        type='button'
+                        onClick={() => setMobileDepartmentOpen(departmentIsOpen ? null : item)}
+                        aria-label={`${departmentIsOpen ? 'Hide' : 'Show'} ${item.toLowerCase()} product types`}
+                        aria-expanded={departmentIsOpen}
+                        style={{
+                          width: '48px', height: '48px', border: 'none', background: 'transparent',
+                          color: '#111', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
+                        }}
+                      >
+                        <FiChevronDown size={18} style={{ transform: departmentIsOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.18s ease' }} />
+                      </button>
+                    </div>
+                    {departmentIsOpen && (
+                      <div style={{ padding: '0 20px 12px', display: 'grid', gap: '2px' }}>
+                        {Object.entries(productLinks).map(([label]) => (
+                          <Link
+                            key={label}
+                            to={getMegaMenuPath(item, label)}
+                            onClick={() => setDrawerOpen(false)}
+                            style={{ padding: '9px 0', fontSize: '13px', color: '#4c4547', textDecoration: 'none' }}
+                          >
+                            {label}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
             </div>
             <div className='glory-drawer-location' style={{
               padding: '16px 20px', display: 'flex',

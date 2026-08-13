@@ -13,6 +13,8 @@
 # production
 /build
 /dist
+/.glory-build-verify
+/.glory-dev*.log
 
 # misc
 .DS_Store

@@ -34,7 +34,7 @@ const ProductsPage = () => {
   const { brand: brandRoute } = useParams()
   const [searchParams, setSearchParams] = useSearchParams()
   const [products, setProducts] = useState([])
-  const [facets, setFacets] = useState({ categories: [], brands: [] })
+  const [facets, setFacets] = useState({ categories: [], brands: [], productTypes: [] })
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 })
   const [loading, setLoading] = useState(true)
   const [catalogError, setCatalogError] = useState('')
@@ -42,6 +42,7 @@ const ProductsPage = () => {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
 
   const category = searchParams.get('category') || ''
+  const productType = searchParams.get('productType') || ''
   const query = searchParams.get('q') || ''
   const brand = brandRoute ? decodeURIComponent(brandRoute) : (searchParams.get('brand') || '')
   const priceRange = searchParams.get('price') || 'all'
@@ -66,6 +67,7 @@ const ProductsPage = () => {
           meta: 'true',
           q: query || undefined,
           category: category || undefined,
+          productType: productType || undefined,
           brand: brand || undefined,
           minPrice,
           maxPrice,
@@ -75,7 +77,7 @@ const ProductsPage = () => {
         })
         if (!active) return
         setProducts(data.items || [])
-        setFacets(data.facets || { categories: [], brands: [] })
+        setFacets(data.facets || { categories: [], brands: [], productTypes: [] })
         setPagination(data.pagination || { page: 1, pages: 1, total: 0 })
         setCatalogError('')
       } catch (error) {
@@ -86,7 +88,7 @@ const ProductsPage = () => {
     }
     fetchProducts()
     return () => { active = false }
-  }, [brand, category, page, priceRange, query, sort])
+  }, [brand, category, page, priceRange, productType, query, sort])
 
   useEffect(() => {
     document.body.style.overflow = mobileFiltersOpen ? 'hidden' : ''
@@ -112,12 +114,13 @@ const ProductsPage = () => {
 
   const activeFilterCount = [
     category,
+    productType,
     query,
     brand,
     priceRange !== 'all' ? priceRange : '',
   ].filter(Boolean).length
 
-  const pageTitle = brand || category || 'All beauty'
+  const pageTitle = brand || productType || category || 'All beauty'
 
   return (
     <div className='glory-page glory-catalog-page glory-catalog-v2'>
@@ -159,9 +162,21 @@ const ProductsPage = () => {
 
       <nav className='glory-category-rail' aria-label='Product categories'>
         <div className='glory-catalog-shell'>
-          <button className={!category ? 'active' : ''} onClick={() => updateParam('category', '')}>All beauty</button>
+          <button className={!category ? 'active' : ''} onClick={() => {
+            const next = new URLSearchParams(searchParams)
+            next.delete('category')
+            next.delete('productType')
+            next.delete('page')
+            setSearchParams(next)
+          }}>All beauty</button>
           {facets.categories.map(item => (
-            <button key={item} className={category === item ? 'active' : ''} onClick={() => updateParam('category', item)}>
+            <button key={item} className={category === item ? 'active' : ''} onClick={() => {
+              const next = new URLSearchParams(searchParams)
+              next.set('category', item)
+              next.delete('productType')
+              next.delete('page')
+              setSearchParams(next)
+            }}>
               {item}
             </button>
           ))}
@@ -216,6 +231,16 @@ const ProductsPage = () => {
               <select value={brand} onChange={event => updateParam('brand', event.target.value)}>
                 <option value=''>All brands</option>
                 {facets.brands.map(item => <option key={item} value={item}>{item}</option>)}
+              </select>
+            </label>
+          )}
+
+          {category && (
+            <label>
+              <span>Product type</span>
+              <select value={productType} onChange={event => updateParam('productType', event.target.value)}>
+                <option value=''>All {category.toLowerCase()}</option>
+                {facets.productTypes.map(item => <option key={item} value={item}>{item}</option>)}
               </select>
             </label>
           )}

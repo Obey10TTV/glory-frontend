@@ -19,7 +19,7 @@ const footerGroups = [
     links: [
       { label: 'Contact us', to: '/contact' },
       { label: 'Marketplace safety', to: '/marketplace-safety' },
-      { label: 'How Glory works', to: '/faq' },
+      { label: 'How Glory works', to: '/about' },
       { label: 'Security', to: '/security' },
       { label: 'FAQs', to: '/faq' },
     ],

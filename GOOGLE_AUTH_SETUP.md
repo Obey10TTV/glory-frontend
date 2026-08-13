@@ -17,10 +17,13 @@ The popup-based flow does not require an Authorized redirect URI.
 
 ## Environment variables
 
-Use the same Web client ID in both services:
+Add the Web client ID to Railway as `GOOGLE_CLIENT_ID`. This is the required
+setting: Glory's frontend reads the public client ID from the secure backend
+configuration before it renders the Google button.
 
-- Vercel frontend: `VITE_GOOGLE_CLIENT_ID`
-- Railway backend: `GOOGLE_CLIENT_ID`
+`VITE_GOOGLE_CLIENT_ID` on Vercel is optional. It can make the button appear
+slightly sooner, but it is not required and does not replace the Railway
+setting.
 
 After adding the variables, redeploy both services. Do not add either value to a committed `.env` file.
 

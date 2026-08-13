@@ -136,6 +136,19 @@ const ProductDetailPage = () => {
   ].filter(Boolean))]
   const displayPrice = selectedVariant?.price || product.price
   const hasReviews = Number(product.numReviews || reviews.length) > 0
+  const sellerProfile = product.seller?.sellerProfile || {}
+  const returnPolicyLabels = {
+    returns_accepted: 'Returns accepted',
+    final_sale: 'Final sale',
+    contact_seller: 'Contact seller about returns',
+    not_specified: 'Return policy not specified'
+  }
+  const responseTimeLabels = {
+    within_24_hours: 'Usually replies within 24 hours',
+    within_48_hours: 'Usually replies within 48 hours',
+    within_3_days: 'Usually replies within 3 days',
+    not_specified: 'Response time not specified'
+  }
 
   return (
     <div className='glory-page glory-product-page-v2'>
@@ -149,6 +162,17 @@ const ProductDetailPage = () => {
           <button type='button' onClick={() => navigate(`/products?category=${encodeURIComponent(product.category)}`)}>
             {product.category}
           </button>
+          {product.productType && (
+            <>
+              <FiChevronRight size={13} aria-hidden='true' />
+              <button
+                type='button'
+                onClick={() => navigate(`/products?category=${encodeURIComponent(product.category)}&productType=${encodeURIComponent(product.productType)}`)}
+              >
+                {product.productType}
+              </button>
+            </>
+          )}
           <FiChevronRight size={13} aria-hidden='true' />
           <span>{product.name}</span>
         </nav>
@@ -284,15 +308,22 @@ const ProductDetailPage = () => {
                   title: product.seller?.sellerProfile?.verificationStatus === 'verified'
                     ? 'Verified seller'
                     : 'Seller details pending',
-                  text: product.seller?.sellerProfile?.storeName || 'Identity and store details are reviewed before publishing.',
+                  text: product.seller?.sellerProfile?.verificationStatus === 'verified'
+                    ? 'Identity, business details and account security were reviewed by Glory.'
+                    : 'Review the seller information and ask questions before agreeing a deal.',
                 },
                 {
                   Icon: FiShield,
-                  title: product.listingEvidence?.status === 'reviewed' ? 'Listing evidence reviewed' : 'Listing under review',
+                  title: product.listingEvidence?.status === 'reviewed' ? 'Documents checked' : 'Listing under review',
                   text: product.listingEvidence?.status === 'reviewed'
-                    ? 'Packaging, label details and seller declaration were reviewed by Glory.'
+                    ? 'Source, packaging, label and compliance details were reviewed by Glory.'
                     : 'Check the listing details and ask the seller questions before you decide.',
                 },
+                ...(product.listingEvidence?.brandAuthorisationStatus === 'authorised' ? [{
+                  Icon: FiShield,
+                  title: 'Brand authorised',
+                  text: 'The seller relationship or authorisation evidence was checked by Glory.',
+                }] : []),
                 {
                   Icon: FiAlertTriangle,
                   title: 'Keep the deal safe',
@@ -374,6 +405,22 @@ const ProductDetailPage = () => {
                   <div>
                     <h2>How to use</h2>
                     <p>{product.howToUse}</p>
+                  </div>
+                </section>
+              )}
+
+              {(sellerProfile.returnPolicy !== 'not_specified' || sellerProfile.returnPolicyDetail || sellerProfile.responseTimeCommitment !== 'not_specified') && (
+                <section>
+                  <span>05</span>
+                  <div>
+                    <h2>Seller commitments</h2>
+                    <dl>
+                      <dt>Returns</dt>
+                      <dd>{returnPolicyLabels[sellerProfile.returnPolicy] || returnPolicyLabels.not_specified}</dd>
+                      {sellerProfile.returnPolicyDetail && <><dt>Policy details</dt><dd>{sellerProfile.returnPolicyDetail}</dd></>}
+                      <dt>Response time</dt>
+                      <dd>{responseTimeLabels[sellerProfile.responseTimeCommitment] || responseTimeLabels.not_specified}</dd>
+                    </dl>
                   </div>
                 </section>
               )}

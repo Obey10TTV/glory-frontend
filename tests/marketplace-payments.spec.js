@@ -10,6 +10,7 @@ const seller = {
   isEmailVerified: true,
   twoFactorEnabled: true,
   sellerProfile: {
+    brandName: 'Ava Beauty',
     storeName: 'Ava Beauty',
     businessEmail: 'seller@example.com',
     phone: '+44 7700 900000',
@@ -42,6 +43,7 @@ const approvedListing = {
   name: 'Barrier Repair Serum',
   brand: 'Ava Beauty',
   category: 'Skincare',
+  productType: 'Serum',
   image: 'https://images.pexels.com/photos/4041392/pexels-photo-4041392.jpeg',
   price: 24,
   countInStock: 8,
@@ -134,4 +136,65 @@ test('legacy checkout route redirects buyers to listings', async ({ page }) => {
 
   await expect(page).toHaveURL(/\/products$/)
   await expect(page.getByRole('heading', { name: /Beauty/i }).first()).toBeVisible()
+})
+
+test('seller brands and controlled product types appear in the catalogue structure', async ({ page }) => {
+  const conditionerListing = {
+    ...approvedListing,
+    _id: 'conditioner-listing',
+    name: 'Daily Moisture Conditioner',
+    category: 'Haircare',
+    productType: 'Conditioner',
+  }
+
+  await page.route('**/api/**', async (route) => {
+    const pathname = new URL(route.request().url()).pathname
+    let body = {}
+    if (pathname.endsWith('/users/csrf')) body = { csrfToken: 'marketplace-test-token' }
+    if (pathname.endsWith('/products')) {
+      body = {
+        items: [conditionerListing],
+        pagination: { page: 1, pages: 1, total: 1 },
+        facets: { categories: ['Haircare'], brands: ['Ava Beauty'], productTypes: ['Conditioner'] },
+      }
+    }
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(body),
+    })
+  })
+
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/products?category=Haircare&productType=Conditioner', { waitUntil: 'domcontentloaded' })
+
+  await expect(page.getByRole('heading', { name: 'Conditioner' })).toBeVisible({ timeout: 15000 })
+  await expect(page.getByLabel('Product type')).toHaveValue('Conditioner')
+  await expect(page.getByText('Daily Moisture Conditioner', { exact: true })).toBeVisible()
+  await expect(page.getByLabel('Brand').locator('option[value="Ava Beauty"]')).toHaveCount(1)
+})
+
+test('haircare navigation routes conditioners to the structured catalogue filter', async ({ page }) => {
+  await installApiMocks(page, customer)
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+
+  await page.locator('.glory-navbar-desktop-links').getByRole('link', { name: 'HAIRCARE' }).hover()
+  await expect(page.getByRole('link', { name: 'Conditioners' })).toHaveAttribute(
+    'href',
+    '/products?category=Haircare&productType=Conditioner'
+  )
+})
+
+test('mobile navigation exposes the conditioner catalogue route', async ({ page }) => {
+  await installApiMocks(page, customer)
+  await page.setViewportSize({ width: 375, height: 667 })
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+
+  await page.getByRole('button', { name: 'Open navigation menu' }).click()
+  await page.getByRole('button', { name: 'Show haircare product types' }).click()
+  await expect(page.getByRole('link', { name: 'Conditioners' })).toHaveAttribute(
+    'href',
+    '/products?category=Haircare&productType=Conditioner'
+  )
 })

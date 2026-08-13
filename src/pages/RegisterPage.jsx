@@ -28,6 +28,7 @@ const RegisterPage = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [brandName, setBrandName] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isSeller, setIsSeller] = useState(false)
@@ -58,13 +59,21 @@ const RegisterPage = () => {
   }
 
   const handleGoogleCredential = async (credential) => {
+    if (isSeller && brandName.trim().length < 2) {
+      setError('Add your brand name before creating a seller account with Google.')
+      return
+    }
     setGoogleCredential(credential)
     setLoading(true)
     setError('')
     setSuccess('')
 
     try {
-      const { data } = await authenticateWithGoogle({ credential, isSeller })
+      const { data } = await authenticateWithGoogle({
+        credential,
+        isSeller,
+        brandName: isSeller ? brandName.trim() : undefined
+      })
       handleAuthResponse(data)
     } catch (err) {
       const data = err.response?.data
@@ -114,13 +123,23 @@ const RegisterPage = () => {
       setError('Use at least 10 characters with uppercase, lowercase, a number and a special character')
       return
     }
+    if (isSeller && brandName.trim().length < 2) {
+      setError('Add your brand name before creating a seller account.')
+      return
+    }
 
     setLoading(true)
     setError('')
     setSuccess('')
 
     try {
-      const { data } = await registerUser({ name, email, password, isSeller })
+      const { data } = await registerUser({
+        name,
+        email,
+        password,
+        isSeller,
+        brandName: isSeller ? brandName.trim() : undefined
+      })
 
       if (data.requiresEmailVerification) {
         setPendingVerification({ type: 'email', email: data.email, isSeller: data.isSeller })
@@ -328,9 +347,25 @@ const RegisterPage = () => {
               </div>
             </div>
 
+            {isSeller && (
+              <div>
+                <label style={labelStyle}>Brand name</label>
+                <input
+                  type='text'
+                  value={brandName}
+                  onChange={event => setBrandName(event.target.value)}
+                  placeholder='e.g. Glow Lab Beauty'
+                  autoComplete='organization'
+                  style={inputStyle}
+                  required
+                />
+                <div className='glory-form-help'>This is the brand buyers will see on listings and in filters. You can edit it later in Seller Dashboard.</div>
+              </div>
+            )}
+
             <GoogleSignInButton
               text='signup_with'
-              disabled={loading}
+              disabled={loading || (isSeller && brandName.trim().length < 2)}
               onCredential={handleGoogleCredential}
               onError={setError}
             />
@@ -407,7 +442,7 @@ const RegisterPage = () => {
                   You're signing up as a seller.
                 </div>
                 <div style={{ fontSize: '11px', color: '#888', lineHeight: '1.6' }}>
-                  After email verification, complete your seller profile and product review steps.
+                  After email verification, complete your seller profile and product review steps. Your brand name is used for your public listings.
                 </div>
               </div>
             )}

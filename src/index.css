@@ -2228,12 +2228,12 @@ select:focus-visible,
   display: grid;
   align-content: start;
   gap: 7px;
-  min-height: 148px;
+  min-height: 198px;
   padding: 16px;
   border: 1px solid #e4e4e1;
   border-radius: 9px;
   background: #fafaf9;
-  cursor: pointer;
+  cursor: default;
   overflow: hidden;
 }
 
@@ -2245,6 +2245,33 @@ select:focus-visible,
 .glory-seller-document-card small.is-rejected { color: #b42318; }
 .glory-seller-document-card em { color: #b42318; font-size: 10px; line-height: 1.5; }
 .glory-seller-document-card input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.glory-seller-document-kind {
+  width: 100%;
+  min-height: 34px;
+  padding: 7px 30px 7px 9px;
+  border: 1px solid #ddd8d4;
+  border-radius: 6px;
+  color: #35302d;
+  background: #fff;
+  font: inherit;
+  font-size: 11px;
+}
+.glory-seller-document-upload {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid #211d1b;
+  border-radius: 6px;
+  color: #211d1b;
+  background: #fff;
+  cursor: pointer;
+}
+.glory-seller-document-upload:hover { background: #211d1b; }
+.glory-seller-document-upload:hover span { color: #fff; }
+.glory-seller-document-upload span { color: #211d1b; font-size: 11px; font-weight: 700; }
 
 .glory-seller-order-list { display: grid; gap: 12px; padding: 18px; }
 

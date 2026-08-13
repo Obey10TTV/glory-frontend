@@ -40,8 +40,10 @@ import {
   FiXCircle
 } from 'react-icons/fi'
 import { formatCurrency } from '../utils/currency'
+import { categoryProductTypes, productTypesForCategory } from '../utils/catalogTaxonomy'
 
 const emptySellerProfile = {
+  brandName: '',
   storeName: '',
   bio: '',
   businessEmail: '',
@@ -51,6 +53,11 @@ const emptySellerProfile = {
   country: 'United Kingdom',
   website: '',
   instagram: '',
+  businessType: 'independent_seller',
+  taxStatus: 'not_registered',
+  returnPolicy: 'not_specified',
+  returnPolicyDetail: '',
+  responseTimeCommitment: 'not_specified',
   acceptedPaymentMethods: ['card'],
   activationStatus: 'unpaid',
   payoutStatus: 'not_started',
@@ -78,9 +85,21 @@ const emptySellerPayments = {
 const emptyListingEvidence = {
   condition: 'new_sealed',
   batchCode: '',
+  expiryOrPao: '',
+  supplierInvoiceAvailable: false,
+  supplierInvoiceReference: '',
+  safetyDocumentationAvailable: false,
   responsiblePersonName: '',
   packagingPhotosConfirmed: false,
   declarationAccepted: false
+}
+
+const defaultDocumentKinds = {
+  identity: 'passport',
+  business: 'company_registration',
+  tax: 'tax_registration',
+  address: 'utility_bill',
+  insurance: 'product_liability'
 }
 
 const priceGuidance = {
@@ -111,6 +130,7 @@ const SellerDashboardPage = () => {
   const [selectedPromotionListingId, setSelectedPromotionListingId] = useState('')
   const [paymentAction, setPaymentAction] = useState('')
   const [documentUploading, setDocumentUploading] = useState('')
+  const [documentKinds, setDocumentKinds] = useState(defaultDocumentKinds)
 
   const [name, setName] = useState('')
   const [price, setPrice] = useState('')
@@ -133,11 +153,7 @@ const SellerDashboardPage = () => {
   const [variants, setVariants] = useState([])
   const [listingEvidence, setListingEvidence] = useState({ ...emptyListingEvidence })
 
-  const categories = [
-    'Skincare', 'Haircare', 'Makeup', 'Nails', 'Lashes',
-    'Body Care', 'Body Liquid', 'Fragrance', 'Scented Candles',
-    'Tools & Accessories'
-  ]
+  const categories = Object.keys(categoryProductTypes)
 
   const normalizeSellerProfile = (profile = {}) => ({
     ...emptySellerProfile,
@@ -310,7 +326,7 @@ const SellerDashboardPage = () => {
     setHowToUse('')
     setKeyBenefits('')
     setCategory('')
-    setBrand('')
+    setBrand(sellerProfile.brandName || sellerProfile.storeName || '')
     setCountInStock('')
     setLowStockThreshold('5')
     setImage('')
@@ -330,6 +346,7 @@ const SellerDashboardPage = () => {
       return
     }
     resetProductForm()
+    setBrand(sellerProfile.brandName || sellerProfile.storeName || '')
     setError('')
     setShowProductForm(true)
   }
@@ -349,7 +366,7 @@ const SellerDashboardPage = () => {
     setHowToUse(product.howToUse || '')
     setKeyBenefits((product.keyBenefits || []).join('\n'))
     setCategory(product.category || '')
-    setBrand(product.brand || '')
+    setBrand(sellerProfile.brandName || product.brand || '')
     setCountInStock(String(product.countInStock || 0))
     setLowStockThreshold(String(product.lowStockThreshold ?? 5))
     setImage(product.image || '')
@@ -366,6 +383,10 @@ const SellerDashboardPage = () => {
       ...emptyListingEvidence,
       condition: product.listingEvidence?.condition || emptyListingEvidence.condition,
       batchCode: product.listingEvidence?.batchCode || '',
+      expiryOrPao: product.listingEvidence?.expiryOrPao || '',
+      supplierInvoiceAvailable: Boolean(product.listingEvidence?.supplierInvoiceAvailable),
+      supplierInvoiceReference: product.listingEvidence?.supplierInvoiceReference || '',
+      safetyDocumentationAvailable: Boolean(product.listingEvidence?.safetyDocumentationAvailable),
       responsiblePersonName: product.listingEvidence?.responsiblePersonName || '',
       packagingPhotosConfirmed: Boolean(product.listingEvidence?.packagingPhotosConfirmed),
       declarationAccepted: Boolean(product.listingEvidence?.declarationAccepted)
@@ -429,14 +450,20 @@ const SellerDashboardPage = () => {
     const numericCompareAtPrice = compareAtPrice ? Number(compareAtPrice) : undefined
     const numericStock = Number(countInStock)
     const numericLowStockThreshold = Number(lowStockThreshold)
+    const isCosmeticListing = !['Scented Candles', 'Tools & Accessories'].includes(category)
+    const listingBrand = sellerProfile.brandName.trim() || sellerProfile.storeName.trim()
 
     const benefitList = keyBenefits.split('\n').map(item => item.trim()).filter(Boolean).slice(0, 8)
-    if (!name || !price || description.trim().length < 40 || !category || !brand || !productType || !countryOfOrigin || countInStock === '' || !image || images.length < 1 || benefitList.length < 2) {
+    if (!name || !price || description.trim().length < 40 || !category || !listingBrand || !productType || !countryOfOrigin || countInStock === '' || !image || images.length < 1 || benefitList.length < 2) {
       return { error: 'Complete the required listing details, add two benefits, and upload a primary plus gallery image.' }
     }
 
-    if (!listingEvidence.batchCode.trim() || !listingEvidence.responsiblePersonName.trim() || !listingEvidence.packagingPhotosConfirmed || !listingEvidence.declarationAccepted) {
-      return { error: 'Add the packaging batch or lot code, the named Responsible Person or brand, and both evidence confirmations before submitting.' }
+    if (!listingEvidence.batchCode.trim() || !listingEvidence.responsiblePersonName.trim() || !listingEvidence.supplierInvoiceAvailable || !listingEvidence.packagingPhotosConfirmed || !listingEvidence.declarationAccepted) {
+      return { error: 'Add the batch or lot code, named Responsible Person, source confirmation and required evidence confirmations before submitting.' }
+    }
+
+    if (isCosmeticListing && (!listingEvidence.expiryOrPao.trim() || !listingEvidence.safetyDocumentationAvailable)) {
+      return { error: 'For cosmetics, add the expiry or PAO information and confirm that safety or compliance information can be provided for review.' }
     }
 
     if (numericPrice <= 0 || numericStock < 0 || numericLowStockThreshold < 0) {
@@ -462,7 +489,7 @@ const SellerDashboardPage = () => {
         howToUse,
         keyBenefits: benefitList,
         category,
-        brand,
+        brand: listingBrand,
         countInStock: numericStock,
         lowStockThreshold: numericLowStockThreshold,
         image,
@@ -470,6 +497,10 @@ const SellerDashboardPage = () => {
         listingEvidence: {
           condition: listingEvidence.condition,
           batchCode: listingEvidence.batchCode.trim(),
+          expiryOrPao: listingEvidence.expiryOrPao.trim(),
+          supplierInvoiceAvailable: listingEvidence.supplierInvoiceAvailable,
+          supplierInvoiceReference: listingEvidence.supplierInvoiceReference.trim(),
+          safetyDocumentationAvailable: listingEvidence.safetyDocumentationAvailable,
           responsiblePersonName: listingEvidence.responsiblePersonName.trim(),
           packagingPhotosConfirmed: listingEvidence.packagingPhotosConfirmed,
           declarationAccepted: listingEvidence.declarationAccepted
@@ -539,6 +570,7 @@ const SellerDashboardPage = () => {
     try {
       const formData = new FormData()
       formData.append('type', type)
+      formData.append('kind', documentKinds[type])
       formData.append('document', file)
       await uploadSellerDocument(formData)
       const { data } = await getUserProfile()
@@ -662,9 +694,65 @@ const SellerDashboardPage = () => {
       && twoFactorEnabled)
   )
   const documentRequirements = [
-    { type: 'identity', label: 'Government ID', help: 'Passport, UK driving licence, or accepted national photo ID.' },
-    { type: 'business', label: 'Business document', help: 'Registration, incorporation, or sole proprietor record.' },
-    { type: 'address', label: 'Proof of address', help: 'Recent utility, bank, or official address statement.' }
+    {
+      type: 'identity',
+      label: 'Government photo ID',
+      help: 'Passport, national ID, biometric residence permit, driving licence, or another accepted government photo ID.',
+      required: true,
+      options: [
+        ['passport', 'Passport'],
+        ['national_id', 'National ID / NIN card'],
+        ['biometric_residence_permit', 'Biometric residence permit'],
+        ['driving_licence', 'Driving licence'],
+        ['other_government_id', 'Other government photo ID']
+      ]
+    },
+    {
+      type: 'business',
+      label: 'Business evidence',
+      help: 'Use a registration record, reseller document, or sole-trader declaration. Early-stage sellers can use the declaration.',
+      required: true,
+      options: [
+        ['company_registration', 'Company registration'],
+        ['sole_trader_declaration', 'Sole-trader declaration'],
+        ['marketplace_reseller_document', 'Reseller / supplier document'],
+        ['other_business_document', 'Other business evidence']
+      ]
+    },
+    {
+      type: 'address',
+      label: 'Proof of address',
+      help: 'Recent utility bill, bank statement, government letter, or another official address document.',
+      required: true,
+      options: [
+        ['utility_bill', 'Utility bill'],
+        ['bank_statement', 'Bank statement'],
+        ['government_letter', 'Government letter'],
+        ['other_address_document', 'Other address evidence']
+      ]
+    },
+    ...(sellerProfile.taxStatus === 'registered' ? [{
+      type: 'tax',
+      label: 'Tax registration',
+      help: 'Required because this seller profile is registered for tax or VAT.',
+      required: true,
+      options: [
+        ['tax_registration', 'Tax registration'],
+        ['vat_registration', 'VAT registration'],
+        ['tax_status_declaration', 'Tax status declaration']
+      ]
+    }] : []),
+    {
+      type: 'insurance',
+      label: 'Insurance evidence',
+      help: 'Optional today, but helpful for higher-risk or high-volume product categories.',
+      required: false,
+      options: [
+        ['product_liability', 'Product liability insurance'],
+        ['public_liability', 'Public liability insurance'],
+        ['other_insurance_document', 'Other insurance document']
+      ]
+    }
   ]
   const sellerDocuments = sellerProfile.documents || []
   return (
@@ -758,12 +846,28 @@ const SellerDashboardPage = () => {
 
             <div className='glory-form-grid'>
               <div>
+                <label style={labelStyle}>Brand Name</label>
+                <input value={sellerProfile.brandName} onChange={event => handleProfileChange('brandName', event.target.value)} placeholder='e.g. Glow Lab' style={inputStyle} />
+                <div className='glory-form-help'>Used on your listings and as the buyer-facing brand filter.</div>
+              </div>
+              <div>
                 <label style={labelStyle}>Store Name</label>
                 <input value={sellerProfile.storeName} onChange={event => handleProfileChange('storeName', event.target.value)} placeholder='e.g. Glow Lab Beauty' style={inputStyle} />
               </div>
+            </div>
+
+            <div className='glory-form-grid'>
               <div>
                 <label style={labelStyle}>Business Email</label>
                 <input value={sellerProfile.businessEmail} onChange={event => handleProfileChange('businessEmail', event.target.value)} placeholder='store@example.com' type='email' style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>Business Structure</label>
+                <select value={sellerProfile.businessType} onChange={event => handleProfileChange('businessType', event.target.value)} style={inputStyle}>
+                  <option value='independent_seller'>Independent seller</option>
+                  <option value='sole_trader'>Sole trader</option>
+                  <option value='registered_business'>Registered business</option>
+                </select>
               </div>
             </div>
 
@@ -812,11 +916,53 @@ const SellerDashboardPage = () => {
               </div>
             </div>
 
+            <div className='glory-form-grid'>
+              <div>
+                <label style={labelStyle}>Tax Status</label>
+                <select value={sellerProfile.taxStatus} onChange={event => handleProfileChange('taxStatus', event.target.value)} style={inputStyle}>
+                  <option value='not_registered'>Not registered yet</option>
+                  <option value='registered'>Registered for tax or VAT</option>
+                  <option value='not_applicable'>Not applicable to my business</option>
+                </select>
+                <div className='glory-form-help'>Tax evidence is only requested when you select a registered status.</div>
+              </div>
+              <div>
+                <label style={labelStyle}>Buyer Response Commitment</label>
+                <select value={sellerProfile.responseTimeCommitment} onChange={event => handleProfileChange('responseTimeCommitment', event.target.value)} style={inputStyle}>
+                  <option value='not_specified'>Not specified</option>
+                  <option value='within_24_hours'>Within 24 hours</option>
+                  <option value='within_48_hours'>Within 48 hours</option>
+                  <option value='within_3_days'>Within 3 days</option>
+                </select>
+              </div>
+            </div>
+
+            <div className='glory-form-grid'>
+              <div>
+                <label style={labelStyle}>Return Policy</label>
+                <select value={sellerProfile.returnPolicy} onChange={event => handleProfileChange('returnPolicy', event.target.value)} style={inputStyle}>
+                  <option value='not_specified'>Not specified</option>
+                  <option value='returns_accepted'>Returns accepted</option>
+                  <option value='contact_seller'>Contact me about returns</option>
+                  <option value='final_sale'>Final sale</option>
+                </select>
+              </div>
+              <div>
+                <label style={labelStyle}>Return Policy Details</label>
+                <input value={sellerProfile.returnPolicyDetail} onChange={event => handleProfileChange('returnPolicyDetail', event.target.value)} placeholder='e.g. Returns accepted within 14 days, unopened.' maxLength={500} style={inputStyle} />
+              </div>
+            </div>
+
+            <div className='glory-dashboard-callout'>
+              <strong>Keep financial verification with the regulated provider.</strong>
+              <span>When Glory enables payout onboarding, account ownership and bank-name matching happen with the payment provider. Never add bank account, passport, or national-ID numbers to profile fields.</span>
+            </div>
+
             <div className='glory-seller-documents'>
               <div className='glory-seller-documents-heading'>
                 <div>
                   <strong>Private verification documents</strong>
-                  <span>Accepted files: PDF, JPG, PNG, or WebP up to 8 MB.</span>
+                  <span>Accepted files: PDF, JPG, PNG, or WebP up to 8 MB. Never type ID, passport, NIN, or bank numbers into Glory.</span>
                 </div>
                 <FiShield size={20} />
               </div>
@@ -824,23 +970,40 @@ const SellerDashboardPage = () => {
                 {documentRequirements.map(requirement => {
                   const document = sellerDocuments.find(item => item.type === requirement.type)
                   return (
-                    <label key={requirement.type} className='glory-seller-document-card'>
+                    <div key={requirement.type} className='glory-seller-document-card'>
                       <FiFileText size={20} />
-                      <strong>{requirement.label}</strong>
+                      <strong>{requirement.label}{requirement.required ? '' : ' (optional)'}</strong>
                       <span>{document?.originalName || requirement.help}</span>
+                      <select
+                        className='glory-seller-document-kind'
+                        value={documentKinds[requirement.type]}
+                        onChange={event => setDocumentKinds(current => ({
+                          ...current,
+                          [requirement.type]: event.target.value
+                        }))}
+                        aria-label={`${requirement.label} document kind`}
+                        disabled={Boolean(documentUploading)}
+                      >
+                        {requirement.options.map(([value, label]) => (
+                          <option key={value} value={value}>{label}</option>
+                        ))}
+                      </select>
                       <small className={`is-${document?.status || 'missing'}`}>
                         {documentUploading === requirement.type
                           ? 'Uploading...'
-                          : document?.status || 'Required'}
+                          : document?.status || (requirement.required ? 'Required' : 'Optional')}
                       </small>
                       {document?.note && <em>{document.note}</em>}
-                      <input
-                        type='file'
-                        accept='.pdf,image/jpeg,image/png,image/webp'
-                        disabled={Boolean(documentUploading)}
-                        onChange={event => handleDocumentUpload(requirement.type, event.target.files?.[0])}
-                      />
-                    </label>
+                      <label className='glory-seller-document-upload'>
+                        <span>{document ? 'Replace document' : 'Choose document'}</span>
+                        <input
+                          type='file'
+                          accept='.pdf,image/jpeg,image/png,image/webp'
+                          disabled={Boolean(documentUploading)}
+                          onChange={event => handleDocumentUpload(requirement.type, event.target.files?.[0])}
+                        />
+                      </label>
+                    </div>
                   )
                 })}
               </div>
@@ -1146,7 +1309,7 @@ const SellerDashboardPage = () => {
 
               <fieldset className='glory-listing-evidence-form'>
                 <legend>Evidence for Glory review</legend>
-                <p>Only Glory reviewers can see the batch or lot code and Responsible Person details. Use the gallery for clear front, back and label photos.</p>
+                <p>These private fields support the listing review. Use the gallery for clear front, back, ingredient, barcode and label photos. Never put invoice numbers or identity documents in public images.</p>
                 <div className='glory-form-grid'>
                   <div>
                     <label style={labelStyle} htmlFor='listing-condition'>Product condition</label>
@@ -1173,6 +1336,31 @@ const SellerDashboardPage = () => {
                     />
                   </div>
                 </div>
+                <div className='glory-form-grid'>
+                  <div>
+                    <label style={labelStyle} htmlFor='listing-expiry'>Expiry or PAO</label>
+                    <input
+                      id='listing-expiry'
+                      value={listingEvidence.expiryOrPao}
+                      onChange={event => setListingEvidence(current => ({ ...current, expiryOrPao: event.target.value }))}
+                      placeholder='e.g. 12M after opening or 2027-05'
+                      maxLength={80}
+                      style={inputStyle}
+                    />
+                    <div className='glory-form-help'>Required for cosmetics; use the expiry date or period-after-opening mark.</div>
+                  </div>
+                  <div>
+                    <label style={labelStyle} htmlFor='listing-invoice-reference'>Supplier invoice reference (private)</label>
+                    <input
+                      id='listing-invoice-reference'
+                      value={listingEvidence.supplierInvoiceReference}
+                      onChange={event => setListingEvidence(current => ({ ...current, supplierInvoiceReference: event.target.value }))}
+                      placeholder='Optional internal reference'
+                      maxLength={160}
+                      style={inputStyle}
+                    />
+                  </div>
+                </div>
                 <div>
                   <label style={labelStyle} htmlFor='listing-responsible-person'>Responsible Person or brand</label>
                   <input
@@ -1182,8 +1370,26 @@ const SellerDashboardPage = () => {
                     placeholder='Name printed on the product packaging'
                     maxLength={160}
                     style={inputStyle}
-                  />
+                    />
                 </div>
+                <label className='glory-listing-evidence-check'>
+                  <input
+                    type='checkbox'
+                    checked={listingEvidence.supplierInvoiceAvailable}
+                    onChange={event => setListingEvidence(current => ({ ...current, supplierInvoiceAvailable: event.target.checked }))}
+                  />
+                  <span>I can provide a supplier invoice, receipt, or other proof of source if Glory asks.</span>
+                </label>
+                {!['Scented Candles', 'Tools & Accessories'].includes(category) && (
+                  <label className='glory-listing-evidence-check'>
+                    <input
+                      type='checkbox'
+                      checked={listingEvidence.safetyDocumentationAvailable}
+                      onChange={event => setListingEvidence(current => ({ ...current, safetyDocumentationAvailable: event.target.checked }))}
+                    />
+                    <span>I can provide safety, labelling, responsible-person, or compliance information if Glory asks.</span>
+                  </label>
+                )}
                 <label className='glory-listing-evidence-check'>
                   <input
                     type='checkbox'
@@ -1209,7 +1415,8 @@ const SellerDashboardPage = () => {
                 </div>
                 <div>
                   <label style={labelStyle}>Brand</label>
-                  <input value={brand} onChange={event => setBrand(event.target.value)} placeholder='e.g. Glow Lab' style={inputStyle} />
+                  <input value={brand} readOnly placeholder='Set your brand in Store Setup' style={inputStyle} />
+                  <div className='glory-form-help'>Managed from Store Setup so buyers always see the verified seller brand.</div>
                 </div>
               </div>
 
@@ -1217,6 +1424,7 @@ const SellerDashboardPage = () => {
                 <div>
                   <label style={labelStyle}>Price (GBP)</label>
                   <input value={price} onChange={event => setPrice(event.target.value)} placeholder='e.g. 18' type='number' min='0' step='0.01' style={inputStyle} />
+                  <div className='glory-form-help'>You set the final selling price. Glory does not change it.</div>
                 </div>
                 <div>
                   <label style={labelStyle}>Stock Quantity</label>
@@ -1249,7 +1457,15 @@ const SellerDashboardPage = () => {
               <div className='glory-form-grid'>
                 <div>
                   <label style={labelStyle}>Product Type</label>
-                  <input value={productType} onChange={event => setProductType(event.target.value)} placeholder='e.g. Leave-in conditioner' maxLength={100} style={inputStyle} />
+                  <select value={productType} onChange={event => setProductType(event.target.value)} disabled={!category} style={inputStyle}>
+                    <option value=''>{category ? 'Select product type' : 'Select category first'}</option>
+                    {productType && !productTypesForCategory(category).includes(productType) && (
+                      <option value={productType}>{productType} (update type)</option>
+                    )}
+                    {productTypesForCategory(category).map(type => (
+                      <option key={type} value={type}>{type}</option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label style={labelStyle}>Country of Origin</label>
@@ -1272,7 +1488,10 @@ const SellerDashboardPage = () => {
               <div className='glory-form-grid'>
                 <div>
                   <label style={labelStyle}>Category</label>
-                  <select value={category} onChange={event => setCategory(event.target.value)} style={inputStyle}>
+                  <select value={category} onChange={event => {
+                    setCategory(event.target.value)
+                    setProductType('')
+                  }} style={inputStyle}>
                     <option value=''>Select category</option>
                     {categories.map(cat => (
                       <option key={cat} value={cat}>{cat}</option>

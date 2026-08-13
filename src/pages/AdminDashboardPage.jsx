@@ -176,13 +176,16 @@ const AdminDashboardPage = () => {
     }
   }
 
-  const handleProductStatus = async (id, approvalStatus) => {
+  const handleProductStatus = async (product, approvalStatus) => {
     const rejectionReason = approvalStatus === 'rejected'
       ? window.prompt('Reason for rejection:', 'Please improve the product photo or listing details.')
       : ''
     if (rejectionReason === null) return
+    const brandAuthorisationChecked = approvalStatus === 'approved'
+      ? window.confirm('Have you reviewed evidence that this seller is authorised to represent this brand? Choose Cancel when that evidence was not provided.')
+      : false
     try {
-      await updateProductStatus(id, { approvalStatus, rejectionReason })
+      await updateProductStatus(product._id, { approvalStatus, rejectionReason, brandAuthorisationChecked })
       await refreshAfter(`Product ${approvalStatus}`)
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to update product status')
@@ -357,7 +360,7 @@ const AdminDashboardPage = () => {
               <OrdersTable orders={filteredOrders} onCancellation={handleCancellation} onDispute={handleDispute} onNote={handleOrderNote} />
             )}
             {activeTab === 'products' && (
-              <ProductsTable products={filteredProducts} onApprove={id => handleProductStatus(id, 'approved')} onReject={id => handleProductStatus(id, 'rejected')} onDelete={handleDeleteProduct} />
+              <ProductsTable products={filteredProducts} onApprove={product => handleProductStatus(product, 'approved')} onReject={product => handleProductStatus(product, 'rejected')} onDelete={handleDeleteProduct} />
             )}
             {activeTab === 'reports' && <ReportsTable reports={filteredReports} onReview={handleListingReport} />}
             {activeTab === 'users' && (
@@ -476,13 +479,13 @@ const ProductsTable = ({ products, onApprove, onReject, onDelete }) => (
         const quality = productQuality(product)
         const lowStock = product.countInStock <= (product.lowStockThreshold ?? 5)
         return <tr key={product._id}>
-          <td><div className='glory-dashboard-product-cell'><img src={product.image} alt='' loading='lazy' width='48' height='48' /><div><strong>{product.name}</strong><span>{product.brand} · {product.category}</span></div></div></td>
+          <td><div className='glory-dashboard-product-cell'><img src={product.image} alt='' loading='lazy' width='48' height='48' /><div><strong>{product.name}</strong><span>{product.brand} · {product.category}{product.productType ? ` · ${product.productType}` : ''}</span></div></div></td>
           <td><div className='glory-dashboard-seller-cell'><strong>{product.seller?.sellerProfile?.storeName || product.seller?.name || 'Admin'}</strong><span>{product.seller?.email || 'Platform product'}</span></div></td>
           <td><strong>{formatCurrency(product.price)}</strong></td>
           <td><span className={lowStock ? 'glory-low-stock' : ''}>{product.countInStock} / alert at {product.lowStockThreshold ?? 5}</span></td>
           <td><span className={`glory-quality-score is-${quality >= 80 ? 'good' : quality >= 50 ? 'fair' : 'poor'}`}>{quality}%</span></td>
           <td><span className='glory-status-chip'>{product.approvalStatus || 'pending'}</span></td>
-          <td><div className='glory-table-actions'>{product.approvalStatus !== 'approved' && <button onClick={() => onApprove(product._id)} className='success' aria-label={`Approve ${product.name}`}><FiCheckCircle /></button>}{product.approvalStatus !== 'rejected' && <button onClick={() => onReject(product._id)} className='warning' aria-label={`Reject ${product.name}`}><FiXCircle /></button>}<button onClick={() => onDelete(product._id)} className='danger' aria-label={`Delete ${product.name}`}><FiTrash2 /></button></div></td>
+          <td><div className='glory-table-actions'>{product.approvalStatus !== 'approved' && <button onClick={() => onApprove(product)} className='success' aria-label={`Approve ${product.name}`}><FiCheckCircle /></button>}{product.approvalStatus !== 'rejected' && <button onClick={() => onReject(product)} className='warning' aria-label={`Reject ${product.name}`}><FiXCircle /></button>}<button onClick={() => onDelete(product._id)} className='danger' aria-label={`Delete ${product.name}`}><FiTrash2 /></button></div></td>
         </tr>
       })}</tbody>
     </table></div>
@@ -528,7 +531,7 @@ const UsersTable = ({ users, orders, products, currentUserId, onDelete, onMakeSe
           <td>{account.isAdmin ? 'Admin' : account.isSeller ? 'Seller' : 'Buyer'}</td>
           <td>{orderCount} orders<br />{listingCount} listings</td>
           <td><span className='glory-status-chip'>{account.isSeller ? account.sellerProfile?.verificationStatus || 'incomplete' : account.isEmailVerified === false ? 'email pending' : 'verified email'}</span></td>
-          <td>{account.sellerProfile?.documents?.length ? <div className='glory-admin-documents'>{account.sellerProfile.documents.map(document => <div key={document._id} className={`is-${document.status}`}><button type='button' onClick={() => onOpenDocument(account._id, document._id)} title={`Open ${document.type}`}><FiFileText /> {document.type}</button>{document.status !== 'approved' && <button type='button' onClick={() => onDocumentStatus(account._id, document._id, 'approved')} aria-label={`Approve ${document.type}`}><FiCheckCircle /></button>}{document.status !== 'rejected' && <button type='button' onClick={() => onDocumentStatus(account._id, document._id, 'rejected')} aria-label={`Reject ${document.type}`}><FiXCircle /></button>}</div>)}</div> : 'None'}</td>
+          <td>{account.sellerProfile?.documents?.length ? <div className='glory-admin-documents'>{account.sellerProfile.documents.map(document => <div key={document._id} className={`is-${document.status}`}><button type='button' onClick={() => onOpenDocument(account._id, document._id)} title={`Open ${document.type}`}><FiFileText /> {document.type}{document.kind ? ` · ${document.kind.replaceAll('_', ' ')}` : ''}</button>{document.status !== 'approved' && <button type='button' onClick={() => onDocumentStatus(account._id, document._id, 'approved')} aria-label={`Approve ${document.type}`}><FiCheckCircle /></button>}{document.status !== 'rejected' && <button type='button' onClick={() => onDocumentStatus(account._id, document._id, 'rejected')} aria-label={`Reject ${document.type}`}><FiXCircle /></button>}</div>)}</div> : 'None'}</td>
           <td>{account.privacy?.deletionStatus === 'pending' ? <span className='glory-privacy-request'>Deletion requested</span> : 'None'}</td>
           <td>{account._id !== currentUserId && <div className='glory-table-actions'>{!account.isSeller && <button onClick={() => onMakeSeller(account._id)} className='success' aria-label={`Make ${account.name} a seller`}><FiUserPlus /></button>}{account.isSeller && account.sellerProfile?.verificationStatus !== 'verified' && <button onClick={() => onSellerStatus(account._id, 'verified')} className='success' aria-label={`Verify ${account.name}`}><FiCheckCircle /></button>}{account.isSeller && account.sellerProfile?.verificationStatus !== 'rejected' && <button onClick={() => onSellerStatus(account._id, 'rejected')} className='warning' aria-label={`Reject ${account.name}`}><FiXCircle /></button>}<button onClick={() => onDelete(account._id)} className='danger' aria-label={`Delete ${account.name}`}><FiTrash2 /></button></div>}</td>
         </tr>
