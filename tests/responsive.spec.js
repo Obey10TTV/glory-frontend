@@ -15,6 +15,7 @@ const publicRoutes = [
   '/faq',
   '/support',
   '/marketplace-safety',
+  '/reviews-policy',
   '/careers',
   '/press',
   '/affiliates',
@@ -24,6 +25,7 @@ const publicRoutes = [
   '/seller-resources',
   '/seller-agreement',
   '/seller-pricing',
+  '/paid-promotion-terms',
   '/seller-faq',
   '/success-stories',
   '/privacy',
@@ -79,6 +81,9 @@ const sellerProfile = {
     country: 'United Kingdom',
     verificationStatus: 'verified',
     activationStatus: 'paid',
+    identityVerification: { provider: 'stripe_identity', status: 'verified' },
+    membershipPlanCode: 'starter',
+    membershipStatus: 'active',
     payoutStatus: 'active',
     acceptedPaymentMethods: ['card'],
   },
@@ -111,11 +116,11 @@ const responsiveListing = {
 }
 
 const homepagePromotionPlan = {
-  code: 'homepage_featured',
+  code: 'homepage_spotlight_7',
   placement: 'homepage_featured',
-  label: 'Homepage featured placement',
+  label: 'Homepage Spotlight',
   description: 'A clearly labelled sponsored placement.',
-  feePence: 999,
+  feePence: 8900,
   currency: 'GBP',
   durationDays: 7,
 }
@@ -182,7 +187,14 @@ const mockApiResponse = (pathname, profile) => {
   if (pathname.endsWith('/users/csrf')) return { csrfToken: 'responsive-test-token' }
   if (pathname.endsWith('/stripe/seller/status')) {
     return {
-      activation: { required: true, feePence: 2000, currency: 'GBP', status: 'paid' },
+      activation: { required: false, feePence: 4900, currency: 'GBP', status: 'paid' },
+      membership: { planCode: 'starter', status: 'active', activeListingLimit: 5, promotionDiscountBps: 0 },
+      sellerPlans: [
+        { code: 'starter', label: 'Starter', description: 'Start a verified catalogue.', feePence: 0, currency: 'GBP', interval: null, activeListingLimit: 5, promotionDiscountBps: 0, features: ['Up to 5 active listings'] },
+        { code: 'studio', label: 'Studio', description: 'For growing beauty businesses.', feePence: 5900, currency: 'GBP', interval: 'month', activeListingLimit: 50, promotionDiscountBps: 1000, features: ['Up to 50 active listings'] },
+        { code: 'scale', label: 'Scale', description: 'For established catalogues.', feePence: 14900, currency: 'GBP', interval: 'month', activeListingLimit: 200, promotionDiscountBps: 2000, features: ['Up to 200 active listings'] },
+        { code: 'partner', label: 'Brand Partner', description: 'For high-volume brands.', feePence: 39900, currency: 'GBP', interval: 'month', activeListingLimit: 750, promotionDiscountBps: 2500, features: ['Up to 750 active listings'] },
+      ],
       payouts: {
         status: 'active',
         detailsSubmitted: true,
@@ -198,6 +210,7 @@ const mockApiResponse = (pathname, profile) => {
       }],
     }
   }
+  if (pathname.endsWith('/stripe/seller/identity/status')) return { provider: 'stripe_identity', status: 'verified' }
   if (pathname.endsWith('/stripe/status')) {
     return {
       enabled: true,
@@ -240,6 +253,7 @@ const mockApiResponse = (pathname, profile) => {
     || pathname.endsWith('/admin/orders')
     || pathname.endsWith('/admin/products')
     || pathname.endsWith('/reports/admin')
+    || pathname.endsWith('/reviews/admin')
     || pathname.endsWith('/conversations')
   ) return []
   return {}

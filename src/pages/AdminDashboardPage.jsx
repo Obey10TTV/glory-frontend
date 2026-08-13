@@ -11,6 +11,7 @@ import {
   deleteUser,
   getAdminAudit,
   getAdminListingReports,
+  getAdminReviews,
   getAdminProducts,
   getAdminStats,
   getAllOrders,
@@ -21,6 +22,7 @@ import {
   resolveDispute,
   updateProductStatus,
   updateListingReport,
+  updateAdminReview,
   updateSellerDocumentStatus,
   updateSellerStatus
 } from '../api'
@@ -85,6 +87,7 @@ const AdminDashboardPage = () => {
   const [orders, setOrders] = useState([])
   const [products, setProducts] = useState([])
   const [reports, setReports] = useState([])
+  const [reviews, setReviews] = useState([])
   const [auditLogs, setAuditLogs] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('overview')
@@ -96,8 +99,8 @@ const AdminDashboardPage = () => {
   const fetchData = useCallback(async (showLoader = true) => {
     try {
       if (showLoader) setLoading(true)
-      const [statsRes, usersRes, ordersRes, productsRes, auditRes, reportsRes] = await Promise.all([
-        getAdminStats(), getAllUsers(), getAllOrders(), getAdminProducts(), getAdminAudit({ limit: 100 }), getAdminListingReports().catch(() => ({ data: [] }))
+      const [statsRes, usersRes, ordersRes, productsRes, auditRes, reportsRes, reviewsRes] = await Promise.all([
+        getAdminStats(), getAllUsers(), getAllOrders(), getAdminProducts(), getAdminAudit({ limit: 100 }), getAdminListingReports().catch(() => ({ data: [] })), getAdminReviews().catch(() => ({ data: [] }))
       ])
       setStats(statsRes.data)
       setUsers(usersRes.data)
@@ -105,6 +108,7 @@ const AdminDashboardPage = () => {
       setProducts(productsRes.data)
       setAuditLogs(auditRes.data.items || [])
       setReports(Array.isArray(reportsRes.data) ? reportsRes.data : [])
+      setReviews(Array.isArray(reviewsRes.data) ? reviewsRes.data : [])
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load admin data')
     } finally {
@@ -217,6 +221,20 @@ const AdminDashboardPage = () => {
     }
   }
 
+  const handleReviewDecision = async (id, status, reportDecision) => {
+    const moderationNote = window.prompt(
+      status === 'published' ? 'Optional publication note:' : 'Reason for this moderation decision:',
+      ''
+    )
+    if (moderationNote === null) return
+    try {
+      await updateAdminReview(id, { status, moderationNote, reportDecision })
+      await refreshAfter(`Review ${status}`)
+    } catch (err) {
+      setError(err.response?.data?.message || 'Could not update this review')
+    }
+  }
+
   const handleCancellation = async (orderId, payload) => {
     try {
       await resolveCancellation(orderId, payload)
@@ -270,6 +288,10 @@ const AdminDashboardPage = () => {
     report.reason, report.detail, report.status, report.listing?.name,
     report.seller?.name, report.seller?.email, report.reporter?.name, report.reporter?.email
   ].some(value => String(value || '').toLowerCase().includes(term))), [reports, term])
+  const filteredReviews = useMemo(() => reviews.filter(review => !term || [
+    review.reviewerName, review.comment, review.status, review.listing?.name,
+    review.reviewer?.email, review.seller?.email, ...(review.riskSignals || [])
+  ].some(value => String(value || '').toLowerCase().includes(term))), [reviews, term])
 
   const exportCurrent = () => {
     const date = new Date().toISOString().slice(0, 10)
@@ -293,6 +315,11 @@ const AdminDashboardPage = () => {
         ['Date', 'Listing', 'Seller', 'Reporter', 'Reason', 'Status', 'Detail'],
         ...filteredReports.map(report => [report.createdAt, report.listing?.name, report.seller?.email, report.reporter?.email, report.reason, report.status, report.detail])
       ])
+    } else if (activeTab === 'reviews') {
+      downloadCsv(`glory-reviews-${date}.csv`, [
+        ['Date', 'Listing', 'Reviewer', 'Seller', 'Rating', 'Status', 'Signals', 'Reports', 'Comment'],
+        ...filteredReviews.map(review => [review.createdAt, review.listing?.name, review.reviewer?.email, review.seller?.email, review.rating, review.status, (review.riskSignals || []).join('; '), review.reportCount || 0, review.comment])
+      ])
     } else {
       downloadCsv(`glory-orders-${date}.csv`, [
         ['Order', 'Customer', 'Email', 'Amount', 'Payment', 'Status', 'Refund status', 'Dispute', 'Date'],
@@ -301,7 +328,7 @@ const AdminDashboardPage = () => {
     }
   }
 
-  const tabs = ['overview', 'reports', 'products', 'users', 'orders', 'audit']
+  const tabs = ['overview', 'reports', 'reviews', 'products', 'users', 'orders', 'audit']
   const pendingProducts = products.filter(product => product.approvalStatus === 'pending')
   const openReports = reports.filter(report => ['received', 'in_review'].includes(report.status))
 
@@ -363,6 +390,7 @@ const AdminDashboardPage = () => {
               <ProductsTable products={filteredProducts} onApprove={product => handleProductStatus(product, 'approved')} onReject={product => handleProductStatus(product, 'rejected')} onDelete={handleDeleteProduct} />
             )}
             {activeTab === 'reports' && <ReportsTable reports={filteredReports} onReview={handleListingReport} />}
+            {activeTab === 'reviews' && <ReviewsTable reviews={filteredReviews} onDecision={handleReviewDecision} />}
             {activeTab === 'users' && (
               <UsersTable users={filteredUsers} orders={orders} products={products} currentUserId={user?._id} onDelete={handleDeleteUser} onMakeSeller={handleMakeSeller} onSellerStatus={handleSellerStatus} onOpenDocument={handleOpenDocument} onDocumentStatus={handleDocumentStatus} />
             )}
@@ -497,19 +525,45 @@ const ReportsTable = ({ reports, onReview }) => (
     <div className='glory-dashboard-panel-header'><FiFlag /> Listing reports ({reports.length})</div>
     {reports.length === 0 ? <div className='glory-admin-empty'>No listing reports match this view.</div> : (
       <div className='glory-table-wrap'><table className='glory-dashboard-table'>
-        <thead><tr>{['Listing', 'Report', 'Seller', 'Reporter', 'Status', 'Actions'].map(header => <th key={header}>{header}</th>)}</tr></thead>
+        <thead><tr>{['Listing', 'Report', 'Seller', 'Reporter', 'SLA', 'Status', 'Actions'].map(header => <th key={header}>{header}</th>)}</tr></thead>
         <tbody>{reports.map(report => (
           <tr key={report._id}>
             <td><div className='glory-dashboard-product-cell'>{report.listing?.image && <img src={report.listing.image} alt='' loading='lazy' width='48' height='48' />}<div><strong>{report.listing?.name || 'Removed listing'}</strong><span>{report.listing?.brand || report.listing?.category || 'Listing unavailable'}</span></div></div></td>
             <td><strong>{report.reason.replaceAll('_', ' ')}</strong><br /><span className='glory-dashboard-note'>{report.detail || 'No additional detail.'}</span></td>
             <td>{report.seller?.sellerProfile?.storeName || report.seller?.name || 'Unknown seller'}<br /><small>{report.seller?.email || ''}</small></td>
             <td>{report.reporter?.name || 'Confidential reporter'}<br /><small>{report.reporter?.email || ''}</small></td>
+            <td><span className={`glory-priority-chip is-${report.priority || 'standard'}`}>{report.priority || 'standard'}</span><br /><small className={String(report.slaState).includes('breached') ? 'glory-sla-breached' : ''}>{report.slaState === 'closed' ? 'Closed' : `${String(report.slaState || 'on_track').replaceAll('_', ' ')} · ${report.triageDueAt ? new Date(report.triageDueAt).toLocaleString('en-GB') : 'legacy report'}`}</small></td>
             <td><span className='glory-status-chip'>{report.status.replaceAll('_', ' ')}</span></td>
             <td><div className='glory-table-actions'>
               {report.status === 'received' && <button type='button' className='neutral' onClick={() => onReview(report._id, 'in_review')} aria-label='Mark report under review'><FiClock /></button>}
               {!['actioned', 'dismissed'].includes(report.status) && <button type='button' className='warning' onClick={() => onReview(report._id, 'actioned', 'pause')} aria-label='Pause listing for review'><FiAlertTriangle /></button>}
               {!['actioned', 'dismissed'].includes(report.status) && <button type='button' className='danger' onClick={() => onReview(report._id, 'actioned', 'remove')} aria-label='Remove listing'><FiTrash2 /></button>}
               {!['actioned', 'dismissed'].includes(report.status) && <button type='button' className='success' onClick={() => onReview(report._id, 'dismissed')} aria-label='Dismiss report'><FiCheckCircle /></button>}
+            </div></td>
+          </tr>
+        ))}</tbody>
+      </table></div>
+    )}
+  </section>
+)
+
+const ReviewsTable = ({ reviews, onDecision }) => (
+  <section className='glory-dashboard-panel'>
+    <div className='glory-dashboard-panel-header'><FiMessageSquare /> Review moderation ({reviews.length})</div>
+    {reviews.length === 0 ? <div className='glory-admin-empty'>No reviews match this view.</div> : (
+      <div className='glory-table-wrap'><table className='glory-dashboard-table'>
+        <thead><tr>{['Listing', 'Review', 'Interaction', 'Detection', 'Status', 'Actions'].map(header => <th key={header}>{header}</th>)}</tr></thead>
+        <tbody>{reviews.map(review => (
+          <tr key={review._id}>
+            <td><div className='glory-dashboard-product-cell'>{review.listing?.image && <img src={review.listing.image} alt='' loading='lazy' width='48' height='48' />}<div><strong>{review.listing?.name || 'Removed listing'}</strong><span>{review.seller?.sellerProfile?.storeName || review.seller?.email || 'Unknown seller'}</span></div></div></td>
+            <td><strong>{review.rating}/5 · {review.reviewerName}</strong><br /><span className='glory-dashboard-note'>{review.comment}</span></td>
+            <td><span className='glory-status-chip'>{review.verifiedInteraction ? 'verified interaction' : 'unverified'}</span><br /><small>{review.reviewer?.email || ''}</small></td>
+            <td>{(review.riskSignals || []).length ? <div className='glory-review-signals'>{review.riskSignals.map(signal => <span key={signal}>{signal.replaceAll('_', ' ')}</span>)}</div> : <small>No automated signals</small>}{review.reportCount > 0 && <small className='glory-review-report-count'>{review.reportCount} member report{review.reportCount === 1 ? '' : 's'}</small>}</td>
+            <td><span className='glory-status-chip'>{review.status}</span></td>
+            <td><div className='glory-table-actions'>
+              {review.status !== 'published' && <button type='button' className='success' onClick={() => onDecision(review._id, 'published', 'dismissed')} aria-label='Publish review'><FiCheckCircle /></button>}
+              {review.status !== 'rejected' && <button type='button' className='warning' onClick={() => onDecision(review._id, 'rejected', 'actioned')} aria-label='Reject review'><FiXCircle /></button>}
+              {review.status === 'published' && <button type='button' className='danger' onClick={() => onDecision(review._id, 'removed', 'actioned')} aria-label='Remove published review'><FiTrash2 /></button>}
             </div></td>
           </tr>
         ))}</tbody>

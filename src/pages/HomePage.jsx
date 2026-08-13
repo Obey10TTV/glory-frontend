@@ -147,6 +147,7 @@ const HomePage = () => {
   const [heroPaused, setHeroPaused] = useState(false)
   const [reducedMotion, setReducedMotion] = useState(false)
   const heroSwipeStartX = useRef(null)
+  const heroActionPath = useRef('')
 
   const loadProducts = useCallback(async () => {
     setLoading(true)
@@ -216,6 +217,17 @@ const HomePage = () => {
   const handleHeroPointerCancel = () => {
     heroSwipeStartX.current = null
     setHeroPaused(false)
+  }
+
+  const captureHeroAction = (path) => {
+    heroActionPath.current = path
+    setHeroPaused(true)
+  }
+
+  const runHeroAction = (fallbackPath) => {
+    const path = heroActionPath.current || fallbackPath
+    heroActionPath.current = ''
+    navigate(path)
   }
 
   const sortedProducts = useMemo(
@@ -330,12 +342,22 @@ const HomePage = () => {
                 <span className='glory-home-kicker'>{selectedHero.eyebrow}</span>
                 <h1>{selectedHero.title}</h1>
                 <p>{selectedHero.copy}</p>
-                <div className='glory-home-stage-actions'>
-                  <button type='button' className='is-primary' onClick={() => navigate(selectedHero.primaryPath)}>
+                <div key={selectedHero.id} className='glory-home-stage-actions'>
+                  <button
+                    type='button'
+                    className='is-primary'
+                    onPointerDown={() => captureHeroAction(selectedHero.primaryPath)}
+                    onClick={() => runHeroAction(selectedHero.primaryPath)}
+                  >
                     <FiShoppingBag size={17} aria-hidden='true' />
                     {selectedHero.primaryLabel}
                   </button>
-                  <button type='button' className='is-secondary' onClick={() => navigate(selectedHero.secondaryPath)}>
+                  <button
+                    type='button'
+                    className='is-secondary'
+                    onPointerDown={() => captureHeroAction(selectedHero.secondaryPath)}
+                    onClick={() => runHeroAction(selectedHero.secondaryPath)}
+                  >
                     {selectedHero.secondaryLabel}
                     <FiArrowRight size={17} aria-hidden='true' />
                   </button>

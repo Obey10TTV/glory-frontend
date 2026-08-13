@@ -14,7 +14,7 @@ import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import Loader from '../components/Loader'
 import Message from '../components/Message'
-import { getProduct, getReviews, reportListing, startConversation } from '../api'
+import { getProduct, getReviews, reportListing, reportReview, startConversation } from '../api'
 import { useUser } from '../context/UserContext'
 import { formatCurrency } from '../utils/currency'
 import { isWishlisted, toggleWishlist } from '../utils/wishlist'
@@ -41,6 +41,11 @@ const ProductDetailPage = () => {
   const [reportDetail, setReportDetail] = useState('')
   const [reportSending, setReportSending] = useState(false)
   const [reportFeedback, setReportFeedback] = useState('')
+  const [reviewReport, setReviewReport] = useState(null)
+  const [reviewReportReason, setReviewReportReason] = useState('')
+  const [reviewReportDetail, setReviewReportDetail] = useState('')
+  const [reviewReportSending, setReviewReportSending] = useState(false)
+  const [reviewReportFeedback, setReviewReportFeedback] = useState('')
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -112,6 +117,33 @@ const ProductDetailPage = () => {
       setReportFeedback(error.response?.data?.message || 'We could not submit this report.')
     } finally {
       setReportSending(false)
+    }
+  }
+
+  const openReviewReport = (review) => {
+    if (!requireAccount()) return
+    setReviewReport(review)
+    setReviewReportReason('')
+    setReviewReportDetail('')
+    setReviewReportFeedback('')
+  }
+
+  const submitReviewReport = async (event) => {
+    event.preventDefault()
+    if (!reviewReport) return
+    setReviewReportSending(true)
+    try {
+      const { data } = await reportReview(reviewReport._id, {
+        reason: reviewReportReason,
+        detail: reviewReportDetail.trim()
+      })
+      setReviewReportFeedback(data.message)
+      setReviewReportReason('')
+      setReviewReportDetail('')
+    } catch (error) {
+      setReviewReportFeedback(error.response?.data?.message || 'We could not report this review.')
+    } finally {
+      setReviewReportSending(false)
     }
   }
 
@@ -432,9 +464,9 @@ const ProductDetailPage = () => {
               <div className='glory-review-form'>
                 <span className='glory-product-section-label'>Trust & safety</span>
                 <h2>Reviews stay accountable.</h2>
-                <p>Glory will only publish feedback after its completed-sale confirmation flow is in place. Existing reviews remain visible for context.</p>
-                <button type='button' className='glory-review-submit' onClick={openReport}>
-                  Report a concern
+                <p>Only buyers from a mutually confirmed Glory interaction can submit feedback. Positive and negative reviews receive the same checks before publication.</p>
+                <button type='button' className='glory-review-submit' onClick={() => navigate('/reviews-policy')}>
+                  Read the reviews policy
                 </button>
               </div>
 
@@ -442,13 +474,13 @@ const ProductDetailPage = () => {
                 {reviews.length === 0 ? (
                   <div className='glory-review-empty'>
                     <strong>No reviews yet.</strong>
-                    <span>Verified purchasers can be the first to share their experience.</span>
+                    <span>A buyer with a confirmed Glory interaction can be the first to share an experience.</span>
                   </div>
-                ) : reviews.map((review, index) => (
-                  <article key={`${review.name}-${review.createdAt}-${index}`}>
+                ) : reviews.map((review) => (
+                  <article key={review._id}>
                     <header>
                       <div>
-                        <strong>{review.name}</strong>
+                        <strong>{review.reviewerName}</strong>
                         <small>
                           {new Date(review.createdAt).toLocaleDateString('en-GB', {
                             year: 'numeric',
@@ -464,6 +496,10 @@ const ProductDetailPage = () => {
                       </span>
                     </header>
                     <p>{review.comment}</p>
+                    <footer className='glory-review-card-footer'>
+                      <span><FiShield size={13} /> Verified interaction</span>
+                      <button type='button' onClick={() => openReviewReport(review)}><FiFlag size={13} /> Report review</button>
+                    </footer>
                   </article>
                 ))}
               </div>
@@ -521,6 +557,38 @@ const ProductDetailPage = () => {
               <button type='submit' disabled={reportSending || !reportReason}>
                 <FiFlag size={16} />
                 {reportSending ? 'Sending report...' : 'Send confidential report'}
+              </button>
+            </form>
+          </section>
+        </div>
+      )}
+
+      {reviewReport && (
+        <div className='glory-marketplace-modal-backdrop' role='presentation' onMouseDown={() => setReviewReport(null)}>
+          <section className='glory-marketplace-modal' role='dialog' aria-modal='true' aria-labelledby='review-report-title' onMouseDown={event => event.stopPropagation()}>
+            <button type='button' className='glory-marketplace-modal-close' onClick={() => setReviewReport(null)} aria-label='Close review report form'>
+              <FiX size={18} />
+            </button>
+            <span>Confidential review report</span>
+            <h2 id='review-report-title'>Tell us why this review may be unreliable.</h2>
+            <p>Reports do not remove reviews automatically. Glory applies the same evidence standard to positive and negative reviews.</p>
+            {reviewReportFeedback && <Message type={reviewReportFeedback.startsWith('Thanks') ? 'success' : 'error'} text={reviewReportFeedback} />}
+            <form onSubmit={submitReviewReport}>
+              <label htmlFor='review-report-reason'>Reason</label>
+              <select id='review-report-reason' value={reviewReportReason} onChange={event => setReviewReportReason(event.target.value)} required>
+                <option value=''>Choose a reason</option>
+                <option value='suspected_fake'>Suspected fake review</option>
+                <option value='conflict_of_interest'>Conflict of interest</option>
+                <option value='abusive'>Abusive content</option>
+                <option value='personal_information'>Personal information</option>
+                <option value='irrelevant'>Not about this interaction</option>
+                <option value='other'>Other</option>
+              </select>
+              <label htmlFor='review-report-detail'>Details {reviewReportReason === 'other' ? '(required)' : '(optional)'}</label>
+              <textarea id='review-report-detail' value={reviewReportDetail} onChange={event => setReviewReportDetail(event.target.value)} minLength={reviewReportReason === 'other' ? 10 : undefined} maxLength={1000} rows={4} required={reviewReportReason === 'other'} />
+              <button type='submit' disabled={reviewReportSending || !reviewReportReason}>
+                <FiFlag size={16} />
+                {reviewReportSending ? 'Sending report...' : 'Send confidential report'}
               </button>
             </form>
           </section>

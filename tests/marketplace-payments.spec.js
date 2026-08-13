@@ -19,6 +19,9 @@ const seller = {
     country: 'United Kingdom',
     verificationStatus: 'verified',
     activationStatus: 'paid',
+    identityVerification: { provider: 'stripe_identity', status: 'verified' },
+    membershipPlanCode: 'starter',
+    membershipStatus: 'active',
   },
 }
 
@@ -33,7 +36,14 @@ const customer = {
 }
 
 const sellerAccessStatus = {
-  activation: { required: true, feePence: 2000, currency: 'GBP', status: 'paid' },
+  activation: { required: false, feePence: 4900, currency: 'GBP', status: 'paid' },
+  membership: { planCode: 'starter', status: 'active', activeListingLimit: 5, promotionDiscountBps: 0 },
+  sellerPlans: [
+    { code: 'starter', label: 'Starter', description: 'Start a verified catalogue.', feePence: 0, currency: 'GBP', interval: null, activeListingLimit: 5, promotionDiscountBps: 0, features: ['Up to 5 active listings', 'Buyer enquiries and verified-interaction reviews'] },
+    { code: 'studio', label: 'Studio', description: 'For growing beauty businesses.', feePence: 5900, currency: 'GBP', interval: 'month', activeListingLimit: 50, promotionDiscountBps: 1000, features: ['Up to 50 active listings', '10% off paid visibility'] },
+    { code: 'scale', label: 'Scale', description: 'For established catalogues.', feePence: 14900, currency: 'GBP', interval: 'month', activeListingLimit: 200, promotionDiscountBps: 2000, features: ['Up to 200 active listings', '20% off paid visibility'] },
+    { code: 'partner', label: 'Brand Partner', description: 'For high-volume brands.', feePence: 39900, currency: 'GBP', interval: 'month', activeListingLimit: 750, promotionDiscountBps: 2500, features: ['Up to 750 active listings', '25% off paid visibility'] },
+  ],
   marketplaceMode: 'classified',
   directCheckoutEnabled: false,
 }
@@ -51,11 +61,11 @@ const approvedListing = {
 }
 
 const homepagePromotionPlan = {
-  code: 'homepage_featured',
+  code: 'homepage_spotlight_7',
   placement: 'homepage_featured',
-  label: 'Homepage featured placement',
+  label: 'Homepage Spotlight',
   description: 'A clearly labelled sponsored placement.',
-  feePence: 999,
+  feePence: 8900,
   currency: 'GBP',
   durationDays: 7,
 }
@@ -67,6 +77,7 @@ const installApiMocks = async (page, profile) => {
     if (pathname.endsWith('/users/csrf')) body = { csrfToken: 'marketplace-test-token' }
     if (pathname.endsWith('/users/profile')) body = profile
     if (pathname.endsWith('/stripe/seller/status')) body = sellerAccessStatus
+    if (pathname.endsWith('/stripe/seller/identity/status')) body = { provider: 'stripe_identity', status: 'verified' }
     if (pathname.endsWith('/stripe/status')) body = { enabled: true, currency: 'GBP', marketplaceMode: 'classified', directCheckoutEnabled: false }
     if (pathname.endsWith('/products/mine')) body = [approvedListing]
     if (pathname.endsWith('/products')) body = [approvedListing]
@@ -93,7 +104,7 @@ test.beforeEach(async ({ page }) => {
   })
 })
 
-test('seller sees platform access and private buyer enquiries, not payout setup', async ({ page }) => {
+test('seller sees serious growth plans and private buyer enquiries, not payout setup', async ({ page }) => {
   await page.addInitScript((profile) => {
     localStorage.setItem('gloryUser', JSON.stringify(profile))
   }, seller)
@@ -101,10 +112,16 @@ test('seller sees platform access and private buyer enquiries, not payout setup'
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/seller', { waitUntil: 'domcontentloaded' })
 
-  await expect(page.getByText('Marketplace access', { exact: true })).toBeVisible({ timeout: 15000 })
+  await expect(page.getByText('Grow on Glory', { exact: true })).toBeVisible({ timeout: 15000 })
+  await expect(page.getByRole('heading', { name: 'Studio' })).toBeVisible()
+  await expect(page.getByText('£59.00', { exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Scale' })).toBeVisible()
+  await expect(page.getByText('£149.00', { exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Brand Partner' })).toBeVisible()
+  await expect(page.getByText('£399.00', { exact: true })).toBeVisible()
   await expect(page.getByText('Homepage featured', { exact: true })).toBeVisible()
-  await expect(page.getByText('\u00A39.99', { exact: true })).toBeVisible()
-  await expect(page.getByText('£20.00', { exact: true })).toBeVisible()
+  await expect(page.getByText('£89.00', { exact: true })).toBeVisible()
+  await expect(page.getByText('Seller activation', { exact: true })).toHaveCount(0)
   await expect(page.getByText('Buyer enquiries', { exact: true })).toBeVisible()
   await expect(page.getByText('Secure payouts', { exact: true })).toHaveCount(0)
   await expect(page.getByText('Buyer payment methods', { exact: true })).toHaveCount(0)

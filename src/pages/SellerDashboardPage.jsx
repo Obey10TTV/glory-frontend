@@ -11,15 +11,20 @@ import {
   getMyPromotions,
   getPromotionPlans,
   getMySellerProducts,
+  getSellerIdentityStatus,
   getSellerPaymentStatus,
   getUserProfile,
   initializeSellerActivation,
+  initializeSellerSubscription,
   initializeHomepagePromotion,
+  openSellerBillingPortal,
+  startSellerIdentityVerification,
   updateProduct,
   updateSellerProfile,
   uploadImage,
   uploadSellerDocument,
   verifySellerActivation,
+  verifySellerSubscription,
   verifyHomepagePromotion
 } from '../api'
 import {
@@ -62,16 +67,31 @@ const emptySellerProfile = {
   activationStatus: 'unpaid',
   payoutStatus: 'not_started',
   verificationStatus: 'incomplete',
-  verificationNote: ''
+  verificationNote: '',
+  identityVerification: {
+    provider: 'none',
+    status: 'not_started',
+    lastErrorReason: ''
+  }
 }
 
 const emptySellerPayments = {
   activation: {
-    required: true,
-    feePence: 2000,
+    required: false,
+    feePence: 4900,
     currency: 'GBP',
     status: 'unpaid'
   },
+  membership: {
+    planCode: 'starter',
+    requestedPlanCode: 'starter',
+    label: 'Starter',
+    status: 'active',
+    activeListingLimit: 5,
+    promotionDiscountBps: 0,
+    cancelAtPeriodEnd: false
+  },
+  sellerPlans: [],
   payouts: {
     status: 'not_started',
     detailsSubmitted: false,
@@ -95,7 +115,6 @@ const emptyListingEvidence = {
 }
 
 const defaultDocumentKinds = {
-  identity: 'passport',
   business: 'company_registration',
   tax: 'tax_registration',
   address: 'utility_bill',
@@ -128,9 +147,11 @@ const SellerDashboardPage = () => {
   const [promotionPlans, setPromotionPlans] = useState([])
   const [promotions, setPromotions] = useState([])
   const [selectedPromotionListingId, setSelectedPromotionListingId] = useState('')
+  const [selectedPromotionPlanCode, setSelectedPromotionPlanCode] = useState('')
   const [paymentAction, setPaymentAction] = useState('')
   const [documentUploading, setDocumentUploading] = useState('')
   const [documentKinds, setDocumentKinds] = useState(defaultDocumentKinds)
+  const [identityDisclosureAccepted, setIdentityDisclosureAccepted] = useState(false)
 
   const [name, setName] = useState('')
   const [price, setPrice] = useState('')
@@ -166,6 +187,7 @@ const SellerDashboardPage = () => {
       ...emptySellerPayments,
       ...data,
       activation: { ...emptySellerPayments.activation, ...(data.activation || {}) },
+      membership: { ...emptySellerPayments.membership, ...(data.membership || {}) },
       payouts: { ...emptySellerPayments.payouts, ...(data.payouts || {}) }
     })
     return data
@@ -176,7 +198,13 @@ const SellerDashboardPage = () => {
       getPromotionPlans(),
       getMyPromotions()
     ])
-    setPromotionPlans(Array.isArray(plansResponse.data?.items) ? plansResponse.data.items : [])
+    const availablePlans = Array.isArray(plansResponse.data?.items) ? plansResponse.data.items : []
+    setPromotionPlans(availablePlans)
+    setSelectedPromotionPlanCode(current => (
+      availablePlans.some(plan => plan.code === current)
+        ? current
+        : availablePlans.find(plan => plan.recommended)?.code || availablePlans[0]?.code || ''
+    ))
     setPromotions(Array.isArray(promotionsResponse.data) ? promotionsResponse.data : [])
   }, [])
 
@@ -249,6 +277,36 @@ const SellerDashboardPage = () => {
   }, [userId, userIsSeller, login, refreshSellerPaymentStatus])
 
   useEffect(() => {
+    if (!userIsSeller || searchParams.get('identity') !== 'return') return
+    let active = true
+    setPaymentAction('identity-status')
+    getSellerIdentityStatus()
+      .then(async ({ data: identity }) => {
+        const { data } = await getUserProfile()
+        if (!active) return
+        setSellerProfile(normalizeSellerProfile(data.sellerProfile))
+        login(data)
+        if (identity.status === 'verified') {
+          setSuccess('Identity check completed. Add the remaining business evidence and submit your store for review.')
+        } else if (identity.status === 'processing') {
+          setSuccess('Stripe is processing your identity check. This page will update when the result is ready.')
+        } else {
+          setError(identity.lastErrorReason || 'The identity check needs another attempt.')
+        }
+        setSearchParams({}, { replace: true })
+      })
+      .catch((err) => {
+        if (active) setError(err.response?.data?.message || 'Could not refresh identity verification')
+      })
+      .finally(() => {
+        if (active) setPaymentAction('')
+      })
+    return () => {
+      active = false
+    }
+  }, [userIsSeller, searchParams, setSearchParams, login])
+
+  useEffect(() => {
     const sessionId = searchParams.get('session_id')
     if (!userIsSeller || searchParams.get('activation') !== 'success' || !sessionId) return
 
@@ -285,6 +343,31 @@ const SellerDashboardPage = () => {
 
   useEffect(() => {
     const sessionId = searchParams.get('session_id')
+    if (!userIsSeller || searchParams.get('membership') !== 'success' || !sessionId) return
+
+    let active = true
+    setPaymentAction('membership-verify')
+    verifySellerSubscription(sessionId)
+      .then(async ({ data }) => {
+        if (!active) return
+        await refreshSellerPaymentStatus()
+        setSuccess(`${data.planCode || 'Paid'} seller plan activated.`)
+        setSearchParams({}, { replace: true })
+      })
+      .catch((err) => {
+        if (active) setError(err.response?.data?.message || 'Could not verify the seller plan payment')
+      })
+      .finally(() => {
+        if (active) setPaymentAction('')
+      })
+
+    return () => {
+      active = false
+    }
+  }, [userIsSeller, searchParams, setSearchParams, refreshSellerPaymentStatus])
+
+  useEffect(() => {
+    const sessionId = searchParams.get('session_id')
     if (!userIsSeller || searchParams.get('promotion') !== 'success' || !sessionId) return
 
     let active = true
@@ -311,6 +394,15 @@ const SellerDashboardPage = () => {
       active = false
     }
   }, [userIsSeller, searchParams, setSearchParams, refreshPromotions])
+
+  useEffect(() => {
+    if (!userIsSeller) return
+    const cancelledFlow = ['membership', 'promotion', 'activation']
+      .find(flow => searchParams.get(flow) === 'cancelled')
+    if (!cancelledFlow) return
+    setError('Checkout was cancelled. Nothing was charged and your current seller access has not changed.')
+    setSearchParams({}, { replace: true })
+  }, [userIsSeller, searchParams, setSearchParams])
 
   const resetProductForm = () => {
     setName('')
@@ -342,7 +434,7 @@ const SellerDashboardPage = () => {
     const activationComplete = !sellerPayments.activation.required
       || ['paid', 'waived'].includes(sellerPayments.activation.status)
     if (!user?.isAdmin && (!profileVerified || !accountSecured || !activationComplete)) {
-      setError('Complete seller verification, email security, two-factor authentication and platform activation before adding a listing.')
+      setError(`Complete seller verification, email security and two-factor authentication${sellerPayments.activation.required ? ', then platform activation' : ''} before adding a listing.`)
       return
     }
     resetProductForm()
@@ -562,6 +654,34 @@ const SellerDashboardPage = () => {
     }))
   }
 
+  const handleIdentityVerification = async () => {
+    setPaymentAction('identity-start')
+    setError('')
+    setSuccess('')
+    try {
+      const { data } = await startSellerIdentityVerification({
+        acceptDisclosure: identityDisclosureAccepted
+      })
+      if (data.alreadyVerified) {
+        const profileResponse = await getUserProfile()
+        setSellerProfile(normalizeSellerProfile(profileResponse.data.sellerProfile))
+        login(profileResponse.data)
+        setSuccess('Your identity is already verified.')
+        setPaymentAction('')
+        return
+      }
+      if (data.status === 'processing' && !data.url) {
+        setSuccess('Stripe is processing your identity check. Return shortly to refresh the result.')
+        setPaymentAction('')
+        return
+      }
+      window.location.assign(data.url)
+    } catch (err) {
+      setError(err.response?.data?.message || 'Could not start identity verification')
+      setPaymentAction('')
+    }
+  }
+
   const handleDocumentUpload = async (type, file) => {
     if (!file) return
     setDocumentUploading(type)
@@ -621,8 +741,32 @@ const SellerDashboardPage = () => {
     }
   }
 
+  const handleSellerSubscription = async (planCode) => {
+    setPaymentAction(`membership-${planCode}`)
+    setError('')
+    try {
+      const { data } = await initializeSellerSubscription({ planCode })
+      window.location.assign(data.url)
+    } catch (err) {
+      setError(err.response?.data?.message || 'Could not start the seller plan checkout')
+      setPaymentAction('')
+    }
+  }
+
+  const handleBillingPortal = async () => {
+    setPaymentAction('membership-portal')
+    setError('')
+    try {
+      const { data } = await openSellerBillingPortal()
+      window.location.assign(data.url)
+    } catch (err) {
+      setError(err.response?.data?.message || 'Could not open seller billing')
+      setPaymentAction('')
+    }
+  }
+
   const handleHomepagePromotion = async () => {
-    const plan = promotionPlans.find((item) => item.placement === 'homepage_featured')
+    const plan = promotionPlans.find((item) => item.code === selectedPromotionPlanCode)
     if (!plan || !selectedPromotionListingId) {
       setError('Choose an approved, in-stock listing before starting a homepage promotion.')
       return
@@ -671,7 +815,7 @@ const SellerDashboardPage = () => {
     return { label: 'Setup incomplete', color: '#888', icon: <FiShield size={14} /> }
   }
 
-  const approvedProducts = products.filter(product => product.approvalStatus === 'approved')
+  const approvedProducts = products.filter(product => product.approvalStatus === 'approved' && product.planVisibilityStatus !== 'paused')
   const promotableProducts = approvedProducts.filter(product => Number(product.countInStock || 0) > 0)
   const pendingProducts = products.filter(product => product.approvalStatus === 'pending' || !product.approvalStatus)
   const rejectedProducts = products.filter(product => product.approvalStatus === 'rejected')
@@ -680,7 +824,14 @@ const SellerDashboardPage = () => {
   const twoFactorEnabled = Boolean(user?.twoFactorEnabled)
   const activationReady = !sellerPayments.activation.required
     || ['paid', 'waived'].includes(sellerPayments.activation.status)
-  const homepagePromotionPlan = promotionPlans.find((plan) => plan.placement === 'homepage_featured')
+  const sellerPlans = Array.isArray(sellerPayments.sellerPlans) ? sellerPayments.sellerPlans : []
+  const activeSellerPlanCode = sellerPayments.membership.planCode || 'starter'
+  const homepagePromotionPlan = promotionPlans.find((plan) => plan.code === selectedPromotionPlanCode)
+    || promotionPlans.find((plan) => plan.placement === 'homepage_featured')
+  const promotionDiscountBps = Number(sellerPayments.membership.promotionDiscountBps || 0)
+  const promotionPricePence = homepagePromotionPlan
+    ? Math.max(100, homepagePromotionPlan.feePence - Math.floor(homepagePromotionPlan.feePence * promotionDiscountBps / 10000))
+    : 0
   const activeHomepagePromotion = promotions.find((promotion) => (
     promotion.placement === 'homepage_featured'
     && promotion.status === 'active'
@@ -694,19 +845,6 @@ const SellerDashboardPage = () => {
       && twoFactorEnabled)
   )
   const documentRequirements = [
-    {
-      type: 'identity',
-      label: 'Government photo ID',
-      help: 'Passport, national ID, biometric residence permit, driving licence, or another accepted government photo ID.',
-      required: true,
-      options: [
-        ['passport', 'Passport'],
-        ['national_id', 'National ID / NIN card'],
-        ['biometric_residence_permit', 'Biometric residence permit'],
-        ['driving_licence', 'Driving licence'],
-        ['other_government_id', 'Other government photo ID']
-      ]
-    },
     {
       type: 'business',
       label: 'Business evidence',
@@ -755,6 +893,7 @@ const SellerDashboardPage = () => {
     }
   ]
   const sellerDocuments = sellerProfile.documents || []
+  const identityVerification = sellerProfile.identityVerification || emptySellerProfile.identityVerification
   return (
     <div className='glory-page'>
       <Navbar />
@@ -799,7 +938,7 @@ const SellerDashboardPage = () => {
             <div>
               <strong>Finish seller security before listing products.</strong>
               <span>
-                Glory requires an approved store, verified email, 2FA and platform activation before listing submissions open.
+                Glory requires a hosted identity check, approved store evidence, verified email and 2FA before listing submissions open.
               </span>
             </div>
             <div className='glory-dashboard-security-actions'>
@@ -954,15 +1093,56 @@ const SellerDashboardPage = () => {
             </div>
 
             <div className='glory-dashboard-callout'>
-              <strong>Keep financial verification with the regulated provider.</strong>
-              <span>When Glory enables payout onboarding, account ownership and bank-name matching happen with the payment provider. Never add bank account, passport, or national-ID numbers to profile fields.</span>
+              <strong>Keep identity and financial data with specialist providers.</strong>
+              <span>Never add bank-account, passport, National Insurance or national-ID numbers to profile fields, listing descriptions or Glory messages.</span>
+            </div>
+
+            <div className={`glory-hosted-identity is-${identityVerification.status}`}>
+              <div className='glory-hosted-identity-heading'>
+                <span><FiShield size={20} /></span>
+                <div>
+                  <strong>Hosted government photo-ID check</strong>
+                  <small>Stripe Identity · document and matching selfie</small>
+                </div>
+                <em>{identityVerification.status.replaceAll('_', ' ')}</em>
+              </div>
+              <p>
+                Stripe captures and checks the identity evidence in its hosted flow. Glory stores the provider reference and verification result, not a second copy of your passport or ID images.
+              </p>
+              {identityVerification.lastErrorReason && <div className='glory-identity-error'>{identityVerification.lastErrorReason}</div>}
+              {identityVerification.status !== 'verified' && (
+                <label className='glory-identity-consent'>
+                  <input type='checkbox' checked={identityDisclosureAccepted} onChange={event => setIdentityDisclosureAccepted(event.target.checked)} />
+                  <span>I have read the <a href='/privacy'>privacy notice</a> and agree to continue to Stripe for this identity check.</span>
+                </label>
+              )}
+              <button
+                type='button'
+                className={identityVerification.status === 'verified' ? 'glory-secondary-button' : 'glory-btn'}
+                onClick={handleIdentityVerification}
+                disabled={
+                  identityVerification.status === 'verified'
+                  || paymentAction !== ''
+                  || !identityDisclosureAccepted
+                  || !twoFactorEnabled
+                }
+              >
+                <FiShield size={15} />
+                {identityVerification.status === 'verified'
+                  ? 'Identity verified'
+                  : paymentAction === 'identity-start'
+                    ? 'Opening secure check...'
+                    : identityVerification.status === 'processing'
+                      ? 'Check processing'
+                      : 'Start secure identity check'}
+              </button>
             </div>
 
             <div className='glory-seller-documents'>
               <div className='glory-seller-documents-heading'>
                 <div>
-                  <strong>Private verification documents</strong>
-                  <span>Accepted files: PDF, JPG, PNG, or WebP up to 8 MB. Never type ID, passport, NIN, or bank numbers into Glory.</span>
+                  <strong>Private business evidence</strong>
+                  <span>Accepted files: PDF, JPG, PNG, or WebP up to 8 MB. These fields never accept passports, National Insurance numbers or bank-account details.</span>
                 </div>
                 <FiShield size={20} />
               </div>
@@ -1031,51 +1211,74 @@ const SellerDashboardPage = () => {
         <section className='glory-dashboard-panel glory-commerce-panel'>
           <div className='glory-dashboard-panel-header glory-dashboard-panel-header-split'>
             <div>
-              <span>Marketplace access</span>
-              <small>Glory charges for its platform services, never for a buyer&apos;s product payment.</small>
+              <span>Grow on Glory</span>
+              <small>Choose catalogue capacity, then buy visibility only when it supports your campaign.</small>
             </div>
-            <FiShield size={19} />
+            <FiTrendingUp size={19} />
+          </div>
+
+          <div className='glory-seller-plan-grid' aria-label='Seller plans'>
+            {sellerPlans.map(plan => {
+              const isCurrent = activeSellerPlanCode === plan.code
+              const hasPaidPlan = activeSellerPlanCode !== 'starter'
+              const isPending = sellerPayments.membership.requestedPlanCode === plan.code
+                && sellerPayments.membership.status === 'pending'
+              return (
+                <article key={plan.code} className={`glory-seller-plan ${isCurrent ? 'is-current' : ''}`}>
+                  <div className='glory-seller-plan-heading'>
+                    <div>
+                      <span>{plan.code === 'scale' ? 'Most popular' : plan.code === 'partner' ? 'High volume' : 'Seller plan'}</span>
+                      <h3>{plan.label}</h3>
+                    </div>
+                    {isCurrent && <em>Current</em>}
+                  </div>
+                  <div className='glory-seller-plan-price'>
+                    <strong>{plan.feePence ? formatCurrency(plan.feePence / 100) : 'Free'}</strong>
+                    {plan.interval && <span>/ month</span>}
+                  </div>
+                  <p>{plan.description}</p>
+                  <ul>
+                    {plan.features.map(feature => <li key={feature}><FiCheckCircle size={14} /> {feature}</li>)}
+                  </ul>
+                  {isCurrent && plan.code === 'starter' ? (
+                    <button type='button' className='glory-secondary-button' disabled>Current plan</button>
+                  ) : hasPaidPlan ? (
+                    <button type='button' className={isCurrent ? 'glory-btn' : 'glory-secondary-button'} onClick={handleBillingPortal} disabled={paymentAction !== ''}>
+                      {paymentAction === 'membership-portal' ? 'Opening billing...' : isCurrent ? 'Manage billing' : 'Change plan'}
+                    </button>
+                  ) : plan.code === 'starter' ? (
+                    <button type='button' className='glory-secondary-button' disabled>Included</button>
+                  ) : (
+                    <button
+                      type='button'
+                      className={plan.code === 'scale' ? 'glory-btn' : 'glory-secondary-button'}
+                      onClick={() => handleSellerSubscription(plan.code)}
+                      disabled={paymentAction !== '' || sellerProfile.verificationStatus !== 'verified' || !twoFactorEnabled}
+                    >
+                      {paymentAction === `membership-${plan.code}` || isPending ? 'Starting checkout...' : `Choose ${plan.label}`}
+                    </button>
+                  )}
+                </article>
+              )
+            })}
           </div>
 
           <div className='glory-commerce-grid'>
-            <article className='glory-commerce-card'>
-              <div className='glory-commerce-card-heading'>
-                <span><FiDollarSign size={18} /></span>
-                <div>
-                  <strong>Seller activation</strong>
-                  <small>One-time access fee</small>
+            {sellerPayments.activation.required && (
+              <article className='glory-commerce-card'>
+                <div className='glory-commerce-card-heading'>
+                  <span><FiDollarSign size={18} /></span>
+                  <div><strong>Seller activation</strong><small>One-time platform access</small></div>
                 </div>
-              </div>
-              <div className='glory-commerce-amount'>
-                {formatCurrency(sellerPayments.activation.feePence / 100)}
-              </div>
-              <p>
-                This is a Glory platform access fee. It does not make Glory a party to any sale between you and a buyer.
-              </p>
-              <span className={`glory-commerce-status is-${sellerPayments.activation.status}`}>
-                {sellerPayments.activation.status === 'paid'
-                  ? 'Paid'
-                  : sellerPayments.activation.status === 'waived'
-                    ? 'Waived'
-                    : sellerPayments.activation.status === 'pending'
-                      ? 'Confirmation pending'
-                      : 'Payment required'}
-              </span>
-              {!activationReady && (
-                <button
-                  type='button'
-                  onClick={handleSellerActivation}
-                  disabled={
-                    paymentAction !== ''
-                    || sellerProfile.verificationStatus !== 'verified'
-                    || !twoFactorEnabled
-                  }
-                  className='glory-btn'
-                >
-                  {paymentAction.startsWith('activation') ? 'Checking payment...' : 'Pay activation fee'}
-                </button>
-              )}
-            </article>
+                <div className='glory-commerce-amount'>{formatCurrency(sellerPayments.activation.feePence / 100)}</div>
+                <p>This separate access fee only applies when Glory enables paid activation.</p>
+                {!activationReady && (
+                  <button type='button' onClick={handleSellerActivation} disabled={paymentAction !== '' || sellerProfile.verificationStatus !== 'verified' || !twoFactorEnabled} className='glory-btn'>
+                    {paymentAction.startsWith('activation') ? 'Checking payment...' : 'Pay activation fee'}
+                  </button>
+                )}
+              </article>
+            )}
 
             <article className='glory-commerce-card glory-promotion-card'>
               <div className='glory-commerce-card-heading'>
@@ -1088,7 +1291,8 @@ const SellerDashboardPage = () => {
               {homepagePromotionPlan ? (
                 <>
                   <div className='glory-commerce-amount'>
-                    {formatCurrency(homepagePromotionPlan.feePence / 100)}
+                    {formatCurrency(promotionPricePence / 100)}
+                    {promotionDiscountBps > 0 && <small>{promotionDiscountBps / 100}% plan discount</small>}
                   </div>
                   <p>
                     Feature one approved listing in Glory&apos;s Sponsored home-page edit for {homepagePromotionPlan.durationDays} days. Paid placement never changes your verification status.
@@ -1099,17 +1303,20 @@ const SellerDashboardPage = () => {
                     </span>
                   )}
                   {promotableProducts.length > 0 ? (
-                    <label className='glory-promotion-listing-select'>
-                      <span>Approved listing</span>
-                      <select
-                        value={selectedPromotionListingId}
-                        onChange={(event) => setSelectedPromotionListingId(event.target.value)}
-                      >
-                        {promotableProducts.map((product) => (
-                          <option key={product._id} value={product._id}>{product.name}</option>
-                        ))}
-                      </select>
-                    </label>
+                    <div className='glory-promotion-options'>
+                      <label className='glory-promotion-listing-select'>
+                        <span>Campaign</span>
+                        <select value={selectedPromotionPlanCode} onChange={(event) => setSelectedPromotionPlanCode(event.target.value)}>
+                          {promotionPlans.map(plan => <option key={plan.code} value={plan.code}>{plan.label} · {plan.durationDays} days</option>)}
+                        </select>
+                      </label>
+                      <label className='glory-promotion-listing-select'>
+                        <span>Approved listing</span>
+                        <select value={selectedPromotionListingId} onChange={(event) => setSelectedPromotionListingId(event.target.value)}>
+                          {promotableProducts.map((product) => <option key={product._id} value={product._id}>{product.name}</option>)}
+                        </select>
+                      </label>
+                    </div>
                   ) : (
                     <small className='glory-dashboard-note'>Approve and stock a listing before buying a homepage placement.</small>
                   )}
@@ -1123,7 +1330,7 @@ const SellerDashboardPage = () => {
                     }
                     className='glory-btn'
                   >
-                    <FiTrendingUp size={15} /> {paymentAction.startsWith('promotion') ? 'Checking payment...' : 'Feature on homepage'}
+                    <FiTrendingUp size={15} /> {paymentAction.startsWith('promotion') ? 'Checking payment...' : 'Buy sponsored placement'}
                   </button>
                 </>
               ) : (
@@ -1194,7 +1401,9 @@ const SellerDashboardPage = () => {
                 </thead>
                 <tbody>
                   {products.map(product => {
-                    const meta = statusMeta(product.approvalStatus)
+                    const meta = product.planVisibilityStatus === 'paused'
+                      ? { label: 'Plan paused', color: '#8b5a16', icon: <FiClock size={14} />, note: 'Upgrade your plan or remove another listing to make this public.' }
+                      : statusMeta(product.approvalStatus)
                     return (
                       <tr key={product._id}>
                         <td>

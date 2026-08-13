@@ -130,6 +130,7 @@ export const getConversation = (id) => API.get(`/conversations/${id}`)
 export const startConversation = (data) => API.post('/conversations', data)
 export const sendConversationMessage = (id, data) => API.post(`/conversations/${id}/messages`, data)
 export const closeConversation = (id) => API.patch(`/conversations/${id}/close`)
+export const confirmConversationTransaction = (id) => API.post(`/conversations/${id}/transaction-confirmation`)
 
 // TRUST & SAFETY
 export const reportListing = (id, data) => API.post(`/reports/listings/${id}`, data)
@@ -152,6 +153,7 @@ export const payOrder = (id, data) => API.put(`/orders/${id}/pay`, data)
 // REVIEWS
 export const addReview = (productId, data) => API.post(`/reviews/${productId}`, data)
 export const getReviews = (productId) => API.get(`/reviews/${productId}`)
+export const reportReview = (reviewId, data) => API.post(`/reviews/${reviewId}/report`, data)
 
 // PROMOTIONS
 export const getPromotionPlans = () => API.get('/promotions/plans')
@@ -169,8 +171,13 @@ export const initializeStripePayment = (data) => API.post('/stripe/initialize', 
 export const verifyStripePayment = (sessionId) => API.get(`/stripe/verify/${sessionId}`)
 export const getStripeStatus = () => API.get('/stripe/status')
 export const getSellerPaymentStatus = () => API.get('/stripe/seller/status')
+export const getSellerIdentityStatus = () => API.get('/stripe/seller/identity/status')
+export const startSellerIdentityVerification = (data) => API.post('/stripe/seller/identity/session', data)
 export const initializeSellerActivation = () => API.post('/stripe/seller/activation')
 export const verifySellerActivation = (sessionId) => API.get(`/stripe/seller/activation/verify/${sessionId}`)
+export const initializeSellerSubscription = (data) => API.post('/stripe/seller/subscription', data)
+export const verifySellerSubscription = (sessionId) => API.get(`/stripe/seller/subscription/verify/${sessionId}`)
+export const openSellerBillingPortal = () => API.post('/stripe/seller/subscription/portal')
 export const initializeSellerPayouts = () => API.post('/stripe/connect/onboard')
 export const initializePayment = (data) => API.post('/paystack/initialize', data)
 export const verifyPayment = (reference) => API.get(`/paystack/verify/${reference}`)
@@ -193,5 +200,7 @@ export const addAdminOrderNote = (orderId, data) => API.post(`/admin/orders/${or
 export const getAdminAudit = (params) => API.get('/admin/audit', { params })
 export const getAdminListingReports = (params) => API.get('/reports/admin', { params })
 export const updateListingReport = (id, data) => API.put(`/reports/admin/${id}`, data)
+export const getAdminReviews = (params) => API.get('/reviews/admin', { params })
+export const updateAdminReview = (id, data) => API.put(`/reviews/admin/${id}`, data)
 
 export default API

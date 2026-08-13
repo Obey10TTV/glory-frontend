@@ -19,6 +19,7 @@ const footerGroups = [
     links: [
       { label: 'Contact us', to: '/contact' },
       { label: 'Marketplace safety', to: '/marketplace-safety' },
+      { label: 'Reviews policy', to: '/reviews-policy' },
       { label: 'How Glory works', to: '/about' },
       { label: 'Security', to: '/security' },
       { label: 'FAQs', to: '/faq' },
@@ -31,6 +32,7 @@ const footerGroups = [
       { label: 'Seller resources', to: '/seller-resources' },
       { label: 'Seller agreement', to: '/seller-agreement' },
       { label: 'Pricing', to: '/seller-pricing' },
+      { label: 'Paid promotion terms', to: '/paid-promotion-terms' },
       { label: 'Seller FAQs', to: '/seller-faq' },
     ],
   },
@@ -52,6 +54,7 @@ const policyLinks = [
   { label: 'Cookies', to: '/cookies' },
   { label: 'Security', to: '/security' },
   { label: 'Accessibility', to: '/accessibility' },
+  { label: 'Reviews policy', to: '/reviews-policy' },
 ]
 
 const socials = [

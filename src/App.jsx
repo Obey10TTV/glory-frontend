@@ -37,6 +37,7 @@ function App() {
   const focusMainContent = (event) => {
     event.preventDefault()
     const target = document.querySelector('main, [role="main"], .glory-container')
+      || document.getElementById('glory-main')
     if (target) {
       target.setAttribute('tabindex', '-1')
       target.focus()
