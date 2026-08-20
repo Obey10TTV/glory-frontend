@@ -8516,14 +8516,16 @@ button {
   background: #fff;
 }
 
-.glory-register-page {
+.glory-register-page,
+.glory-login-page {
   background-color: #f7e7df;
   background-image: linear-gradient(90deg, rgba(255, 248, 244, 0.2), rgba(255, 248, 244, 0.54)), url('/images/auth/signup-beauty.png');
   background-position: center;
   background-size: cover;
 }
 
-.glory-register-page .glory-auth-card {
+.glory-register-page .glory-auth-card,
+.glory-login-page .glory-auth-card {
   background: rgba(255, 255, 255, 0.92) !important;
   border-color: rgba(255, 255, 255, 0.76) !important;
 }
@@ -11232,7 +11234,8 @@ button {
     font-size: 14px;
   }
 
-  .glory-auth-page.glory-register-page {
+  .glory-auth-page.glory-register-page,
+  .glory-auth-page.glory-login-page {
     align-items: flex-start !important;
     background-color: #f7e7df !important;
     background-image: linear-gradient(180deg, rgba(255, 248, 244, 0.3), rgba(255, 248, 244, 0.62)), url('/images/auth/signup-beauty.png') !important;
@@ -11242,7 +11245,8 @@ button {
     padding: max(14px, env(safe-area-inset-top)) 14px max(14px, env(safe-area-inset-bottom)) !important;
   }
 
-  .glory-auth-page.glory-register-page .glory-auth-card {
+  .glory-auth-page.glory-register-page .glory-auth-card,
+  .glory-auth-page.glory-login-page .glory-auth-card {
     min-height: auto !important;
     margin: 0 !important;
     padding: 28px 20px !important;

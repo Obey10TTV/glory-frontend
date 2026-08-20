@@ -179,7 +179,7 @@ const LoginPage = () => {
     || (pendingAuth?.type === '2fa' && /^[A-F0-9]{6}-[A-F0-9]{6}$/.test(otp))
 
   return (
-    <div className='glory-auth-page' style={pageStyle}>
+    <div className='glory-auth-page glory-login-page' style={pageStyle}>
       <div className='glory-auth-card' style={cardStyle}>
         <div style={{ textAlign: 'center', marginBottom: '8px' }}>
           <Link to='/' style={logoStyle}>
@@ -429,8 +429,12 @@ const Divider = ({ text, extraStyle = {} }) => (
 )
 
 const pageStyle = {
-  minHeight: '100vh',
-  background: '#fafaf9',
+  minHeight: '100dvh',
+  backgroundColor: '#f7e7df',
+  backgroundImage: "linear-gradient(90deg, rgba(255,248,244,0.2), rgba(255,248,244,0.54)), url('/images/auth/signup-beauty.png')",
+  backgroundSize: 'cover',
+  backgroundPosition: 'center',
+  backgroundAttachment: 'fixed',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -438,13 +442,14 @@ const pageStyle = {
 }
 
 const cardStyle = {
-  background: '#fff',
-  borderRadius: '20px',
+  background: 'rgba(255, 255, 255, 0.92)',
+  borderRadius: '12px',
   padding: '48px 40px',
   width: '100%',
   maxWidth: '420px',
-  boxShadow: '0 4px 24px rgba(0,0,0,0.06)',
-  border: '0.5px solid #eee'
+  boxShadow: '0 22px 56px rgba(79, 45, 31, 0.16)',
+  border: '1px solid rgba(255, 255, 255, 0.76)',
+  backdropFilter: 'blur(14px)'
 }
 
 const logoStyle = {
