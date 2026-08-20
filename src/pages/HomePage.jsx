@@ -539,6 +539,10 @@ const HomePage = () => {
                 <span className='glory-home-kicker'>Make it yours</span>
                 <h2 id='glory-stories-title'>Small rituals, big feeling.</h2>
               </div>
+              <button type='button' className='glory-home-text-link glory-home-story-all' onClick={() => navigate('/products')}>
+                Shop everything
+                <FiArrowRight size={18} aria-hidden='true' />
+              </button>
             </div>
             <div className='glory-home-story-grid'>
               {editorialStories.map((story) => (

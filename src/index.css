@@ -8438,6 +8438,96 @@ button {
   font-size: 12px;
 }
 
+/* Editorial category treatment based on the new Glory reference direction. */
+.glory-home-stories .glory-home-section-heading-v3 {
+  margin-bottom: 30px;
+}
+
+.glory-home-stories .glory-home-section-heading-v3 h2 {
+  max-width: 900px;
+  font-size: clamp(48px, 5vw, 72px);
+}
+
+.glory-home-story-all {
+  min-width: 220px;
+  border-color: var(--glory-home-rose);
+  border-radius: 999px;
+  color: var(--glory-home-rose);
+}
+
+.glory-home-story-all:hover,
+.glory-home-story-all:focus-visible {
+  border-color: var(--glory-home-rose);
+  background: var(--glory-home-rose);
+  color: #fff;
+}
+
+.glory-home-story-grid {
+  gap: 22px;
+}
+
+.glory-home-story,
+.glory-home-story-copy {
+  min-height: clamp(440px, 36vw, 620px);
+}
+
+.glory-home-story::after {
+  background: linear-gradient(90deg, rgba(255, 252, 249, 0.97) 0%, rgba(255, 252, 249, 0.78) 42%, rgba(255, 252, 249, 0.12) 82%, rgba(255, 252, 249, 0.02) 100%);
+}
+
+.glory-home-story.is-ink::after {
+  background: linear-gradient(90deg, rgba(13, 11, 11, 0.86) 0%, rgba(13, 11, 11, 0.67) 46%, rgba(13, 11, 11, 0.16) 100%);
+}
+
+.glory-home-story-copy {
+  max-width: min(72%, 520px);
+  padding: clamp(28px, 3.2vw, 48px);
+}
+
+.glory-home-story-copy strong {
+  font-size: clamp(42px, 3.5vw, 58px);
+}
+
+.glory-home-story-copy small {
+  max-width: 390px;
+  font-size: 15px;
+  line-height: 1.58;
+}
+
+.glory-home-story-copy b {
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  padding: 0 19px;
+  font-size: 13px;
+  transition: background 180ms ease, color 180ms ease;
+}
+
+.glory-home-story.is-paper:hover .glory-home-story-copy b,
+.glory-home-story.is-paper:focus-visible .glory-home-story-copy b {
+  color: #fff;
+  background: var(--glory-home-rose);
+  border-color: var(--glory-home-rose);
+}
+
+.glory-home-story.is-ink:hover .glory-home-story-copy b,
+.glory-home-story.is-ink:focus-visible .glory-home-story-copy b {
+  border-color: #fff;
+  color: #171514;
+  background: #fff;
+}
+
+.glory-register-page {
+  background-color: #f7e7df;
+  background-image: linear-gradient(90deg, rgba(255, 248, 244, 0.2), rgba(255, 248, 244, 0.54)), url('/images/auth/signup-beauty.png');
+  background-position: center;
+  background-size: cover;
+}
+
+.glory-register-page .glory-auth-card {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border-color: rgba(255, 255, 255, 0.76) !important;
+}
+
 .glory-home-motion {
   padding: 84px 0;
   background: var(--glory-home-night);
@@ -11093,4 +11183,78 @@ button {
   .glory-about-regions, .glory-about-trust { padding-inline: 16px; }
   .glory-payment-method-picker { padding: 16px; }
   .glory-home-campaign-copy { padding-inline: 16px; }
+}
+
+/* Final mobile overrides for the editorial cards and registration image. */
+@media (max-width: 820px) {
+  .glory-home-stories .glory-home-section-heading-v3 h2 {
+    font-size: clamp(46px, 7vw, 60px);
+  }
+
+  .glory-home-stories .glory-home-story,
+  .glory-home-stories .glory-home-story-copy {
+    min-height: 500px;
+  }
+}
+
+@media (max-width: 640px) {
+  .glory-home-stories .glory-home-section-heading-v3 {
+    gap: 18px;
+  }
+
+  .glory-home-stories .glory-home-story-all {
+    width: auto;
+    min-width: 0;
+    padding-right: 18px;
+    padding-left: 18px;
+  }
+
+  .glory-home-stories .glory-home-story-grid {
+    gap: 16px;
+  }
+
+  .glory-home-stories .glory-home-story,
+  .glory-home-stories .glory-home-story-copy {
+    min-height: 470px;
+  }
+
+  .glory-home-stories .glory-home-story-copy {
+    max-width: 100%;
+    padding: 28px 24px;
+  }
+
+  .glory-home-stories .glory-home-story-copy strong {
+    font-size: clamp(42px, 12vw, 52px);
+  }
+
+  .glory-home-stories .glory-home-story-copy small {
+    max-width: 330px;
+    font-size: 14px;
+  }
+
+  .glory-auth-page.glory-register-page {
+    align-items: flex-start !important;
+    background-color: #f7e7df !important;
+    background-image: linear-gradient(180deg, rgba(255, 248, 244, 0.3), rgba(255, 248, 244, 0.62)), url('/images/auth/signup-beauty.png') !important;
+    background-attachment: scroll !important;
+    background-position: center !important;
+    background-size: cover !important;
+    padding: max(14px, env(safe-area-inset-top)) 14px max(14px, env(safe-area-inset-bottom)) !important;
+  }
+
+  .glory-auth-page.glory-register-page .glory-auth-card {
+    min-height: auto !important;
+    margin: 0 !important;
+    padding: 28px 20px !important;
+    border: 1px solid rgba(255, 255, 255, 0.76) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 18px 42px rgba(79, 45, 31, 0.14) !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .glory-home-stories .glory-home-story,
+  .glory-home-stories .glory-home-story-copy {
+    min-height: 440px;
+  }
 }
