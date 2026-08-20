@@ -2,6 +2,7 @@ import { useNavigate, useParams } from 'react-router'
 import { FiArrowLeft, FiArrowRight, FiGlobe } from 'react-icons/fi'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
+import MarketFlag from '../components/MarketFlag'
 import { getComingSoonMarket } from '../data/markets'
 
 const ComingSoonPage = () => {
@@ -27,7 +28,7 @@ const ComingSoonPage = () => {
     <div className='glory-page'>
       <Navbar />
       <main className='glory-coming-page'>
-        <span className='glory-coming-page-flag' role='img' aria-label={`${destination.name} flag`}>{destination.flag}</span>
+        <MarketFlag market={destination} size={64} className='glory-coming-page-flag' />
         <p>Glory worldwide</p>
         <h1>{destination.name} is coming to Glory.</h1>
         <span>We are preparing local seller standards, pricing, payments and support before opening this marketplace.</span>

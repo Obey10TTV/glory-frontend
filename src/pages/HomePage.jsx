@@ -56,6 +56,49 @@ const categoryTiles = [
   },
 ]
 
+const marketSectionContent = {
+  NG: {
+    departmentLayout: 'gallery',
+    departmentEyebrow: 'Explore our world',
+    departmentTitle: 'Beauty, your way.',
+    departmentNames: ['Skincare', 'Makeup', 'Haircare', 'Nails', 'Lashes', 'Fragrance'],
+    newInEyebrow: 'Fresh in Nigeria',
+    newInTitle: 'New names to know.',
+    newInCopy: 'Recently approved Nigerian listings arrive here first, ready for their next customer.',
+    newInLabel: 'View all Nigerian beauty'
+  },
+  GB: {
+    departmentLayout: 'editorial',
+    departmentEyebrow: 'The British beauty edit',
+    departmentTitle: 'A considered beauty shelf.',
+    departmentNames: ['Skincare', 'Haircare', 'Makeup'],
+    newInEyebrow: 'New to the UK edit',
+    newInTitle: 'The latest on the shelf.',
+    newInCopy: 'New independent labels, everyday essentials and colour worth a second look.',
+    newInLabel: 'Shop the UK edit'
+  },
+  US: {
+    departmentLayout: 'studio',
+    departmentEyebrow: 'The colour studio',
+    departmentTitle: 'Expression starts here.',
+    departmentNames: ['Makeup', 'Haircare', 'Nails', 'Lashes'],
+    newInEyebrow: 'Trending in the US',
+    newInTitle: 'The beauty conversation, now.',
+    newInCopy: 'A quick read on the newest independent products, textures and colour stories.',
+    newInLabel: 'View the US edit'
+  },
+  CA: {
+    departmentLayout: 'seasonal',
+    departmentEyebrow: 'The Canadian ritual',
+    departmentTitle: 'Care for every season.',
+    departmentNames: ['Skincare', 'Haircare', 'Fragrance'],
+    newInEyebrow: 'New in Canada',
+    newInTitle: 'A softer kind of new.',
+    newInCopy: 'Considered skincare, haircare and small luxuries from independent Canadian sellers.',
+    newInLabel: 'Discover Canada'
+  }
+}
+
 const categoryOrder = [
   'Skincare',
   'Makeup',
@@ -109,6 +152,10 @@ const HomePage = () => {
   const [reducedMotion, setReducedMotion] = useState(false)
   const heroSwipeStartX = useRef(null)
   const heroActionPath = useRef('')
+  const regionalContent = marketSectionContent[market.code] || marketSectionContent.NG
+  const regionalDepartments = useMemo(() => categoryTiles.filter((category) => (
+    regionalContent.departmentNames.includes(category.name)
+  )), [regionalContent])
   const heroSlides = useMemo(() => [{
     ...market.hero,
     primaryPath: market.hero.primaryPath || '/products',
@@ -278,7 +325,7 @@ const HomePage = () => {
   const selectedHero = heroSlides[activeSlide]
 
   return (
-    <div className='glory-page glory-home-page glory-home-v3'>
+    <div className='glory-page glory-home-page glory-home-v3' data-market={market.code.toLowerCase()}>
       <Navbar />
 
       <main>
@@ -390,12 +437,12 @@ const HomePage = () => {
           </div>
         </section>
 
-        <section className='glory-home-section-v3 glory-home-departments' aria-labelledby='glory-departments-title'>
+        <section className={`glory-home-section-v3 glory-home-departments is-${regionalContent.departmentLayout}`} aria-labelledby='glory-departments-title'>
           <div className='glory-home-shell-v3'>
             <div className='glory-home-section-heading-v3'>
               <div>
-                <span className='glory-home-kicker'>Choose your corner</span>
-                <h2 id='glory-departments-title'>Beauty with a point of view.</h2>
+                <span className='glory-home-kicker'>{regionalContent.departmentEyebrow}</span>
+                <h2 id='glory-departments-title'>{regionalContent.departmentTitle}</h2>
               </div>
               <button type='button' className='glory-home-text-link' onClick={() => navigate('/products')}>
                 Shop everything
@@ -404,7 +451,7 @@ const HomePage = () => {
             </div>
 
             <div className='glory-home-department-rail'>
-              {categoryTiles.map((category) => (
+              {regionalDepartments.map((category) => (
                 <button
                   key={category.name}
                   type='button'
@@ -430,16 +477,16 @@ const HomePage = () => {
           </div>
         </section>
 
-        <section className='glory-home-section-v3 glory-home-new-in' aria-labelledby='glory-new-in-title'>
+        <section className={`glory-home-section-v3 glory-home-new-in is-${market.code.toLowerCase()}`} aria-labelledby='glory-new-in-title'>
           <div className='glory-home-shell-v3'>
             <div className='glory-home-section-heading-v3'>
               <div>
-                <span className='glory-home-kicker'>Fresh on Glory</span>
-                <h2 id='glory-new-in-title'>The new in shelf.</h2>
-                <p>Recently approved products move here automatically, so the first look is always current.</p>
+                <span className='glory-home-kicker'>{regionalContent.newInEyebrow}</span>
+                <h2 id='glory-new-in-title'>{regionalContent.newInTitle}</h2>
+                <p>{regionalContent.newInCopy}</p>
               </div>
               <button type='button' className='glory-home-text-link' onClick={() => navigate('/products')}>
-                View all
+                {regionalContent.newInLabel}
                 <FiArrowRight size={16} aria-hidden='true' />
               </button>
             </div>

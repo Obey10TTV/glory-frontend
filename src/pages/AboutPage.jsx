@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router'
 import { FiGlobe, FiMessageCircle, FiShield, FiShoppingBag, FiUsers } from 'react-icons/fi'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
+import MarketFlag from '../components/MarketFlag'
 import { useMarket } from '../context/MarketContext'
 import { ACTIVE_MARKETS } from '../data/markets'
 
@@ -91,7 +92,7 @@ const AboutPage = () => {
                 className={item.code === market.code ? 'is-current' : ''}
                 onClick={() => navigate(`/${item.slug}`)}
               >
-                <span role='img' aria-label={`${item.name} flag`}>{item.flag}</span>
+                <MarketFlag market={item} size={24} />
                 <strong>{item.name}</strong>
                 <small>{item.currency}</small>
               </button>

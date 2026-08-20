@@ -126,7 +126,7 @@ const MarketSelector = ({ open, onClose }) => {
                   <h4>{region}</h4>
                   {items.map((item) => (
                     <button type='button' key={item.code} onClick={() => chooseComingMarket(item.slug)}>
-                      <span className='glory-market-coming-flag' role='img' aria-label={`${item.name} flag`}>{item.flag}</span>
+                      <MarketFlag market={item} size={22} />
                       <span>{item.name}</span>
                       <small>Coming soon</small>
                     </button>
