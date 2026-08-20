@@ -69,37 +69,6 @@ const categoryOrder = [
   'Tools & Accessories',
 ]
 
-const sharedHeroSlides = [
-  {
-    id: 'skincare-ritual',
-    eyebrow: 'The ritual starts here',
-    title: 'Your glow has a routine.',
-    copy: 'Build a considered skincare shelf, from first cleanse to the final layer of SPF.',
-    mediaType: 'image',
-    media: '/images/home/skincare-edit.jpg',
-    imagePosition: 'center',
-    primaryLabel: 'Shop skincare',
-    primaryPath: '/products?category=Skincare',
-    secondaryLabel: 'Explore all beauty',
-    secondaryPath: '/products',
-    tone: 'dark',
-  },
-  {
-    id: 'makeup-expression',
-    eyebrow: 'Colour, your way',
-    title: 'Made to be seen.',
-    copy: 'Everyday complexion, statement lips and detail-led colour for whichever version of you arrives today.',
-    mediaType: 'image',
-    media: '/images/home/makeup-edit.jpg',
-    imagePosition: 'center',
-    primaryLabel: 'Shop makeup',
-    primaryPath: '/products?category=Makeup',
-    secondaryLabel: 'Meet the sellers',
-    secondaryPath: '/sell-on-glory',
-    tone: 'dark',
-  },
-]
-
 const editorialStories = [
   {
     title: 'The skin barrier edit',
@@ -142,9 +111,13 @@ const HomePage = () => {
   const heroActionPath = useRef('')
   const heroSlides = useMemo(() => [{
     ...market.hero,
-    primaryPath: '/products',
-    secondaryPath: '/sell-on-glory'
-  }, ...sharedHeroSlides], [market])
+    primaryPath: market.hero.primaryPath || '/products',
+    secondaryPath: market.hero.secondaryPath || '/sell-on-glory'
+  }, ...(market.hero.slides || [])], [market])
+
+  useEffect(() => {
+    setActiveSlide(0)
+  }, [market.code])
 
   const loadProducts = useCallback(async () => {
     setLoading(true)
