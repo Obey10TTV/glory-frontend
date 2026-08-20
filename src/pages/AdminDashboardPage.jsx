@@ -13,6 +13,7 @@ import {
   getAdminListingReports,
   getAdminReviews,
   getAdminProducts,
+  getAdminPromotions,
   getAdminStats,
   getAllOrders,
   getAllUsers,
@@ -23,6 +24,7 @@ import {
   updateProductStatus,
   updateListingReport,
   updateAdminReview,
+  reviewPromotionCreative,
   updateSellerDocumentStatus,
   updateSellerStatus
 } from '../api'
@@ -43,6 +45,7 @@ import {
   FiTrash2,
   FiUserPlus,
   FiUsers,
+  FiVideo,
   FiXCircle
 } from 'react-icons/fi'
 import { formatCurrency } from '../utils/currency'
@@ -89,6 +92,7 @@ const AdminDashboardPage = () => {
   const [reports, setReports] = useState([])
   const [reviews, setReviews] = useState([])
   const [auditLogs, setAuditLogs] = useState([])
+  const [promotions, setPromotions] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('overview')
   const [search, setSearch] = useState('')
@@ -99,8 +103,8 @@ const AdminDashboardPage = () => {
   const fetchData = useCallback(async (showLoader = true) => {
     try {
       if (showLoader) setLoading(true)
-      const [statsRes, usersRes, ordersRes, productsRes, auditRes, reportsRes, reviewsRes] = await Promise.all([
-        getAdminStats(), getAllUsers(), getAllOrders(), getAdminProducts(), getAdminAudit({ limit: 100 }), getAdminListingReports().catch(() => ({ data: [] })), getAdminReviews().catch(() => ({ data: [] }))
+      const [statsRes, usersRes, ordersRes, productsRes, auditRes, reportsRes, reviewsRes, promotionsRes] = await Promise.all([
+        getAdminStats(), getAllUsers(), getAllOrders(), getAdminProducts(), getAdminAudit({ limit: 100 }), getAdminListingReports().catch(() => ({ data: [] })), getAdminReviews().catch(() => ({ data: [] })), getAdminPromotions().catch(() => ({ data: [] }))
       ])
       setStats(statsRes.data)
       setUsers(usersRes.data)
@@ -109,6 +113,7 @@ const AdminDashboardPage = () => {
       setAuditLogs(auditRes.data.items || [])
       setReports(Array.isArray(reportsRes.data) ? reportsRes.data : [])
       setReviews(Array.isArray(reviewsRes.data) ? reviewsRes.data : [])
+      setPromotions(Array.isArray(promotionsRes.data) ? promotionsRes.data : [])
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load admin data')
     } finally {
@@ -144,6 +149,20 @@ const AdminDashboardPage = () => {
       await refreshAfter('User is now a seller')
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to update seller role')
+    }
+  }
+
+  const handlePromotionReview = async (id, decision) => {
+    const note = window.prompt(
+      decision === 'approved' ? 'Optional internal approval note:' : 'Tell the seller what must change:',
+      decision === 'approved' ? '' : 'Creative does not yet meet Glory advertising requirements.'
+    )
+    if (note === null) return
+    try {
+      await reviewPromotionCreative(id, { decision, note })
+      await refreshAfter(decision === 'approved' ? 'Campaign approved for payment' : 'Campaign rejected before payment')
+    } catch (err) {
+      setError(err.response?.data?.message || 'Campaign review could not be saved')
     }
   }
 
@@ -292,6 +311,10 @@ const AdminDashboardPage = () => {
     review.reviewerName, review.comment, review.status, review.listing?.name,
     review.reviewer?.email, review.seller?.email, ...(review.riskSignals || [])
   ].some(value => String(value || '').toLowerCase().includes(term))), [reviews, term])
+  const filteredPromotions = useMemo(() => promotions.filter(promotion => !term || [
+    promotion.creativeHeadline, promotion.creativeCopy, promotion.status, promotion.marketCode,
+    promotion.listing?.name, promotion.seller?.email, promotion.seller?.sellerProfile?.brandName
+  ].some(value => String(value || '').toLowerCase().includes(term))), [promotions, term])
 
   const exportCurrent = () => {
     const date = new Date().toISOString().slice(0, 10)
@@ -320,6 +343,11 @@ const AdminDashboardPage = () => {
         ['Date', 'Listing', 'Reviewer', 'Seller', 'Rating', 'Status', 'Signals', 'Reports', 'Comment'],
         ...filteredReviews.map(review => [review.createdAt, review.listing?.name, review.reviewer?.email, review.seller?.email, review.rating, review.status, (review.riskSignals || []).join('; '), review.reportCount || 0, review.comment])
       ])
+    } else if (activeTab === 'promotions') {
+      downloadCsv(`glory-promotions-${date}.csv`, [
+        ['Date', 'Market', 'Seller', 'Listing', 'Placement', 'Plan', 'Creative status', 'Campaign status', 'Headline'],
+        ...filteredPromotions.map(promotion => [promotion.createdAt, promotion.marketCode, promotion.seller?.email, promotion.listing?.name, promotion.placement, promotion.planCode, promotion.creativeReviewStatus, promotion.status, promotion.creativeHeadline])
+      ])
     } else {
       downloadCsv(`glory-orders-${date}.csv`, [
         ['Order', 'Customer', 'Email', 'Amount', 'Payment', 'Status', 'Refund status', 'Dispute', 'Date'],
@@ -328,7 +356,7 @@ const AdminDashboardPage = () => {
     }
   }
 
-  const tabs = ['overview', 'reports', 'reviews', 'products', 'users', 'orders', 'audit']
+  const tabs = ['overview', 'reports', 'reviews', 'promotions', 'products', 'users', 'orders', 'audit']
   const pendingProducts = products.filter(product => product.approvalStatus === 'pending')
   const openReports = reports.filter(report => ['received', 'in_review'].includes(report.status))
 
@@ -391,6 +419,7 @@ const AdminDashboardPage = () => {
             )}
             {activeTab === 'reports' && <ReportsTable reports={filteredReports} onReview={handleListingReport} />}
             {activeTab === 'reviews' && <ReviewsTable reviews={filteredReviews} onDecision={handleReviewDecision} />}
+            {activeTab === 'promotions' && <PromotionsTable promotions={filteredPromotions} onDecision={handlePromotionReview} />}
             {activeTab === 'users' && (
               <UsersTable users={filteredUsers} orders={orders} products={products} currentUserId={user?._id} onDelete={handleDeleteUser} onMakeSeller={handleMakeSeller} onSellerStatus={handleSellerStatus} onOpenDocument={handleOpenDocument} onDocumentStatus={handleDocumentStatus} />
             )}
@@ -564,6 +593,34 @@ const ReviewsTable = ({ reviews, onDecision }) => (
               {review.status !== 'published' && <button type='button' className='success' onClick={() => onDecision(review._id, 'published', 'dismissed')} aria-label='Publish review'><FiCheckCircle /></button>}
               {review.status !== 'rejected' && <button type='button' className='warning' onClick={() => onDecision(review._id, 'rejected', 'actioned')} aria-label='Reject review'><FiXCircle /></button>}
               {review.status === 'published' && <button type='button' className='danger' onClick={() => onDecision(review._id, 'removed', 'actioned')} aria-label='Remove published review'><FiTrash2 /></button>}
+            </div></td>
+          </tr>
+        ))}</tbody>
+      </table></div>
+    )}
+  </section>
+)
+
+const PromotionsTable = ({ promotions, onDecision }) => (
+  <section className='glory-dashboard-panel'>
+    <div className='glory-dashboard-panel-header'><FiVideo /> Promotion review ({promotions.length})</div>
+    {promotions.length === 0 ? <div className='glory-admin-empty'>No campaigns match this view.</div> : (
+      <div className='glory-table-wrap'><table className='glory-dashboard-table glory-promotion-review-table'>
+        <thead><tr>{['Creative', 'Campaign', 'Seller', 'Market', 'Status', 'Actions'].map(header => <th key={header}>{header}</th>)}</tr></thead>
+        <tbody>{promotions.map(promotion => (
+          <tr key={promotion._id}>
+            <td>
+              {promotion.creativeMediaUrl
+                ? <video src={promotion.creativeMediaUrl} muted controls playsInline preload='metadata' />
+                : promotion.listing?.image && <img src={promotion.listing.image} alt='' loading='lazy' />}
+            </td>
+            <td><strong>{promotion.creativeHeadline || promotion.label}</strong><br /><span className='glory-dashboard-note'>{promotion.creativeCopy || promotion.listing?.name}</span><br /><small>{promotion.planCode.replaceAll('_', ' ')}</small></td>
+            <td>{promotion.seller?.sellerProfile?.brandName || promotion.seller?.sellerProfile?.storeName || promotion.seller?.name}<br /><small>{promotion.seller?.email}</small></td>
+            <td><strong>{promotion.marketCode}</strong><br /><small>{promotion.currency}</small></td>
+            <td><span className='glory-status-chip'>{promotion.creativeReviewStatus.replaceAll('_', ' ')}</span><br /><small>{promotion.status.replaceAll('_', ' ')}</small></td>
+            <td><div className='glory-table-actions'>
+              {promotion.status === 'pending_review' && <button type='button' className='success' onClick={() => onDecision(promotion._id, 'approved')} aria-label='Approve campaign for payment'><FiCheckCircle /></button>}
+              {promotion.status === 'pending_review' && <button type='button' className='warning' onClick={() => onDecision(promotion._id, 'rejected')} aria-label='Reject campaign before payment'><FiXCircle /></button>}
             </div></td>
           </tr>
         ))}</tbody>

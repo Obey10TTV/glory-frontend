@@ -9,23 +9,28 @@ import {
   createProduct,
   deleteProduct,
   getMyPromotions,
-  getPromotionPlans,
   getMySellerProducts,
   getSellerIdentityStatus,
-  getSellerPaymentStatus,
+  getMarketplaceSellerStatus,
   getUserProfile,
   initializeSellerActivation,
   initializeSellerSubscription,
   initializeHomepagePromotion,
+  initializePaystackHomepagePromotion,
+  initializePaystackSellerPlan,
   openSellerBillingPortal,
   startSellerIdentityVerification,
   updateProduct,
   updateSellerProfile,
   uploadImage,
+  uploadPromotionMedia,
   uploadSellerDocument,
+  submitHomepageVideoDraft,
   verifySellerActivation,
   verifySellerSubscription,
-  verifyHomepagePromotion
+  verifyHomepagePromotion,
+  verifyPaystackHomepagePromotion,
+  verifyPaystackSellerPlan
 } from '../api'
 import {
   FiCheckCircle,
@@ -44,10 +49,12 @@ import {
   FiX,
   FiXCircle
 } from 'react-icons/fi'
-import { formatCurrency } from '../utils/currency'
+import { formatCurrency, formatMinorCurrency } from '../utils/currency'
 import { categoryProductTypes, productTypesForCategory } from '../utils/catalogTaxonomy'
+import { ACTIVE_MARKETS } from '../data/markets'
 
 const emptySellerProfile = {
+  marketCode: 'GB',
   brandName: '',
   storeName: '',
   bio: '',
@@ -76,6 +83,11 @@ const emptySellerProfile = {
 }
 
 const emptySellerPayments = {
+  marketCode: 'GB',
+  marketName: 'United Kingdom',
+  currency: 'GBP',
+  billingProvider: 'stripe',
+  billingEnabled: false,
   activation: {
     required: false,
     feePence: 4900,
@@ -99,7 +111,8 @@ const emptySellerPayments = {
     payoutsEnabled: false
   },
   acceptedPaymentMethods: ['card'],
-  paymentMethods: []
+  paymentMethods: [],
+  sellerAcceptedPaymentMethods: []
 }
 
 const emptyListingEvidence = {
@@ -125,6 +138,21 @@ const priceGuidance = {
   Skincare: [12, 95], Haircare: [10, 75], Makeup: [10, 85], Nails: [8, 55],
   Lashes: [8, 45], 'Body Care': [10, 70], 'Body Liquid': [8, 55],
   Fragrance: [18, 180], 'Scented Candles': [16, 85], 'Tools & Accessories': [8, 120]
+}
+
+const nigeriaPriceGuidance = {
+  Skincare: [5000, 45000], Haircare: [4000, 35000], Makeup: [4000, 40000], Nails: [3000, 25000],
+  Lashes: [2500, 20000], 'Body Care': [4000, 30000], 'Body Liquid': [3500, 25000],
+  Fragrance: [8000, 85000], 'Scented Candles': [6000, 40000], 'Tools & Accessories': [3000, 55000]
+}
+
+const getPriceGuidance = (category, currency) => {
+  if (!category) return null
+  if (currency === 'NGN') return nigeriaPriceGuidance[category]
+  const base = priceGuidance[category]
+  if (!base) return null
+  const multiplier = currency === 'USD' ? 1.25 : currency === 'CAD' ? 1.65 : 1
+  return base.map(value => Math.round(value * multiplier))
 }
 
 const SellerDashboardPage = () => {
@@ -173,16 +201,20 @@ const SellerDashboardPage = () => {
   const [images, setImages] = useState([])
   const [variants, setVariants] = useState([])
   const [listingEvidence, setListingEvidence] = useState({ ...emptyListingEvidence })
+  const [listingPaymentMethods, setListingPaymentMethods] = useState(['card'])
+  const [videoCreative, setVideoCreative] = useState({ headline: '', copy: '', mediaUrl: '', ctaLabel: 'View product' })
+  const [videoUploading, setVideoUploading] = useState(false)
 
   const categories = Object.keys(categoryProductTypes)
 
   const normalizeSellerProfile = (profile = {}) => ({
     ...emptySellerProfile,
-    ...profile
+    ...profile,
+    acceptedPaymentMethods: profile.acceptedPaymentMethods?.length ? profile.acceptedPaymentMethods : ['card']
   })
 
   const refreshSellerPaymentStatus = useCallback(async () => {
-    const { data } = await getSellerPaymentStatus()
+    const { data } = await getMarketplaceSellerStatus()
     setSellerPayments({
       ...emptySellerPayments,
       ...data,
@@ -190,21 +222,18 @@ const SellerDashboardPage = () => {
       membership: { ...emptySellerPayments.membership, ...(data.membership || {}) },
       payouts: { ...emptySellerPayments.payouts, ...(data.payouts || {}) }
     })
+    const regionalPlans = Array.isArray(data.promotionPlans) ? data.promotionPlans : []
+    setPromotionPlans(regionalPlans)
+    setSelectedPromotionPlanCode(current => (
+      regionalPlans.some(plan => plan.code === current)
+        ? current
+        : regionalPlans.find(plan => plan.recommended)?.code || regionalPlans[0]?.code || ''
+    ))
     return data
   }, [])
 
   const refreshPromotions = useCallback(async () => {
-    const [plansResponse, promotionsResponse] = await Promise.all([
-      getPromotionPlans(),
-      getMyPromotions()
-    ])
-    const availablePlans = Array.isArray(plansResponse.data?.items) ? plansResponse.data.items : []
-    setPromotionPlans(availablePlans)
-    setSelectedPromotionPlanCode(current => (
-      availablePlans.some(plan => plan.code === current)
-        ? current
-        : availablePlans.find(plan => plan.recommended)?.code || availablePlans[0]?.code || ''
-    ))
+    const promotionsResponse = await getMyPromotions()
     setPromotions(Array.isArray(promotionsResponse.data) ? promotionsResponse.data : [])
   }, [])
 
@@ -235,12 +264,14 @@ const SellerDashboardPage = () => {
 
   useEffect(() => {
     const eligibleListings = products.filter((product) => (
-      product.approvalStatus === 'approved' && Number(product.countInStock || 0) > 0
+      product.approvalStatus === 'approved'
+      && Number(product.countInStock || 0) > 0
+      && product.marketCode === sellerPayments.marketCode
     ))
     if (!eligibleListings.some((product) => product._id === selectedPromotionListingId)) {
       setSelectedPromotionListingId(eligibleListings[0]?._id || '')
     }
-  }, [products, selectedPromotionListingId])
+  }, [products, selectedPromotionListingId, sellerPayments.marketCode])
 
   useEffect(() => {
     if (!userIsSeller) return
@@ -343,11 +374,15 @@ const SellerDashboardPage = () => {
 
   useEffect(() => {
     const sessionId = searchParams.get('session_id')
-    if (!userIsSeller || searchParams.get('membership') !== 'success' || !sessionId) return
+    const reference = searchParams.get('reference') || searchParams.get('trxref')
+    if (!userIsSeller || searchParams.get('membership') !== 'success' || (!sessionId && !reference)) return
 
     let active = true
     setPaymentAction('membership-verify')
-    verifySellerSubscription(sessionId)
+    const verification = reference
+      ? verifyPaystackSellerPlan(reference)
+      : verifySellerSubscription(sessionId)
+    verification
       .then(async ({ data }) => {
         if (!active) return
         await refreshSellerPaymentStatus()
@@ -368,11 +403,15 @@ const SellerDashboardPage = () => {
 
   useEffect(() => {
     const sessionId = searchParams.get('session_id')
-    if (!userIsSeller || searchParams.get('promotion') !== 'success' || !sessionId) return
+    const reference = searchParams.get('reference') || searchParams.get('trxref')
+    if (!userIsSeller || searchParams.get('promotion') !== 'success' || (!sessionId && !reference)) return
 
     let active = true
     setPaymentAction('promotion-verify')
-    verifyHomepagePromotion(sessionId)
+    const verification = reference
+      ? verifyPaystackHomepagePromotion(reference)
+      : verifyHomepagePromotion(sessionId)
+    verification
       .then(async ({ data }) => {
         if (!active) return
         await refreshPromotions()
@@ -425,6 +464,7 @@ const SellerDashboardPage = () => {
     setImages([])
     setVariants([])
     setListingEvidence({ ...emptyListingEvidence })
+    setListingPaymentMethods(sellerProfile.acceptedPaymentMethods?.length ? sellerProfile.acceptedPaymentMethods : ['card'])
     setEditingProduct(null)
   }
 
@@ -483,6 +523,9 @@ const SellerDashboardPage = () => {
       packagingPhotosConfirmed: Boolean(product.listingEvidence?.packagingPhotosConfirmed),
       declarationAccepted: Boolean(product.listingEvidence?.declarationAccepted)
     })
+    setListingPaymentMethods(product.acceptedPaymentMethods?.length
+      ? product.acceptedPaymentMethods
+      : (sellerProfile.acceptedPaymentMethods?.length ? sellerProfile.acceptedPaymentMethods : ['card']))
     setError('')
     setShowProductForm(true)
   }
@@ -566,6 +609,10 @@ const SellerDashboardPage = () => {
       return { error: 'Compare-at price must be higher than the selling price' }
     }
 
+    if (!listingPaymentMethods.length) {
+      return { error: 'Choose at least one payment method buyers can use for this listing.' }
+    }
+
     return {
       payload: {
         name,
@@ -586,6 +633,7 @@ const SellerDashboardPage = () => {
         lowStockThreshold: numericLowStockThreshold,
         image,
         images,
+        acceptedPaymentMethods: listingPaymentMethods,
         listingEvidence: {
           condition: listingEvidence.condition,
           batchCode: listingEvidence.batchCode.trim(),
@@ -654,6 +702,28 @@ const SellerDashboardPage = () => {
     }))
   }
 
+  const toggleSellerPaymentMethod = (method) => {
+    setSellerProfile(current => {
+      const selected = current.acceptedPaymentMethods || []
+      if (selected.includes(method) && selected.length === 1) return current
+      return {
+        ...current,
+        acceptedPaymentMethods: selected.includes(method)
+          ? selected.filter(item => item !== method)
+          : [...selected, method]
+      }
+    })
+  }
+
+  const toggleListingPaymentMethod = (method) => {
+    setListingPaymentMethods(current => {
+      if (current.includes(method) && current.length === 1) return current
+      return current.includes(method)
+        ? current.filter(item => item !== method)
+        : [...current, method]
+    })
+  }
+
   const handleIdentityVerification = async () => {
     setPaymentAction('identity-start')
     setError('')
@@ -715,6 +785,8 @@ const SellerDashboardPage = () => {
       })
       setSellerProfile(normalizeSellerProfile(data.sellerProfile))
       login(data)
+      await refreshSellerPaymentStatus()
+      await refreshPromotions()
       setSuccess(submitForReview ? 'Store profile submitted for verification.' : 'Store profile saved.')
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to save seller profile')
@@ -745,7 +817,11 @@ const SellerDashboardPage = () => {
     setPaymentAction(`membership-${planCode}`)
     setError('')
     try {
-      const { data } = await initializeSellerSubscription({ planCode })
+      const checkout = sellerPayments.billingProvider === 'paystack'
+        ? initializePaystackSellerPlan
+        : initializeSellerSubscription
+      const { data } = await checkout({ planCode })
+      if (!data.url) throw new Error('Regional billing is not available yet.')
       window.location.assign(data.url)
     } catch (err) {
       setError(err.response?.data?.message || 'Could not start the seller plan checkout')
@@ -765,6 +841,24 @@ const SellerDashboardPage = () => {
     }
   }
 
+  const handlePromotionMediaUpload = async (event) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+    setVideoUploading(true)
+    setError('')
+    try {
+      const formData = new FormData()
+      formData.append('media', file)
+      const { data } = await uploadPromotionMedia(formData)
+      setVideoCreative(current => ({ ...current, mediaUrl: data.url }))
+      setSuccess('Campaign video uploaded securely. Add the campaign copy and submit it for review.')
+    } catch (err) {
+      setError(err.response?.data?.message || 'Campaign media upload failed')
+    } finally {
+      setVideoUploading(false)
+    }
+  }
+
   const handleHomepagePromotion = async () => {
     const plan = promotionPlans.find((item) => item.code === selectedPromotionPlanCode)
     if (!plan || !selectedPromotionListingId) {
@@ -775,9 +869,53 @@ const SellerDashboardPage = () => {
     setPaymentAction('promotion')
     setError('')
     try {
-      const { data } = await initializeHomepagePromotion({
+      if (plan.requiresCreative) {
+        const approvedDraft = promotions.find((item) => (
+          item.listing?._id === selectedPromotionListingId
+          && item.planCode === plan.code
+          && item.status === 'approved_for_payment'
+          && item.creativeReviewStatus === 'approved'
+        ))
+        const pendingDraft = promotions.find((item) => (
+          item.listing?._id === selectedPromotionListingId
+          && item.planCode === plan.code
+          && item.status === 'pending_review'
+        ))
+        if (pendingDraft) {
+          setSuccess('This video campaign is already with Glory for review. Payment will open after approval.')
+          setPaymentAction('')
+          return
+        }
+        if (!approvedDraft) {
+          const { data } = await submitHomepageVideoDraft({
+            listingId: selectedPromotionListingId,
+            planCode: plan.code,
+            marketCode: sellerPayments.marketCode,
+            creativeHeadline: videoCreative.headline,
+            creativeCopy: videoCreative.copy,
+            creativeMediaUrl: videoCreative.mediaUrl,
+            creativeCtaLabel: videoCreative.ctaLabel
+          })
+          await refreshPromotions()
+          setSuccess(data.message || 'Campaign submitted for review. You will pay only after approval.')
+          setPaymentAction('')
+          return
+        }
+      }
+
+      const checkout = sellerPayments.billingProvider === 'paystack'
+        ? initializePaystackHomepagePromotion
+        : initializeHomepagePromotion
+      const approvedDraft = plan.requiresCreative ? promotions.find((item) => (
+        item.listing?._id === selectedPromotionListingId
+        && item.planCode === plan.code
+        && item.status === 'approved_for_payment'
+      )) : null
+      const { data } = await checkout({
         listingId: selectedPromotionListingId,
-        planCode: plan.code
+        planCode: plan.code,
+        promotionId: approvedDraft?._id,
+        marketCode: sellerPayments.marketCode
       })
       if (data.alreadyActive) {
         await refreshPromotions()
@@ -785,6 +923,7 @@ const SellerDashboardPage = () => {
         setPaymentAction('')
         return
       }
+      if (!data.url) throw new Error('Regional campaign billing is not available yet.')
       window.location.assign(data.url)
     } catch (err) {
       setError(err.response?.data?.message || 'Could not start the sponsored placement payment')
@@ -816,7 +955,9 @@ const SellerDashboardPage = () => {
   }
 
   const approvedProducts = products.filter(product => product.approvalStatus === 'approved' && product.planVisibilityStatus !== 'paused')
-  const promotableProducts = approvedProducts.filter(product => Number(product.countInStock || 0) > 0)
+  const promotableProducts = approvedProducts.filter(product => (
+    Number(product.countInStock || 0) > 0 && product.marketCode === sellerPayments.marketCode
+  ))
   const pendingProducts = products.filter(product => product.approvalStatus === 'pending' || !product.approvalStatus)
   const rejectedProducts = products.filter(product => product.approvalStatus === 'rejected')
   const inventoryValue = products.reduce((sum, product) => sum + Number(product.price || 0) * Number(product.countInStock || 0), 0)
@@ -825,18 +966,36 @@ const SellerDashboardPage = () => {
   const activationReady = !sellerPayments.activation.required
     || ['paid', 'waived'].includes(sellerPayments.activation.status)
   const sellerPlans = Array.isArray(sellerPayments.sellerPlans) ? sellerPayments.sellerPlans : []
+  const sellerCurrency = sellerPayments.currency || ACTIVE_MARKETS[sellerProfile.marketCode]?.currency || 'GBP'
+  const currentPriceGuidance = getPriceGuidance(category, sellerCurrency)
   const activeSellerPlanCode = sellerPayments.membership.planCode || 'starter'
   const homepagePromotionPlan = promotionPlans.find((plan) => plan.code === selectedPromotionPlanCode)
     || promotionPlans.find((plan) => plan.placement === 'homepage_featured')
   const promotionDiscountBps = Number(sellerPayments.membership.promotionDiscountBps || 0)
-  const promotionPricePence = homepagePromotionPlan
-    ? Math.max(100, homepagePromotionPlan.feePence - Math.floor(homepagePromotionPlan.feePence * promotionDiscountBps / 10000))
+  const promotionPriceMinor = homepagePromotionPlan
+    ? Math.max(100, homepagePromotionPlan.feeMinor - Math.floor(homepagePromotionPlan.feeMinor * promotionDiscountBps / 10000))
     : 0
   const activeHomepagePromotion = promotions.find((promotion) => (
     promotion.placement === 'homepage_featured'
     && promotion.status === 'active'
     && new Date(promotion.endsAt).getTime() > Date.now()
   ))
+  const selectedVideoPromotion = homepagePromotionPlan?.requiresCreative
+    ? promotions.find((promotion) => (
+        promotion.listing?._id === selectedPromotionListingId
+        && promotion.planCode === homepagePromotionPlan.code
+        && ['pending_review', 'approved_for_payment', 'pending_payment', 'active'].includes(promotion.status)
+      ))
+    : null
+  const promotionActionLabel = homepagePromotionPlan?.requiresCreative
+    ? selectedVideoPromotion?.status === 'pending_review'
+      ? 'Campaign in review'
+      : selectedVideoPromotion?.status === 'approved_for_payment'
+        ? 'Pay for approved campaign'
+        : selectedVideoPromotion?.status === 'active'
+          ? 'Campaign is live'
+          : 'Submit video for review'
+    : 'Buy sponsored placement'
   const sellerCanSubmitProducts = Boolean(
     user?.isAdmin
     || (user?.isEmailVerified !== false
@@ -922,7 +1081,7 @@ const SellerDashboardPage = () => {
             { label: 'Total Listings', value: products.length, icon: <FiPackage size={22} />, color: '#b85f83', bg: '#f8e8ee' },
             { label: 'Approved Live', value: approvedProducts.length, icon: <FiCheckCircle size={22} />, color: '#2ecc71', bg: '#eef8f1' },
             { label: 'Pending Review', value: pendingProducts.length, icon: <FiClock size={22} />, color: '#f39c12', bg: '#fbf1dd' },
-            { label: 'Inventory Value', value: formatCurrency(inventoryValue), icon: <FiPackage size={22} />, color: '#416b5f', bg: '#eef5f2' }
+            { label: 'Inventory Value', value: formatCurrency(inventoryValue, sellerCurrency), icon: <FiPackage size={22} />, color: '#416b5f', bg: '#eef5f2' }
           ].map(stat => (
             <div key={stat.label} className='glory-dashboard-stat'>
               <div style={{ background: stat.bg, color: stat.color }}>{stat.icon}</div>
@@ -1035,12 +1194,29 @@ const SellerDashboardPage = () => {
 
             <div className='glory-form-grid'>
               <div>
-                <label style={labelStyle}>County / Region</label>
-                <input value={sellerProfile.province} onChange={event => handleProfileChange('province', event.target.value)} placeholder='e.g. Greater London' style={inputStyle} />
+                <label style={labelStyle}>State / Province / Region</label>
+                <input value={sellerProfile.province} onChange={event => handleProfileChange('province', event.target.value)} placeholder='Your business region' style={inputStyle} />
               </div>
               <div>
-                <label style={labelStyle}>Country</label>
-                <input value={sellerProfile.country} onChange={event => handleProfileChange('country', event.target.value)} placeholder='United Kingdom' style={inputStyle} />
+                <label style={labelStyle}>Operating Marketplace</label>
+                <select
+                  value={sellerProfile.marketCode || 'GB'}
+                  onChange={event => {
+                    const nextMarket = ACTIVE_MARKETS[event.target.value]
+                    setSellerProfile(current => ({
+                      ...current,
+                      marketCode: nextMarket.code,
+                      country: nextMarket.name,
+                      acceptedPaymentMethods: ['card']
+                    }))
+                  }}
+                  style={inputStyle}
+                >
+                  {Object.values(ACTIVE_MARKETS).map(item => (
+                    <option key={item.code} value={item.code}>{item.name} - {item.currency}</option>
+                  ))}
+                </select>
+                <div className='glory-form-help'>Your listings and paid services use this market&apos;s currency. Active paid plans must finish before moving markets.</div>
               </div>
             </div>
 
@@ -1054,6 +1230,23 @@ const SellerDashboardPage = () => {
                 <input value={sellerProfile.instagram} onChange={event => handleProfileChange('instagram', event.target.value)} placeholder='@yourstore' style={inputStyle} />
               </div>
             </div>
+
+            <fieldset className='glory-payment-method-picker'>
+              <legend>Default listing payment methods</legend>
+              <p>Choose methods you can genuinely offer. Buyers will see these on each listing and agree payment with you in Glory messages.</p>
+              <div>
+                {(sellerPayments.sellerAcceptedPaymentMethods || []).map(method => (
+                  <label key={method.code}>
+                    <input
+                      type='checkbox'
+                      checked={sellerProfile.acceptedPaymentMethods.includes(method.code)}
+                      onChange={() => toggleSellerPaymentMethod(method.code)}
+                    />
+                    <span><strong>{method.label}</strong><small>{method.description}</small></span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
 
             <div className='glory-form-grid'>
               <div>
@@ -1233,8 +1426,8 @@ const SellerDashboardPage = () => {
                     {isCurrent && <em>Current</em>}
                   </div>
                   <div className='glory-seller-plan-price'>
-                    <strong>{plan.feePence ? formatCurrency(plan.feePence / 100) : 'Free'}</strong>
-                    {plan.interval && <span>/ month</span>}
+                    <strong>{plan.feeMinor ? formatMinorCurrency(plan.feeMinor, plan.currency) : 'Free'}</strong>
+                    {plan.interval && <span>{sellerPayments.billingProvider === 'paystack' ? '/ 30 days' : '/ month'}</span>}
                   </div>
                   <p>{plan.description}</p>
                   <ul>
@@ -1242,6 +1435,10 @@ const SellerDashboardPage = () => {
                   </ul>
                   {isCurrent && plan.code === 'starter' ? (
                     <button type='button' className='glory-secondary-button' disabled>Current plan</button>
+                  ) : hasPaidPlan && sellerPayments.billingProvider === 'paystack' ? (
+                    <button type='button' className='glory-secondary-button' disabled>
+                      {isCurrent ? 'Active until renewal' : 'Current plan is active'}
+                    </button>
                   ) : hasPaidPlan ? (
                     <button type='button' className={isCurrent ? 'glory-btn' : 'glory-secondary-button'} onClick={handleBillingPortal} disabled={paymentAction !== ''}>
                       {paymentAction === 'membership-portal' ? 'Opening billing...' : isCurrent ? 'Manage billing' : 'Change plan'}
@@ -1270,7 +1467,7 @@ const SellerDashboardPage = () => {
                   <span><FiDollarSign size={18} /></span>
                   <div><strong>Seller activation</strong><small>One-time platform access</small></div>
                 </div>
-                <div className='glory-commerce-amount'>{formatCurrency(sellerPayments.activation.feePence / 100)}</div>
+                <div className='glory-commerce-amount'>{formatMinorCurrency(sellerPayments.activation.feePence, sellerPayments.activation.currency)}</div>
                 <p>This separate access fee only applies when Glory enables paid activation.</p>
                 {!activationReady && (
                   <button type='button' onClick={handleSellerActivation} disabled={paymentAction !== '' || sellerProfile.verificationStatus !== 'verified' || !twoFactorEnabled} className='glory-btn'>
@@ -1284,18 +1481,21 @@ const SellerDashboardPage = () => {
               <div className='glory-commerce-card-heading'>
                 <span><FiTrendingUp size={18} /></span>
                 <div>
-                  <strong>Homepage featured</strong>
-                  <small>Clearly labelled sponsored placement</small>
+                  <strong>Homepage advertising</strong>
+                  <small>Listing spotlights and reviewed video campaigns</small>
                 </div>
               </div>
               {homepagePromotionPlan ? (
                 <>
                   <div className='glory-commerce-amount'>
-                    {formatCurrency(promotionPricePence / 100)}
+                    {formatMinorCurrency(promotionPriceMinor, homepagePromotionPlan.currency)}
                     {promotionDiscountBps > 0 && <small>{promotionDiscountBps / 100}% plan discount</small>}
                   </div>
                   <p>
-                    Feature one approved listing in Glory&apos;s Sponsored home-page edit for {homepagePromotionPlan.durationDays} days. Paid placement never changes your verification status.
+                    {homepagePromotionPlan.requiresCreative
+                      ? `Submit a video for review, then run it as a clearly labelled Sponsored campaign for ${homepagePromotionPlan.durationDays} days.`
+                      : `Feature one approved listing in Glory's Sponsored homepage edit for ${homepagePromotionPlan.durationDays} days.`}
+                    {' '}Paid placement never changes your verification status or organic ranking.
                   </p>
                   {activeHomepagePromotion && (
                     <span className='glory-commerce-status is-paid'>
@@ -1320,6 +1520,60 @@ const SellerDashboardPage = () => {
                   ) : (
                     <small className='glory-dashboard-note'>Approve and stock a listing before buying a homepage placement.</small>
                   )}
+                  {homepagePromotionPlan.requiresCreative && (
+                    <fieldset className='glory-video-campaign-form'>
+                      <legend>Video creative</legend>
+                      {selectedVideoPromotion && (
+                        <>
+                          <div className={`glory-commerce-status is-${selectedVideoPromotion.creativeReviewStatus}`}>
+                            Creative {selectedVideoPromotion.creativeReviewStatus.replaceAll('_', ' ')}
+                            {selectedVideoPromotion.status === 'approved_for_payment' && ' - ready for payment'}
+                          </div>
+                          {selectedVideoPromotion.sellerFeedback && (
+                            <small className='glory-dashboard-note'>{selectedVideoPromotion.sellerFeedback}</small>
+                          )}
+                        </>
+                      )}
+                      {!selectedVideoPromotion && (
+                        <>
+                          <label>
+                            <span>Campaign headline</span>
+                            <input
+                              value={videoCreative.headline}
+                              onChange={event => setVideoCreative(current => ({ ...current, headline: event.target.value }))}
+                              maxLength={100}
+                              placeholder='A clear promise for this product'
+                            />
+                          </label>
+                          <label>
+                            <span>Campaign copy</span>
+                            <textarea
+                              value={videoCreative.copy}
+                              onChange={event => setVideoCreative(current => ({ ...current, copy: event.target.value }))}
+                              maxLength={220}
+                              rows={3}
+                              placeholder='Describe the product truthfully and tell shoppers what they will discover.'
+                            />
+                          </label>
+                          <label>
+                            <span>Button label</span>
+                            <input
+                              value={videoCreative.ctaLabel}
+                              onChange={event => setVideoCreative(current => ({ ...current, ctaLabel: event.target.value }))}
+                              maxLength={40}
+                            />
+                          </label>
+                          <label className='glory-video-upload'>
+                            <FiImage size={18} aria-hidden='true' />
+                            <span>{videoUploading ? 'Uploading securely...' : videoCreative.mediaUrl ? 'Replace campaign video' : 'Upload MP4 or WebM video'}</span>
+                            <input type='file' accept='video/mp4,video/webm' disabled={videoUploading} onChange={handlePromotionMediaUpload} />
+                          </label>
+                          {videoCreative.mediaUrl && <video src={videoCreative.mediaUrl} muted controls playsInline preload='metadata' />}
+                          <small>Creative is reviewed before payment. Unsupported claims, unsafe products or unclear sponsorship are rejected without charging you.</small>
+                        </>
+                      )}
+                    </fieldset>
+                  )}
                   <button
                     type='button'
                     onClick={handleHomepagePromotion}
@@ -1327,10 +1581,14 @@ const SellerDashboardPage = () => {
                       paymentAction !== ''
                       || !sellerCanSubmitProducts
                       || !selectedPromotionListingId
+                      || ['pending_review', 'pending_payment', 'active'].includes(selectedVideoPromotion?.status)
+                      || (homepagePromotionPlan.requiresCreative
+                        && !selectedVideoPromotion
+                        && (!videoCreative.mediaUrl || videoCreative.headline.trim().length < 4 || videoCreative.copy.trim().length < 12))
                     }
                     className='glory-btn'
                   >
-                    <FiTrendingUp size={15} /> {paymentAction.startsWith('promotion') ? 'Checking payment...' : 'Buy sponsored placement'}
+                    <FiTrendingUp size={15} /> {paymentAction.startsWith('promotion') ? 'Working...' : promotionActionLabel}
                   </button>
                 </>
               ) : (
@@ -1415,7 +1673,7 @@ const SellerDashboardPage = () => {
                             </div>
                           </div>
                         </td>
-                        <td><strong>{formatCurrency(product.price)}</strong></td>
+                        <td><strong>{formatCurrency(product.price, product.currency || sellerCurrency)}</strong></td>
                         <td>
                           <span className={product.countInStock <= (product.lowStockThreshold ?? 5) ? 'glory-low-stock' : ''}>
                             {product.countInStock}
@@ -1631,7 +1889,7 @@ const SellerDashboardPage = () => {
 
               <div className='glory-form-grid'>
                 <div>
-                  <label style={labelStyle}>Price (GBP)</label>
+                  <label style={labelStyle}>Price ({sellerCurrency})</label>
                   <input value={price} onChange={event => setPrice(event.target.value)} placeholder='e.g. 18' type='number' min='0' step='0.01' style={inputStyle} />
                   <div className='glory-form-help'>You set the final selling price. Glory does not change it.</div>
                 </div>
@@ -1641,15 +1899,32 @@ const SellerDashboardPage = () => {
                 </div>
               </div>
 
-              {category && priceGuidance[category] && (
-                <div className={`glory-price-guidance ${Number(price) > priceGuidance[category][1] * 2 ? 'is-warning' : ''}`}>
+              {currentPriceGuidance && (
+                <div className={`glory-price-guidance ${Number(price) > currentPriceGuidance[1] * 2 ? 'is-warning' : ''}`}>
                   <FiDollarSign size={17} />
                   <span>
                     <strong>Pricing reference</strong>
-                    Most {category.toLowerCase()} listings on a UK beauty marketplace commonly sit around {formatCurrency(priceGuidance[category][0])}–{formatCurrency(priceGuidance[category][1])}. Set the real price for your product; unusually high prices may need extra review.
+                    Comparable {category.toLowerCase()} listings in {sellerPayments.marketName} often sit around {formatCurrency(currentPriceGuidance[0], sellerCurrency)} - {formatCurrency(currentPriceGuidance[1], sellerCurrency)}. You set the real price; Glory only flags unusual values for an extra check.
                   </span>
                 </div>
               )}
+
+              <fieldset className='glory-payment-method-picker glory-listing-payment-picker'>
+                <legend>Payment available for this product</legend>
+                <p>Only selected methods appear to buyers on this listing. Glory does not receive or split this product payment.</p>
+                <div>
+                  {(sellerPayments.sellerAcceptedPaymentMethods || []).map(method => (
+                    <label key={method.code}>
+                      <input
+                        type='checkbox'
+                        checked={listingPaymentMethods.includes(method.code)}
+                        onChange={() => toggleListingPaymentMethod(method.code)}
+                      />
+                      <span><strong>{method.label}</strong><small>{method.description}</small></span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
 
               <div className='glory-form-grid'>
                 <div>
@@ -1678,7 +1953,7 @@ const SellerDashboardPage = () => {
                 </div>
                 <div>
                   <label style={labelStyle}>Country of Origin</label>
-                  <input value={countryOfOrigin} onChange={event => setCountryOfOrigin(event.target.value)} placeholder='e.g. United Kingdom' maxLength={100} style={inputStyle} />
+                  <input value={countryOfOrigin} onChange={event => setCountryOfOrigin(event.target.value)} placeholder='e.g. Nigeria, United Kingdom, France' maxLength={100} style={inputStyle} />
                 </div>
               </div>
 

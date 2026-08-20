@@ -15,6 +15,7 @@ import Footer from '../components/Footer'
 import ProductCard from '../components/ProductCard'
 import Loader from '../components/Loader'
 import { getHomepagePromotions, getProducts } from '../api'
+import { useMarket } from '../context/MarketContext'
 
 const categoryTiles = [
   {
@@ -68,26 +69,14 @@ const categoryOrder = [
   'Tools & Accessories',
 ]
 
-const heroSlides = [
-  {
-    id: 'glory-edit',
-    eyebrow: 'Glory beauty, United Kingdom',
-    title: 'Beauty, in all your glory.',
-    copy: 'Discover authentic beauty across every shade, texture and ritual. Chosen for you by independent sellers and beloved brands.',
-    image: '/images/home/glory-editorial-hero.jpg',
-    imagePosition: 'center',
-    primaryLabel: 'Shop new in',
-    primaryPath: '/products',
-    secondaryLabel: 'Start selling',
-    secondaryPath: '/sell-on-glory',
-    tone: 'light',
-  },
+const sharedHeroSlides = [
   {
     id: 'skincare-ritual',
     eyebrow: 'The ritual starts here',
     title: 'Your glow has a routine.',
     copy: 'Build a considered skincare shelf, from first cleanse to the final layer of SPF.',
-    image: '/images/home/skincare-edit.jpg',
+    mediaType: 'image',
+    media: '/images/home/skincare-edit.jpg',
     imagePosition: 'center',
     primaryLabel: 'Shop skincare',
     primaryPath: '/products?category=Skincare',
@@ -100,7 +89,8 @@ const heroSlides = [
     eyebrow: 'Colour, your way',
     title: 'Made to be seen.',
     copy: 'Everyday complexion, statement lips and detail-led colour for whichever version of you arrives today.',
-    image: '/images/home/makeup-edit.jpg',
+    mediaType: 'image',
+    media: '/images/home/makeup-edit.jpg',
     imagePosition: 'center',
     primaryLabel: 'Shop makeup',
     primaryPath: '/products?category=Makeup',
@@ -138,8 +128,10 @@ const getProductTime = (product) => {
 
 const HomePage = () => {
   const navigate = useNavigate()
+  const { market } = useMarket()
   const [products, setProducts] = useState([])
   const [sponsoredProducts, setSponsoredProducts] = useState([])
+  const [sponsoredVideos, setSponsoredVideos] = useState([])
   const [loading, setLoading] = useState(true)
   const [catalogError, setCatalogError] = useState('')
   const [arrivalCategory, setArrivalCategory] = useState('All')
@@ -148,12 +140,17 @@ const HomePage = () => {
   const [reducedMotion, setReducedMotion] = useState(false)
   const heroSwipeStartX = useRef(null)
   const heroActionPath = useRef('')
+  const heroSlides = useMemo(() => [{
+    ...market.hero,
+    primaryPath: '/products',
+    secondaryPath: '/sell-on-glory'
+  }, ...sharedHeroSlides], [market])
 
   const loadProducts = useCallback(async () => {
     setLoading(true)
     try {
-      const { data } = await getProducts()
-      setProducts(Array.isArray(data) ? data : [])
+      const { data } = await getProducts({ market: market.code })
+      setProducts(Array.isArray(data) ? data : (data.items || []))
       setCatalogError('')
     } catch (error) {
       setProducts([])
@@ -161,24 +158,28 @@ const HomePage = () => {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [market.code])
 
   const loadSponsoredProducts = useCallback(async () => {
     try {
-      const { data } = await getHomepagePromotions()
+      const { data } = await getHomepagePromotions({ market: market.code })
       const items = Array.isArray(data?.items) ? data.items : []
       setSponsoredProducts(items
-        .filter((item) => item?.listing)
+        .filter((item) => item?.listing && item.placement === 'homepage_featured')
         .map((item) => ({ ...item.listing, isSponsored: true, promotionEndsAt: item.endsAt })))
+      setSponsoredVideos(items.filter((item) => item?.creative?.type === 'video' && item?.listing))
     } catch (error) {
       setSponsoredProducts([])
+      setSponsoredVideos([])
     }
-  }, [])
+  }, [market.code])
 
   useEffect(() => {
     loadProducts()
     loadSponsoredProducts()
   }, [loadProducts, loadSponsoredProducts])
+
+  useEffect(() => setActiveSlide(0), [market.code])
 
   useEffect(() => {
     const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
@@ -324,11 +325,25 @@ const HomePage = () => {
         >
           <div className='glory-home-shell-v3'>
             <div className='glory-home-stage-frame'>
-              {heroSlides.map((slide, index) => (
+              {heroSlides.map((slide, index) => slide.mediaType === 'video' ? (
+                <video
+                  key={slide.id}
+                  className={`glory-home-stage-image ${index === activeSlide ? 'is-active' : ''}`}
+                  muted
+                  loop
+                  playsInline
+                  autoPlay={index === activeSlide && !reducedMotion}
+                  preload={index === 0 ? 'auto' : 'metadata'}
+                  aria-hidden={index !== activeSlide}
+                  style={{ objectPosition: slide.imagePosition }}
+                >
+                  <source src={slide.media} type='video/mp4' />
+                </video>
+              ) : (
                 <img
                   key={slide.id}
                   className={`glory-home-stage-image ${index === activeSlide ? 'is-active' : ''}`}
-                  src={slide.image}
+                  src={slide.media}
                   alt=''
                   aria-hidden={index !== activeSlide}
                   width='1672'
@@ -498,6 +513,25 @@ const HomePage = () => {
           </section>
         )}
 
+        {sponsoredVideos.length > 0 && sponsoredVideos.slice(0, 1).map((campaign) => (
+          <section className='glory-home-campaign' key={campaign.id} aria-label='Sponsored beauty campaign'>
+            <div className='glory-home-campaign-media'>
+              <video muted loop playsInline autoPlay={!reducedMotion} preload='metadata' aria-label={`Sponsored campaign from ${campaign.listing.brand}`}>
+                <source src={campaign.creative.mediaUrl} type='video/mp4' />
+              </video>
+            </div>
+            <div className='glory-home-campaign-copy'>
+              <span>Sponsored - Reviewed by Glory</span>
+              <h2>{campaign.creative.headline}</h2>
+              <p>{campaign.creative.copy}</p>
+              <button type='button' onClick={() => navigate(`/products/${campaign.listing._id}`)}>
+                {campaign.creative.ctaLabel || 'View product'}
+                <FiArrowRight size={17} aria-hidden='true' />
+              </button>
+            </div>
+          </section>
+        ))}
+
         <section className='glory-home-section-v3 glory-home-stories' aria-labelledby='glory-stories-title'>
           <div className='glory-home-shell-v3'>
             <div className='glory-home-section-heading-v3 is-compact'>
@@ -580,7 +614,7 @@ const HomePage = () => {
               <h2>Build your next chapter on Glory.</h2>
             </div>
             <div>
-              <p>Open a verified storefront, submit products for review and meet shoppers in the UK and beyond.</p>
+              <p>Open a verified storefront, submit products for review and meet shoppers across {market.name} and the wider Glory community.</p>
               <button type='button' onClick={() => navigate('/sell-on-glory')}>
                 Sell on Glory
                 <FiArrowRight size={17} aria-hidden='true' />
@@ -594,7 +628,7 @@ const HomePage = () => {
             {[
               { Icon: FiCheckCircle, title: 'Reviewed listings', sub: 'Products are checked before going live' },
               { Icon: FiShield, title: 'Secure accounts', sub: 'Verification and optional 2FA protect your account' },
-              { Icon: FiTruck, title: 'UK rooted, globally open', sub: 'International delivery where available' },
+              { Icon: FiTruck, title: `${market.name}, connected`, sub: market.deliveryCopy },
               { Icon: FiHeart, title: 'Made for more of us', sub: 'Every shade, texture and tradition belongs here' },
             ].map((item) => (
               <div key={item.title} className='glory-home-trust-item-v3'>

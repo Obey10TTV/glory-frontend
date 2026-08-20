@@ -156,15 +156,21 @@ export const getReviews = (productId) => API.get(`/reviews/${productId}`)
 export const reportReview = (reviewId, data) => API.post(`/reviews/${reviewId}/report`, data)
 
 // PROMOTIONS
-export const getPromotionPlans = () => API.get('/promotions/plans')
-export const getHomepagePromotions = () => API.get('/promotions/homepage')
+export const getPromotionPlans = (params) => API.get('/promotions/plans', { params })
+export const getHomepagePromotions = (params) => API.get('/promotions/homepage', { params })
 export const getMyPromotions = () => API.get('/promotions/mine')
 export const initializeHomepagePromotion = (data) => API.post('/stripe/seller/promotions/homepage', data)
 export const verifyHomepagePromotion = (sessionId) => API.get(`/stripe/seller/promotions/homepage/verify/${sessionId}`)
+export const submitHomepageVideoDraft = (data) => API.post('/promotions/video-drafts', data)
+
+// REGIONAL MARKETPLACE
+export const getMarketplaceConfig = (market) => API.get('/marketplace/config', { params: { market } })
+export const getMarketplaceSellerStatus = () => API.get('/marketplace/seller/status')
 
 // UPLOAD
 export const uploadImage = (data) => API.post('/upload', data)
 export const uploadSellerDocument = (data) => API.post('/upload/seller-document', data)
+export const uploadPromotionMedia = (data) => API.post('/upload/promotion-media', data)
 
 // PAYMENTS
 export const initializeStripePayment = (data) => API.post('/stripe/initialize', data)
@@ -181,6 +187,10 @@ export const openSellerBillingPortal = () => API.post('/stripe/seller/subscripti
 export const initializeSellerPayouts = () => API.post('/stripe/connect/onboard')
 export const initializePayment = (data) => API.post('/paystack/initialize', data)
 export const verifyPayment = (reference) => API.get(`/paystack/verify/${reference}`)
+export const initializePaystackSellerPlan = (data) => API.post('/paystack/seller/plan', data)
+export const verifyPaystackSellerPlan = (reference) => API.get(`/paystack/seller/plan/verify/${reference}`)
+export const initializePaystackHomepagePromotion = (data) => API.post('/paystack/seller/promotions/homepage', data)
+export const verifyPaystackHomepagePromotion = (reference) => API.get(`/paystack/seller/promotions/homepage/verify/${reference}`)
 
 // ADMIN
 export const getAdminStats = () => API.get('/admin/stats')
@@ -202,5 +212,7 @@ export const getAdminListingReports = (params) => API.get('/reports/admin', { pa
 export const updateListingReport = (id, data) => API.put(`/reports/admin/${id}`, data)
 export const getAdminReviews = (params) => API.get('/reviews/admin', { params })
 export const updateAdminReview = (id, data) => API.put(`/reviews/admin/${id}`, data)
+export const getAdminPromotions = (params) => API.get('/admin/promotions', { params })
+export const reviewPromotionCreative = (id, data) => API.put(`/admin/promotions/${id}/creative-review`, data)
 
 export default API

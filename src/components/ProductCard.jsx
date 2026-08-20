@@ -135,11 +135,11 @@ const ProductCard = ({ product }) => {
         }}>
           <div className='glory-product-card-prices' style={{ display: 'flex', alignItems: 'baseline', gap: '6px', flexWrap: 'wrap' }}>
             <strong style={{ fontSize: '14px', fontWeight: '700', color: '#111' }}>
-              {formatCurrency(product.price)}
+              {formatCurrency(product.price, product.currency)}
             </strong>
             {product.compareAtPrice > product.price && (
               <span style={{ fontSize: '11px', color: '#aaa', textDecoration: 'line-through' }}>
-                {formatCurrency(product.compareAtPrice)}
+                {formatCurrency(product.compareAtPrice, product.currency)}
               </span>
             )}
           </div>

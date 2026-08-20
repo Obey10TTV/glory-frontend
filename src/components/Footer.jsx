@@ -1,6 +1,7 @@
 import { Link } from 'react-router'
 import { FiArrowRight, FiFacebook, FiInstagram, FiTwitter, FiYoutube } from 'react-icons/fi'
-import UnitedKingdomFlag from './UnitedKingdomFlag'
+import MarketFlag from './MarketFlag'
+import { useMarket } from '../context/MarketContext'
 import { SiAmericanexpress, SiBitcoin, SiEthereum, SiMastercard, SiSolana, SiStripe, SiVisa, SiXrp } from 'react-icons/si'
 
 const footerGroups = [
@@ -64,7 +65,7 @@ const socials = [
   { Icon: FiFacebook, label: 'Glory customer support', to: '/contact' },
 ]
 
-const paymentBadges = [
+const globalPaymentBadges = [
   { label: 'Stripe', Icon: SiStripe },
   { label: 'Visa', Icon: SiVisa },
   { label: 'Mastercard', Icon: SiMastercard },
@@ -75,8 +76,14 @@ const paymentBadges = [
   { label: 'XRP', Icon: SiXrp, className: 'is-xrp' },
 ]
 
-const Footer = () => (
-  <footer className='glory-footer-v2'>
+const Footer = () => {
+  const { market } = useMarket()
+  const paymentBadges = market.code === 'NG'
+    ? globalPaymentBadges.filter(({ label }) => !['Stripe', 'American Express'].includes(label))
+    : globalPaymentBadges
+
+  return (
+    <footer className='glory-footer-v2'>
     <div className='glory-footer-invite'>
       <div className='glory-footer-shell'>
         <div>
@@ -94,11 +101,11 @@ const Footer = () => (
       <div className='glory-footer-shell'>
         <div className='glory-footer-topline'>
           <div className='glory-footer-brand'>
-            <Link to='/' className='glory-footer-wordmark' aria-label='Glory home'>GLORY.</Link>
-            <p>The UK beauty marketplace for every shade, texture and ritual. Discover independent sellers, ask thoughtful questions and buy with care.</p>
+            <Link to={`/${market.slug}`} className='glory-footer-wordmark' aria-label={`Glory ${market.name} home`}>GLORY.</Link>
+            <p>A global beauty marketplace with local context. Discover independent sellers, ask thoughtful questions and arrange every purchase with care.</p>
             <div className='glory-footer-market'>
-              <UnitedKingdomFlag size={27} title='United Kingdom' />
-              <span>United Kingdom marketplace<br />Worldwide delivery where available</span>
+              <MarketFlag market={market} size={27} />
+              <span>{market.name} marketplace<br />Prices in {market.currency} - {market.deliveryCopy}</span>
             </div>
           </div>
 
@@ -118,7 +125,7 @@ const Footer = () => (
 
         <div className='glory-footer-bottomline'>
           <div className='glory-footer-legal'>
-            <span>© {new Date().getFullYear()} Glory Beauty Ltd.</span>
+            <span>© {new Date().getFullYear()} Glory.</span>
             {policyLinks.map((link) => <Link key={link.to} to={link.to}>{link.label}</Link>)}
           </div>
 
@@ -139,7 +146,8 @@ const Footer = () => (
         </div>
       </div>
     </div>
-  </footer>
-)
+    </footer>
+  )
+}
 
 export default Footer

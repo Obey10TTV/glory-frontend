@@ -2,6 +2,11 @@ const { expect, test } = require('@playwright/test')
 
 const publicRoutes = [
   '/',
+  '/ng',
+  '/gb',
+  '/us',
+  '/ca',
+  '/coming-soon/ghana',
   '/products',
   '/cart',
   '/wishlist',
@@ -78,6 +83,8 @@ const sellerProfile = {
   twoFactorEnabled: true,
   sellerProfile: {
     storeName: 'Responsive Beauty',
+    brandName: 'Responsive Beauty',
+    marketCode: 'GB',
     country: 'United Kingdom',
     verificationStatus: 'verified',
     activationStatus: 'paid',
@@ -111,6 +118,9 @@ const responsiveListing = {
   category: 'Skincare',
   image: 'https://images.pexels.com/photos/4041392/pexels-photo-4041392.jpeg',
   price: 24,
+  currency: 'GBP',
+  marketCode: 'GB',
+  acceptedPaymentMethods: ['card', 'bank_transfer'],
   countInStock: 8,
   approvalStatus: 'approved',
 }
@@ -121,8 +131,49 @@ const homepagePromotionPlan = {
   label: 'Homepage Spotlight',
   description: 'A clearly labelled sponsored placement.',
   feePence: 8900,
+  feeMinor: 8900,
   currency: 'GBP',
+  marketCode: 'GB',
+  billingProvider: 'stripe',
   durationDays: 7,
+}
+
+const regionalDetails = {
+  NG: { marketName: 'Nigeria', currency: 'NGN', locale: 'en-NG', billingProvider: 'paystack', starterLimit: 10 },
+  GB: { marketName: 'United Kingdom', currency: 'GBP', locale: 'en-GB', billingProvider: 'stripe', starterLimit: 5 },
+  US: { marketName: 'United States', currency: 'USD', locale: 'en-US', billingProvider: 'stripe', starterLimit: 5 },
+  CA: { marketName: 'Canada', currency: 'CAD', locale: 'en-CA', billingProvider: 'stripe', starterLimit: 5 },
+}
+
+const regionalMarketplaceResponse = (marketCode = 'NG') => {
+  const market = regionalDetails[marketCode] || regionalDetails.NG
+  const paidPrices = marketCode === 'NG' ? [750000, 2200000, 6000000] : [5900, 14900, 39900]
+  const sellerPlans = [
+    { code: 'starter', label: 'Starter', description: 'Start a verified catalogue.', feeMinor: 0, currency: market.currency, marketCode, billingProvider: market.billingProvider, interval: null, activeListingLimit: market.starterLimit, promotionDiscountBps: 0, features: [`Up to ${market.starterLimit} active listings`] },
+    { code: 'studio', label: 'Studio', description: 'For growing beauty businesses.', feeMinor: paidPrices[0], currency: market.currency, marketCode, billingProvider: market.billingProvider, interval: 'month', activeListingLimit: 50, promotionDiscountBps: 1000, features: ['Up to 50 active listings'] },
+    { code: 'scale', label: 'Scale', description: 'For established catalogues.', feeMinor: paidPrices[1], currency: market.currency, marketCode, billingProvider: market.billingProvider, interval: 'month', activeListingLimit: 200, promotionDiscountBps: 2000, features: ['Up to 200 active listings'] },
+    { code: 'partner', label: 'Brand Partner', description: 'For high-volume brands.', feeMinor: paidPrices[2], currency: market.currency, marketCode, billingProvider: market.billingProvider, interval: 'month', activeListingLimit: 750, promotionDiscountBps: 2500, features: ['Up to 750 active listings'] },
+  ]
+  const promotionPlans = [
+    { ...homepagePromotionPlan, currency: market.currency, marketCode, billingProvider: market.billingProvider, feeMinor: marketCode === 'NG' ? 500000 : 8900, recommended: true, requiresCreative: false },
+    { code: 'homepage_video_7', placement: 'homepage_video', label: 'Homepage Video', description: 'A reviewed video campaign.', feeMinor: marketCode === 'NG' ? 2500000 : 19900, currency: market.currency, marketCode, billingProvider: market.billingProvider, durationDays: 7, requiresCreative: true },
+  ]
+
+  return {
+    marketCode,
+    marketName: market.marketName,
+    locale: market.locale,
+    currency: market.currency,
+    billingProvider: market.billingProvider,
+    billingEnabled: true,
+    marketplaceMode: 'classified',
+    directCheckoutEnabled: false,
+    sellerActivationRequired: false,
+    sellerPlans,
+    promotionPlans,
+    paymentMethods: [{ code: 'card', label: 'Card', enabled: true }],
+    sellerAcceptedPaymentMethods: [{ code: 'card', label: 'Card or payment link' }, { code: 'bank_transfer', label: 'Bank transfer' }],
+  }
 }
 
 const heightForWidth = (width) => {
@@ -182,32 +233,22 @@ const findLayoutIssues = () => {
   }
 }
 
-const mockApiResponse = (pathname, profile) => {
+const mockApiResponse = (requestUrl, profile) => {
+  const url = new URL(requestUrl)
+  const { pathname, searchParams } = url
+  const marketCode = searchParams.get('market') || profile?.sellerProfile?.marketCode || 'NG'
+  const marketplace = regionalMarketplaceResponse(marketCode)
+
   if (pathname.endsWith('/users/profile')) return profile
   if (pathname.endsWith('/users/csrf')) return { csrfToken: 'responsive-test-token' }
-  if (pathname.endsWith('/stripe/seller/status')) {
+  if (pathname.endsWith('/marketplace/config')) return marketplace
+  if (pathname.endsWith('/marketplace/seller/status')) {
     return {
-      activation: { required: false, feePence: 4900, currency: 'GBP', status: 'paid' },
+      ...marketplace,
+      activation: { required: false, feePence: 0, currency: marketplace.currency, status: 'paid' },
       membership: { planCode: 'starter', status: 'active', activeListingLimit: 5, promotionDiscountBps: 0 },
-      sellerPlans: [
-        { code: 'starter', label: 'Starter', description: 'Start a verified catalogue.', feePence: 0, currency: 'GBP', interval: null, activeListingLimit: 5, promotionDiscountBps: 0, features: ['Up to 5 active listings'] },
-        { code: 'studio', label: 'Studio', description: 'For growing beauty businesses.', feePence: 5900, currency: 'GBP', interval: 'month', activeListingLimit: 50, promotionDiscountBps: 1000, features: ['Up to 50 active listings'] },
-        { code: 'scale', label: 'Scale', description: 'For established catalogues.', feePence: 14900, currency: 'GBP', interval: 'month', activeListingLimit: 200, promotionDiscountBps: 2000, features: ['Up to 200 active listings'] },
-        { code: 'partner', label: 'Brand Partner', description: 'For high-volume brands.', feePence: 39900, currency: 'GBP', interval: 'month', activeListingLimit: 750, promotionDiscountBps: 2500, features: ['Up to 750 active listings'] },
-      ],
-      payouts: {
-        status: 'active',
-        detailsSubmitted: true,
-        chargesEnabled: true,
-        payoutsEnabled: true,
-      },
+      payouts: { status: 'active', detailsSubmitted: true, chargesEnabled: true, payoutsEnabled: true },
       acceptedPaymentMethods: ['card'],
-      paymentMethods: [{
-        code: 'card',
-        label: 'Credit or debit card',
-        description: 'Visa, Mastercard and supported cards through Stripe.',
-        enabled: true,
-      }],
     }
   }
   if (pathname.endsWith('/stripe/seller/identity/status')) return { provider: 'stripe_identity', status: 'verified' }
@@ -229,9 +270,18 @@ const mockApiResponse = (pathname, profile) => {
     }
   }
   if (pathname.includes('/stripe/verify/')) return { message: 'Payment verification test state' }
-  if (pathname === '/api/products') return [responsiveListing]
+  if (pathname === '/api/products') {
+    const listing = { ...responsiveListing, marketCode, currency: marketplace.currency }
+    return searchParams.toString()
+      ? {
+          items: [listing],
+          pagination: { page: 1, pages: 1, total: 1 },
+          facets: { categories: ['Skincare'], brands: ['Responsive Beauty'], productTypes: ['Serum'] },
+        }
+      : [listing]
+  }
   if (pathname.endsWith('/products/mine')) return [responsiveListing]
-  if (pathname.endsWith('/promotions/plans')) return { items: [homepagePromotionPlan] }
+  if (pathname.endsWith('/promotions/plans')) return { marketCode, items: marketplace.promotionPlans }
   if (pathname.endsWith('/promotions/homepage')) {
     return {
       items: [{
@@ -252,6 +302,7 @@ const mockApiResponse = (pathname, profile) => {
     || pathname.endsWith('/admin/users')
     || pathname.endsWith('/admin/orders')
     || pathname.endsWith('/admin/products')
+    || pathname.endsWith('/admin/promotions')
     || pathname.endsWith('/reports/admin')
     || pathname.endsWith('/reviews/admin')
     || pathname.endsWith('/conversations')
@@ -270,7 +321,8 @@ test.beforeEach(async ({ page }) => {
 
   // Keep layout checks deterministic while the hosted API is unavailable or slow.
   await page.route('**/api/**', async (requestRoute) => {
-    const pathname = new URL(requestRoute.request().url()).pathname
+    const requestUrl = requestRoute.request().url()
+    const pathname = new URL(requestUrl).pathname
     if (pathname.endsWith('/users/profile')) {
       await requestRoute.fulfill({
         status: 401,
@@ -283,7 +335,7 @@ test.beforeEach(async ({ page }) => {
     await requestRoute.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify(mockApiResponse(pathname, {})),
+      body: JSON.stringify(mockApiResponse(requestUrl, {})),
     })
   })
 })
@@ -329,11 +381,11 @@ for (const protectedRoute of protectedRoutes) {
     }, protectedRoute.profile)
 
     await page.route('**/api/**', async (requestRoute) => {
-      const pathname = new URL(requestRoute.request().url()).pathname
+      const requestUrl = requestRoute.request().url()
       await requestRoute.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify(mockApiResponse(pathname, protectedRoute.profile)),
+        body: JSON.stringify(mockApiResponse(requestUrl, protectedRoute.profile)),
       })
     })
 

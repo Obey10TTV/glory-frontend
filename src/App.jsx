@@ -6,6 +6,7 @@ import ScrollToTop from './components/ScrollToTop'
 import Loader from './components/Loader'
 import SeoManager from './components/Seo'
 import { useUser } from './context/UserContext'
+import { MarketProvider } from './context/MarketContext'
 import { infoPageRoutes } from './data/infoPages'
 
 const HomePage = lazy(() => import('./pages/HomePage'))
@@ -18,8 +19,10 @@ const SellerDashboardPage = lazy(() => import('./pages/SellerDashboardPage'))
 const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'))
 const AboutPage = lazy(() => import('./pages/AboutPage'))
 const InfoPage = lazy(() => import('./pages/InfoPage'))
+const SellerPricingPage = lazy(() => import('./pages/SellerPricingPage'))
 const WishlistPage = lazy(() => import('./pages/WishlistPage'))
 const MessagesPage = lazy(() => import('./pages/MessagesPage'))
+const ComingSoonPage = lazy(() => import('./pages/ComingSoonPage'))
 const ChatBot = lazy(() => import('./components/ChatBot'))
 
 const RequireAccess = ({ children, role }) => {
@@ -32,7 +35,7 @@ const RequireAccess = ({ children, role }) => {
   return children
 }
 
-function App() {
+function AppContent() {
   const { user } = useUser()
   const focusMainContent = (event) => {
     event.preventDefault()
@@ -44,7 +47,7 @@ function App() {
     }
   }
   return (
-    <Router>
+    <>
       <a className='glory-skip-link' href='#glory-main' onClick={focusMainContent}>Skip to main content</a>
       <ScrollToTop />
       <SeoManager />
@@ -52,6 +55,11 @@ function App() {
         <Suspense fallback={<div className='glory-route-loader'><Loader /></div>}>
           <Routes>
             <Route path='/' element={<HomePage />} />
+            <Route path='/ng' element={<HomePage />} />
+            <Route path='/gb' element={<HomePage />} />
+            <Route path='/us' element={<HomePage />} />
+            <Route path='/ca' element={<HomePage />} />
+            <Route path='/coming-soon/:marketSlug' element={<ComingSoonPage />} />
             <Route path='/products' element={<ProductsPage />} />
             <Route path='/brands/:brand' element={<ProductsPage />} />
             <Route path='/products/:id' element={<ProductDetailPage />} />
@@ -66,12 +74,25 @@ function App() {
             <Route path='/seller' element={<RequireAccess role='seller'><SellerDashboardPage /></RequireAccess>} />
             <Route path='/admin' element={<RequireAccess role='admin'><AdminDashboardPage /></RequireAccess>} />
             <Route path='/about' element={<AboutPage />} />
-            {infoPageRoutes.map(slug => <Route key={slug} path={`/${slug}`} element={<InfoPage slug={slug} />} />)}
+            <Route path='/seller-pricing' element={<SellerPricingPage />} />
+            {infoPageRoutes
+              .filter(slug => slug !== 'seller-pricing')
+              .map(slug => <Route key={slug} path={`/${slug}`} element={<InfoPage slug={slug} />} />)}
           </Routes>
         </Suspense>
       </div>
       {user && <Suspense fallback={null}><ChatBot /></Suspense>}
       <CookieConsent />
+    </>
+  )
+}
+
+function App() {
+  return (
+    <Router>
+      <MarketProvider>
+        <AppContent />
+      </MarketProvider>
     </Router>
   )
 }

@@ -12,6 +12,7 @@ import {
 import Message from '../components/Message'
 import { FiEye, FiEyeOff, FiMail, FiPackage, FiRefreshCw, FiShield, FiShoppingBag } from 'react-icons/fi'
 import GoogleSignInButton from '../components/GoogleSignInButton'
+import { useMarket } from '../context/MarketContext'
 
 const passwordIsStrong = (value) => (
   value.length >= 10
@@ -23,6 +24,7 @@ const passwordIsStrong = (value) => (
 
 const RegisterPage = () => {
   const navigate = useNavigate()
+  const { market } = useMarket()
   const { login } = useUser()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -72,7 +74,8 @@ const RegisterPage = () => {
       const { data } = await authenticateWithGoogle({
         credential,
         isSeller,
-        brandName: isSeller ? brandName.trim() : undefined
+        brandName: isSeller ? brandName.trim() : undefined,
+        marketCode: market.code
       })
       handleAuthResponse(data)
     } catch (err) {
@@ -138,7 +141,8 @@ const RegisterPage = () => {
         email,
         password,
         isSeller,
-        brandName: isSeller ? brandName.trim() : undefined
+        brandName: isSeller ? brandName.trim() : undefined,
+        marketCode: market.code
       })
 
       if (data.requiresEmailVerification) {
@@ -190,7 +194,12 @@ const RegisterPage = () => {
         if (!googleCredential) {
           throw new Error('Start Google sign-in again to request a new code.')
         }
-        const { data } = await authenticateWithGoogle({ credential: googleCredential, isSeller })
+        const { data } = await authenticateWithGoogle({
+          credential: googleCredential,
+          isSeller,
+          brandName: isSeller ? brandName.trim() : undefined,
+          marketCode: market.code
+        })
         handleAuthResponse(data)
       } else {
         const { data } = await resendVerificationOtp({ email: pendingVerification.email })

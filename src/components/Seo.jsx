@@ -1,15 +1,16 @@
 import { useEffect } from 'react'
 import { useLocation } from 'react-router'
+import { useMarket } from '../context/MarketContext'
 
 const defaults = {
-  title: 'Glory | UK Beauty Marketplace',
-  description: 'Discover authentic beauty products from reviewed sellers in the UK and around the world.'
+  title: 'Glory | Global Beauty Marketplace',
+  description: 'Discover beauty products from reviewed independent sellers across Glory marketplaces.'
 }
 
 const pages = {
   '/': defaults,
-  '/products': { title: 'Shop Beauty in the UK | Glory', description: 'Shop skincare, makeup, haircare, fragrance, nails and beauty essentials from reviewed sellers, with international delivery where available.' },
-  '/about': { title: 'About Glory | UK Beauty, Global Community', description: 'Meet Glory, a UK-based marketplace created for global beauty, independent sellers and every beauty tradition.' },
+  '/products': { title: 'Shop Beauty | Glory', description: 'Shop skincare, makeup, haircare, fragrance, nails and beauty essentials from reviewed independent sellers.' },
+  '/about': { title: 'About Glory | Local Beauty Without Borders', description: 'Meet Glory, a global classified marketplace for independent beauty sellers and shoppers.' },
   '/sell-on-glory': { title: 'Sell Beauty Products on Glory', description: 'Create beauty listings on Glory with seller verification, evidence review and private buyer conversations.' },
   '/wishlist': { title: 'Your Wishlist | Glory', description: 'Return to the beauty products you saved on Glory.' },
   '/login': { title: 'Sign In | Glory', description: 'Securely sign in to your Glory buyer or seller account.' },
@@ -56,18 +57,26 @@ const applySeo = ({ title, description, image, canonical, type = 'website', robo
 
 const SeoManager = () => {
   const location = useLocation()
+  const { market } = useMarket()
   useEffect(() => {
-    const basePath = location.pathname.startsWith('/brands/') ? '/products' : location.pathname
-    const page = pages[basePath] || (location.pathname.startsWith('/products/')
+    const marketHome = ['/', '/ng', '/gb', '/us', '/ca'].includes(location.pathname)
+    const basePath = marketHome ? '/' : (location.pathname.startsWith('/brands/') ? '/products' : location.pathname)
+    const basePage = pages[basePath] || (location.pathname.startsWith('/products/')
       ? { title: 'Beauty Product | Glory', description: defaults.description }
       : defaults)
+    const page = marketHome
+      ? {
+          title: `Glory ${market.name} | Independent Beauty Marketplace`,
+          description: `Discover beauty products and independent sellers in ${market.name}, with prices in ${market.currency}.`
+        }
+      : basePage
     const privatePage = ['/account', '/admin', '/seller', '/checkout', '/payment/verify'].some(path => location.pathname.startsWith(path))
     applySeo({
       ...page,
       canonical: `${window.location.origin}${location.pathname}`,
       robots: privatePage ? 'noindex,nofollow' : 'index,follow'
     })
-  }, [location.pathname])
+  }, [location.pathname, market])
   return null
 }
 
@@ -96,7 +105,7 @@ export const ProductSeo = ({ product }) => {
       aggregateRating: product.numReviews > 0 ? { '@type': 'AggregateRating', ratingValue: product.rating, reviewCount: product.numReviews } : undefined,
       offers: {
         '@type': 'Offer',
-        priceCurrency: 'GBP',
+        priceCurrency: product.currency || 'GBP',
         price: product.price,
         availability: product.countInStock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
         url: canonical

@@ -14,7 +14,7 @@ export const infoPages = {
     sections: [
       {
         title: 'Support hours',
-        body: 'Glory support is available Monday to Friday, 9am to 6pm UK time. Messages received after hours are answered the next business day.',
+        body: 'Glory support is available Monday to Friday. Your confirmation email will show the response window for your selected marketplace, and messages received after hours are answered the next business day.',
       },
       {
         title: 'Before you contact us',
@@ -68,12 +68,12 @@ export const infoPages = {
     group: 'Help',
     eyebrow: 'Shipping',
     title: 'Delivery is arranged with your seller.',
-    intro: 'Glory is based in the United Kingdom and displays prices in GBP. Independent sellers decide whether they can deliver locally, across the UK or internationally.',
+    intro: 'Glory shows local marketplace prices in naira, pounds, US dollars or Canadian dollars. Independent sellers decide where they deliver and arrange each delivery directly with the buyer.',
     primaryAction: { label: 'Shop products', to: '/products' },
     secondaryAction: { label: 'Marketplace safety', to: '/marketplace-safety' },
     cards: [
-      { title: 'UK based', text: 'Storefront pricing and default delivery details are designed around UK customers.' },
-      { title: 'Worldwide destinations', text: 'Customers outside the UK can ask the seller whether delivery to their destination is possible.' },
+      { title: 'Local marketplaces', text: 'Choose Nigeria, the United Kingdom, the United States or Canada to browse listings in the local currency.' },
+      { title: 'Worldwide destinations', text: 'Customers outside a seller\'s home market can ask whether delivery to their destination is available.' },
       { title: 'Delivery costs', text: 'Delivery pricing and terms are set by each seller and should be agreed before payment.' },
     ],
     sections: [
@@ -91,7 +91,7 @@ export const infoPages = {
     primaryAction: { label: 'Contact support', to: '/contact' },
     secondaryAction: { label: 'Become a seller', to: '/sell-on-glory' },
     sections: [
-      { title: 'Is Glory only for the United Kingdom?', body: 'No. Glory is UK based and prices are shown in GBP, but customers in other countries can shop when delivery is available to their destination.' },
+      { title: 'Where is Glory available?', body: 'Glory is being built for Nigeria, the United Kingdom, the United States and Canada, with more regional marketplaces planned. Select a market to see its listings and currency.' },
       { title: 'Are products authentic?', body: 'Glory reviews seller identity and listing evidence, but no marketplace can guarantee every private transaction. Check the listing, ask questions and report anything suspicious.' },
       { title: 'Can I sell my beauty brand here?', body: 'Yes. Visit Sell on Glory to learn how sellers can prepare their store profile, packaging evidence and listings.' },
       { title: 'How do payments work?', body: 'Glory does not collect buyer-to-seller payments. Buyers and sellers agree payment and delivery directly, while Glory provides the listing, conversation and safety reporting tools.' },
@@ -150,14 +150,14 @@ export const infoPages = {
       { title: 'Detection and moderation', body: 'Glory checks account age, repeated buyer-seller patterns, unusually fast confirmations, duplicate text and contact details. A signal does not decide the outcome on its own. A moderator reviews the content and interaction record, regardless of the star rating.' },
       { title: 'Publication and removal', body: 'Reviews may be published, rejected or removed only under this policy. Genuine criticism is not removed merely because a seller disagrees with it. Review authors may withdraw their own feedback.' },
       { title: 'Reports and appeals', body: 'Anyone with a verified Glory account can report a published review. Glory records the reason, reviews available evidence and keeps an audit trail. A reviewer or seller may ask support to reconsider a decision and provide relevant evidence.' },
-      { title: 'Policy status', body: 'This operational policy reflects the controls currently built into Glory. It must receive final UK legal review before public launch and should be reviewed whenever the review system changes.' },
+      { title: 'Policy status', body: 'This operational policy reflects the controls currently built into Glory. It requires final legal review in every launch market and should be reviewed whenever the review system changes.' },
     ],
   },
   careers: {
     group: 'About',
     eyebrow: 'Careers',
     title: 'Build the future of beauty commerce.',
-    intro: 'Glory is early, focused and building for independent beauty sellers in the UK and shoppers around the world.',
+    intro: 'Glory is early, focused and building for independent beauty sellers and shoppers across regional marketplaces.',
     primaryAction: { label: 'Email careers', href: 'mailto:ajokuobioma10@gmail.com' },
     secondaryAction: { label: 'Our story', to: '/about' },
     cards: [
@@ -174,7 +174,7 @@ export const infoPages = {
     primaryAction: { label: 'Email press', href: 'mailto:ajokuobioma10@gmail.com' },
     secondaryAction: { label: 'Read our story', to: '/about' },
     sections: [
-      { title: 'Company boilerplate', body: 'Glory is a UK-based global beauty marketplace helping shoppers discover authentic products while giving independent beauty sellers a professional e-commerce home.' },
+      { title: 'Company boilerplate', body: 'Glory is a global beauty classifieds marketplace helping shoppers discover independent sellers while giving beauty businesses a professional, trust-led listing home.' },
       { title: 'Media requests', body: 'Please include your publication, deadline, interview topic and any requested assets when contacting the team.' },
     ],
   },
@@ -213,7 +213,7 @@ export const infoPages = {
     secondaryAction: { label: 'Contact us', to: '/contact' },
     cards: [
       { title: 'Inclusive discovery', text: 'Every shade, texture and tradition deserves space in the marketplace.' },
-      { title: 'Local trust, global reach', text: 'UK-based marketplace standards with international delivery where available.' },
+      { title: 'Local trust, global reach', text: 'Regional pricing and marketplace standards with international delivery where sellers offer it.' },
       { title: 'Brand building', text: 'Tools and stories that help independent sellers move beyond DMs.' },
     ],
   },
@@ -271,12 +271,12 @@ export const infoPages = {
     secondaryAction: { label: 'Contact sales', to: '/contact' },
     cards: [
       { title: 'Starter · Free', text: 'Up to 5 active listings, buyer enquiries, verified-interaction reviews and standard listing review.' },
-      { title: 'Studio · £59/month', text: 'Up to 50 active listings, 10% off paid visibility and priority placement in the listing-review queue.' },
-      { title: 'Scale · £149/month', text: 'Up to 200 active listings, 20% off paid visibility and priority listing review for established catalogues.' },
-      { title: 'Brand Partner · £399/month', text: 'Up to 750 active listings, 25% off paid visibility and managed campaign support.' },
+      { title: 'Studio', text: 'Up to 50 active listings, 10% off paid visibility and priority placement in the listing-review queue.' },
+      { title: 'Scale', text: 'Up to 200 active listings, 20% off paid visibility and priority listing review for established catalogues.' },
+      { title: 'Brand Partner', text: 'Up to 750 active listings, 25% off paid visibility and managed campaign support.' },
     ],
     sections: [
-      { title: 'Sponsored visibility', items: ['Homepage Spotlight: £89 for 7 days.', 'Homepage Spotlight 30: £249 for 30 days.', 'Larger brand and seasonal campaigns are quoted separately based on placement, duration and expected reach.'] },
+      { title: 'Sponsored visibility', items: ['Homepage listing placements are available for 7 or 30 days.', 'Reviewed homepage video campaigns are available for 7 or 30 days.', 'Prices are shown in the selected marketplace currency before payment.'] },
       { title: 'Trust is never sold', body: 'Identity checks, product evidence and seller verification are assessed separately from payment. Buying a plan or promotion never creates a verified badge or guarantees listing approval.' },
       { title: 'Before live billing', body: 'Applicable taxes are calculated at Stripe checkout when automatic tax is enabled. Cancellation rights, renewal terms and promotion refund rules must be confirmed in the final Seller Agreement and Paid Promotion Terms.' },
     ],
@@ -289,11 +289,11 @@ export const infoPages = {
     primaryAction: { label: 'View seller pricing', to: '/seller-pricing' },
     secondaryAction: { label: 'Contact support', to: '/contact' },
     sections: [
-      { title: 'Subscriptions', body: 'Studio, Scale and Brand Partner are monthly subscriptions billed in advance through Stripe. The checkout page shows the current price, applicable tax and renewal date before payment. Sellers can manage or cancel renewal through the billing portal; cancellation takes effect at the end of the paid period unless law requires otherwise.' },
+      { title: 'Plans and renewal', body: 'Studio, Scale and Brand Partner are billed in advance through the payment provider shown for the seller\'s marketplace. Stripe plans renew monthly until cancelled. Nigeria plans provide 30 days of access through Paystack and require a new payment to renew. Checkout shows the current price and payment terms before payment.' },
       { title: 'Paid visibility', body: 'Homepage Spotlight is a time-limited advertising placement for one approved listing. Paid placements are labelled Sponsored. Payment does not guarantee sales, engagement, listing approval or a trust badge.' },
       { title: 'Eligibility and interruption', body: 'Only approved, in-stock listings may be promoted. Glory may pause an advertisement that becomes unsafe, misleading, unavailable or non-compliant. The final terms must specify replacement time or refund treatment when Glory causes a material interruption.' },
       { title: 'Price changes', body: 'Glory may change prices prospectively with clear notice. A change does not alter a promotion already purchased or a subscription period already paid for.' },
-      { title: 'Final review required', body: 'Tax treatment, statutory cancellation rights, invoices, refunds and renewal notices require review by a UK solicitor and accountant before live billing is enabled.' },
+      { title: 'Final review required', body: 'Tax treatment, cancellation rights, invoices, refunds and renewal notices require review by qualified legal and accounting advisers in each launch market before live billing is enabled there.' },
     ],
   },
   'seller-faq': {
@@ -335,7 +335,7 @@ export const infoPages = {
       { title: 'How information is used', body: 'Information is used to provide accounts, review listings, support sellers, prevent fraud, investigate reports and improve the marketplace experience.' },
       { title: 'Hosted identity verification', body: 'Seller identity checks are completed on Stripe Identity\'s hosted service. Glory stores the verification session reference, status and relevant timestamps, not passport or driving-licence images. Stripe processes identity-document and selfie information under its own security and privacy controls. Sellers who cannot use the hosted check can contact support about a proportionate alternative.' },
       { title: 'Identity retention and deletion', body: 'Glory requests provider redaction as part of an approved account-deletion workflow when there is no legal, fraud-prevention or dispute reason to retain the verification record. Exact retention periods and lawful bases must be recorded in Glory\'s approved DPIA and retention schedule before launch.' },
-      { title: 'Legal review', body: 'This page is not final legal language. Privacy terms should be reviewed for UK GDPR and Data Protection Act 2018 requirements before public launch.' },
+      { title: 'Legal review', body: 'This page is not final legal language. Privacy terms, lawful bases and retention rules must be reviewed for every launch market, including Nigeria\'s data-protection framework, UK GDPR and applicable Canadian and United States requirements.' },
     ],
   },
   terms: {
@@ -360,7 +360,7 @@ export const infoPages = {
     secondaryAction: { label: 'Contact support', to: '/contact' },
     sections: [
       { title: 'Essential cookies', body: 'Essential cookies may support login sessions, marketplace messages, safety reporting and account security.' },
-      { title: 'UK consent standard', body: 'Optional analytics and marketing storage remain off unless a visitor actively chooses to enable them. Essential storage can still be used to provide requested account and security features.' },
+      { title: 'Consent standard', body: 'Optional analytics and marketing storage remain off unless a visitor actively chooses to enable them where consent is required. Essential storage can still be used to provide requested account and security features.' },
       { title: 'Analytics and improvements', body: 'Analytics tools may help Glory understand page performance, product discovery and marketplace reliability.' },
       { title: 'Control your choices', body: 'Use Manage cookies in the footer at any time to review or change optional analytics and marketing preferences.' },
     ],

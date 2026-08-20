@@ -20,6 +20,14 @@ import { formatCurrency } from '../utils/currency'
 import { isWishlisted, toggleWishlist } from '../utils/wishlist'
 import { ProductSeo } from '../components/Seo'
 
+const paymentMethodLabels = {
+  card: 'Card or seller payment link',
+  bank_transfer: 'Bank transfer',
+  ussd: 'USSD',
+  cash_on_delivery: 'Pay on collection or delivery',
+  crypto: 'Crypto'
+}
+
 const ProductDetailPage = () => {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -56,8 +64,8 @@ const ProductDetailPage = () => {
         setSelectedVariant(data.variants?.find(variant => variant.countInStock > 0) || data.variants?.[0] || null)
         const { data: reviewData } = await getReviews(id)
         setReviews(reviewData)
-      } catch (error) {
-        console.log(error)
+      } catch {
+        setProduct(null)
       } finally {
         setLoading(false)
       }
@@ -276,9 +284,9 @@ const ProductDetailPage = () => {
             </div>
 
             <div className='glory-product-price'>
-              <strong>{formatCurrency(displayPrice)}</strong>
+              <strong>{formatCurrency(displayPrice, product.currency)}</strong>
               {product.compareAtPrice > displayPrice && (
-                <span>{formatCurrency(product.compareAtPrice)}</span>
+                <span>{formatCurrency(product.compareAtPrice, product.currency)}</span>
               )}
             </div>
 
@@ -332,6 +340,16 @@ const ProductDetailPage = () => {
             </div>
 
             <p className='glory-listing-payment-note'>Glory hosts this listing and conversation. Payment and delivery are agreed directly with the seller.</p>
+
+            <div className='glory-listing-payment-methods'>
+              <span>Seller accepts</span>
+              <div>
+                {(product.acceptedPaymentMethods?.length ? product.acceptedPaymentMethods : ['card']).map((method) => (
+                  <small key={method}>{paymentMethodLabels[method] || method}</small>
+                ))}
+              </div>
+              <p>These methods are seller-arranged, not a Glory checkout. Confirm the exact amount, provider and delivery terms inside Glory messages.</p>
+            </div>
 
             <div className='glory-product-confidence'>
               {[

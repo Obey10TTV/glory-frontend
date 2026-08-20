@@ -4,12 +4,15 @@ import { useState, useEffect, useRef } from 'react'
 import { FiUser, FiHeart, FiX, FiChevronDown, FiMenu, FiMessageCircle, FiSearch } from 'react-icons/fi'
 import { getProducts } from '../api'
 import useIsMobile from '../hooks/useIsMobile'
-import UnitedKingdomFlag from './UnitedKingdomFlag'
+import MarketFlag from './MarketFlag'
+import MarketSelector from './MarketSelector'
+import { useMarket } from '../context/MarketContext'
 import { formatCurrency } from '../utils/currency'
 import { getWishlistIds } from '../utils/wishlist'
 
 const Navbar = () => {
   const { user, logout } = useUser()
+  const { market } = useMarket()
   const navigate = useNavigate()
   const isMobile = useIsMobile(1024)
 
@@ -22,6 +25,7 @@ const Navbar = () => {
   const [mobileDepartmentOpen, setMobileDepartmentOpen] = useState(null)
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
   const [wishlistCount, setWishlistCount] = useState(() => getWishlistIds().length)
+  const [marketSelectorOpen, setMarketSelectorOpen] = useState(false)
   const searchRef = useRef(null)
 
   useEffect(() => {
@@ -33,14 +37,14 @@ const Navbar = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const { data } = await getProducts()
-        setAllProducts(Array.isArray(data) ? data : [])
-      } catch (err) {
-        console.log(err)
+        const { data } = await getProducts({ market: market.code })
+        setAllProducts(Array.isArray(data) ? data : (data.items || []))
+      } catch {
+        setAllProducts([])
       }
     }
     fetchProducts()
-  }, [])
+  }, [market.code])
 
   useEffect(() => {
     if (searchQuery.trim() === '') {
@@ -205,7 +209,7 @@ const Navbar = () => {
                 </div>
               </div>
               <div style={{ fontSize: '14px', fontWeight: '700', color: '#111' }}>
-                {formatCurrency(product.price)}
+                {formatCurrency(product.price, product.currency || market.currency, market.locale)}
               </div>
             </div>
           ))}
@@ -238,7 +242,7 @@ const Navbar = () => {
         letterSpacing: '0.06em', fontFamily: "'Inter', sans-serif",
         fontWeight: '500', lineHeight: '1.6'
       }}>
-        <b style={{ color: '#fff' }}>THE UK'S GLOBAL BEAUTY MARKETPLACE</b>
+        <b style={{ color: '#fff' }}>{market.announcement}</b>
         {!isMobile && (
           <span>
             &nbsp;-&nbsp;<b style={{ color: '#fff' }}>CURATED DEPARTMENTS</b>
@@ -283,30 +287,30 @@ const Navbar = () => {
             </button>
           )}
 
-          {/* LOGO */}
-          <Link className='glory-navbar-logo' to='/' style={{
-            fontFamily: "'Inter', sans-serif",
-            fontWeight: '900', fontSize: isMobile ? '18px' : '24px',
-            color: '#111', textDecoration: 'none',
-            letterSpacing: '-0.5px', flexShrink: 0,
-            display: 'flex', alignItems: 'center', gap: isMobile ? '6px' : '10px'
-          }}>
-            GLORY.
+          {/* LOGO AND MARKET */}
+          <div className='glory-navbar-brand-lockup'>
+            <Link className='glory-navbar-logo' to={`/${market.slug}`} style={{
+              fontFamily: "'Inter', sans-serif",
+              fontWeight: '900', fontSize: isMobile ? '18px' : '24px',
+              color: '#111', textDecoration: 'none',
+              letterSpacing: '0', flexShrink: 0,
+              display: 'flex', alignItems: 'center'
+            }}>
+              GLORY.
+            </Link>
             {!isMobile && (
-              <div className='glory-currency-badge' style={{
-                display: 'flex', alignItems: 'center', gap: '6px',
-                background: '#f5f5f5', borderRadius: '999px',
-                padding: '4px 10px 4px 6px'
-              }}>
-                <UnitedKingdomFlag size={22} />
-                <span style={{
-                  fontSize: '10px', fontWeight: '700',
-                  color: '#555', letterSpacing: '0.04em',
-                  fontFamily: "'Inter', sans-serif"
-                }}>UK</span>
-              </div>
+              <button
+                type='button'
+                className='glory-currency-badge'
+                onClick={() => setMarketSelectorOpen(true)}
+                aria-label={`Change marketplace. Current marketplace ${market.name}, prices in ${market.currency}`}
+              >
+                <MarketFlag market={market} size={20} />
+                <span>{market.currency}</span>
+                <FiChevronDown size={13} aria-hidden='true' />
+              </button>
             )}
-          </Link>
+          </div>
 
           {/* DESKTOP SEARCH BAR */}
           {!isMobile && (
@@ -768,14 +772,21 @@ const Navbar = () => {
                 )
               })}
             </div>
-            <div className='glory-drawer-location' style={{
-              padding: '16px 20px', display: 'flex',
-              alignItems: 'center', gap: '8px',
-              borderTop: '1px solid #f0f0f0', marginTop: '8px'
-            }}>
-              <UnitedKingdomFlag size={24} />
-              <span style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>UK marketplace · Prices in GBP · Worldwide delivery</span>
-            </div>
+            <button
+              type='button'
+              className='glory-drawer-location'
+              onClick={() => {
+                setDrawerOpen(false)
+                setMarketSelectorOpen(true)
+              }}
+            >
+              <MarketFlag market={market} size={24} />
+              <span>
+                <strong>{market.name}</strong>
+                <small>Prices in {market.currency} - Change marketplace</small>
+              </span>
+              <FiChevronDown size={16} aria-hidden='true' />
+            </button>
           </div>
           <style>{`
             @keyframes slideInLeft {
@@ -785,6 +796,7 @@ const Navbar = () => {
           `}</style>
         </>
       )}
+      <MarketSelector open={marketSelectorOpen} onClose={() => setMarketSelectorOpen(false)} />
     </>
   )
 }

@@ -13,14 +13,26 @@ import Footer from '../components/Footer'
 import ProductCard from '../components/ProductCard'
 import Loader from '../components/Loader'
 import { getProducts } from '../api'
+import { useMarket } from '../context/MarketContext'
+import { formatCurrency } from '../utils/currency'
 
-const priceRanges = [
-  { label: 'All prices', value: 'all' },
-  { label: 'Under £25', value: '0-25' },
-  { label: '£25 - £50', value: '25-50' },
-  { label: '£50 - £100', value: '50-100' },
-  { label: 'Above £100', value: '100-100000' },
-]
+const priceBreaks = {
+  NGN: [10000, 25000, 50000],
+  GBP: [25, 50, 100],
+  USD: [30, 60, 120],
+  CAD: [40, 80, 160]
+}
+
+const getPriceRanges = (market) => {
+  const [low, middle, high] = priceBreaks[market.currency] || priceBreaks.GBP
+  return [
+    { label: 'All prices', value: 'all' },
+    { label: `Under ${formatCurrency(low, market.currency, market.locale)}`, value: `0-${low}` },
+    { label: `${formatCurrency(low, market.currency, market.locale)} - ${formatCurrency(middle, market.currency, market.locale)}`, value: `${low}-${middle}` },
+    { label: `${formatCurrency(middle, market.currency, market.locale)} - ${formatCurrency(high, market.currency, market.locale)}`, value: `${middle}-${high}` },
+    { label: `Above ${formatCurrency(high, market.currency, market.locale)}`, value: `${high}-100000000` },
+  ]
+}
 
 const sortOptions = [
   { label: 'Newest first', value: 'newest' },
@@ -31,6 +43,7 @@ const sortOptions = [
 
 const ProductsPage = () => {
   const navigate = useNavigate()
+  const { market } = useMarket()
   const { brand: brandRoute } = useParams()
   const [searchParams, setSearchParams] = useSearchParams()
   const [products, setProducts] = useState([])
@@ -48,6 +61,7 @@ const ProductsPage = () => {
   const priceRange = searchParams.get('price') || 'all'
   const sort = searchParams.get('sort') || 'newest'
   const page = Math.max(1, Number(searchParams.get('page')) || 1)
+  const priceRanges = getPriceRanges(market)
 
   const updateParam = (key, value) => {
     const next = new URLSearchParams(searchParams)
@@ -65,6 +79,7 @@ const ProductsPage = () => {
         const [minPrice, maxPrice] = priceRange === 'all' ? [] : priceRange.split('-')
         const { data } = await getProducts({
           meta: 'true',
+          market: market.code,
           q: query || undefined,
           category: category || undefined,
           productType: productType || undefined,
@@ -88,7 +103,7 @@ const ProductsPage = () => {
     }
     fetchProducts()
     return () => { active = false }
-  }, [brand, category, page, priceRange, productType, query, sort])
+  }, [brand, category, market.code, page, priceRange, productType, query, sort])
 
   useEffect(() => {
     document.body.style.overflow = mobileFiltersOpen ? 'hidden' : ''
@@ -129,7 +144,7 @@ const ProductsPage = () => {
       <header className='glory-catalog-hero'>
         <div className='glory-catalog-shell glory-catalog-hero-inner'>
           <div>
-            <span className='glory-catalog-label'>Glory marketplace</span>
+            <span className='glory-catalog-label'>Glory {market.name}</span>
             <h1>{pageTitle}</h1>
             <p>
               {loading
