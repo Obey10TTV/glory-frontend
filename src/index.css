@@ -11595,3 +11595,188 @@ button {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 }
+
+/* Phone layouts are compositions in their own right, not compressed desktop grids. */
+@media (max-width: 700px) {
+  .glory-home-section-heading-v3,
+  .glory-home-section-heading-v3.is-compact {
+    align-items: flex-start;
+    gap: 18px;
+  }
+
+  .glory-home-section-heading-v3 h2 {
+    max-width: 11ch;
+    font-size: clamp(38px, 11.5vw, 48px);
+    line-height: 0.98;
+  }
+
+  .glory-home-text-link,
+  .glory-home-story-all {
+    width: auto;
+    min-width: min(100%, 210px);
+  }
+
+  .glory-home-departments.is-gallery {
+    padding-right: 0;
+  }
+
+  .glory-home-departments.is-gallery .glory-home-department-rail {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 14px;
+    padding-right: 16px;
+  }
+
+  .glory-home-departments.is-gallery .glory-home-department {
+    width: auto;
+    flex-basis: auto;
+    min-width: 0;
+    min-height: 292px;
+  }
+
+  .glory-home-departments.is-gallery .glory-home-department-image {
+    width: 100%;
+    height: clamp(154px, 47vw, 196px);
+    margin: 0;
+  }
+
+  .glory-home-departments.is-gallery .glory-home-department strong {
+    margin: 15px 14px 0;
+    font-size: 16px;
+    line-height: 1.2;
+  }
+
+  .glory-home-departments.is-gallery .glory-home-department small {
+    margin: 6px 14px 16px;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  .glory-home-stories .glory-home-story-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 16px;
+  }
+
+  .glory-home-stories .glory-home-story,
+  .glory-home-stories .glory-home-story-copy {
+    min-height: 490px;
+  }
+
+  .glory-home-stories .glory-home-story-copy {
+    max-width: min(100%, 410px);
+    padding: 28px 24px;
+  }
+
+  .glory-home-stories .glory-home-story-copy strong {
+    font-size: clamp(44px, 12vw, 56px);
+  }
+
+  .glory-home-seller-v3 {
+    padding: 64px 0;
+  }
+
+  .glory-home-seller-inner-v3 {
+    grid-template-columns: minmax(0, 1fr) !important;
+    align-items: start;
+    gap: 26px;
+  }
+
+  .glory-home-seller-v3 h2 {
+    max-width: 10ch;
+    font-size: clamp(42px, 13vw, 54px);
+    line-height: 0.95;
+  }
+
+  .glory-home-seller-v3 p {
+    max-width: 34rem;
+    margin-bottom: 22px;
+    font-size: 15px;
+  }
+
+  .glory-home-seller-v3 button {
+    width: 100%;
+  }
+
+  .glory-home-trust-grid-v3 {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .glory-home-trust-item-v3,
+  .glory-home-trust-item-v3:first-child,
+  .glory-home-trust-item-v3:nth-child(3),
+  .glory-home-trust-item-v3:nth-child(4) {
+    min-height: 94px;
+    border-right: 1px solid var(--glory-home-line);
+    border-bottom: 1px solid var(--glory-home-line);
+    border-left: 1px solid var(--glory-home-line);
+    border-top: 0;
+    padding: 18px 16px;
+  }
+
+  .glory-home-trust-item-v3:first-child {
+    border-top: 1px solid var(--glory-home-line);
+  }
+
+  .glory-home-trust-item-v3:last-child {
+    border-bottom: 0;
+  }
+
+  .glory-footer-topline {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 42px;
+  }
+
+  .glory-footer-links {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 30px 18px;
+  }
+
+  .glory-footer-links nav,
+  .glory-footer-links li,
+  .glory-footer-links a {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .glory-footer-bottomline,
+  .glory-footer-right {
+    width: 100%;
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .glory-footer-right {
+    gap: 16px;
+  }
+
+  .glory-footer-payments,
+  .glory-footer-socials {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 359px) {
+  .glory-home-section-heading-v3 h2 {
+    font-size: 38px;
+  }
+
+  .glory-home-departments.is-gallery .glory-home-department-rail {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .glory-home-departments.is-gallery .glory-home-department {
+    min-height: 300px;
+  }
+
+  .glory-home-departments.is-gallery .glory-home-department-image {
+    height: 190px;
+  }
+
+  .glory-home-stories .glory-home-story,
+  .glory-home-stories .glory-home-story-copy {
+    min-height: 455px;
+  }
+
+  .glory-footer-links {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}

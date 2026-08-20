@@ -233,6 +233,27 @@ const findLayoutIssues = () => {
   }
 }
 
+const getCompactHomeLayout = () => {
+  const columnCount = (selector) => {
+    const element = document.querySelector(selector)
+    if (!element) return 0
+
+    return getComputedStyle(element).gridTemplateColumns
+      .split(' ')
+      .filter(Boolean)
+      .length
+  }
+
+  return {
+    departmentColumns: columnCount('.glory-home-departments.is-gallery .glory-home-department-rail'),
+    storyColumns: columnCount('.glory-home-stories .glory-home-story-grid'),
+    sellerColumns: columnCount('.glory-home-seller-inner-v3'),
+    trustColumns: columnCount('.glory-home-trust-grid-v3'),
+    footerColumns: columnCount('.glory-footer-links'),
+    departmentCardWidth: Math.round(document.querySelector('.glory-home-departments.is-gallery .glory-home-department')?.getBoundingClientRect().width || 0),
+  }
+}
+
 const mockApiResponse = (requestUrl, profile) => {
   const url = new URL(requestUrl)
   const { pathname, searchParams } = url
@@ -373,6 +394,24 @@ for (const route of publicRoutes) {
     }
   })
 }
+
+test('home page keeps content readable on compact iPhones', async ({ page }) => {
+  await page.goto('/ng', { waitUntil: 'domcontentloaded' })
+  await page.locator('.glory-home-departments.is-gallery').waitFor()
+
+  for (const width of [320, 375, 414]) {
+    await page.setViewportSize({ width, height: heightForWidth(width) })
+    await page.waitForTimeout(150)
+
+    const layout = await page.evaluate(getCompactHomeLayout)
+    expect(layout.departmentColumns, `department columns at ${width}px`).toBe(width <= 359 ? 1 : 2)
+    expect(layout.departmentCardWidth, `department card width at ${width}px`).toBeGreaterThan(120)
+    expect(layout.storyColumns, `editorial story columns at ${width}px`).toBe(1)
+    expect(layout.sellerColumns, `seller section columns at ${width}px`).toBe(1)
+    expect(layout.trustColumns, `trust columns at ${width}px`).toBe(1)
+    expect(layout.footerColumns, `footer columns at ${width}px`).toBeLessThanOrEqual(2)
+  }
+})
 
 for (const protectedRoute of protectedRoutes) {
   test(`${protectedRoute.route} remains fluid when authenticated`, async ({ page }) => {
