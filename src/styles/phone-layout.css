@@ -10,8 +10,6 @@
   #root,
   #glory-main {
     max-width: 100%;
-    overflow-x: hidden;
-    overflow-x: clip;
   }
 
   .glory-home-department-rail {

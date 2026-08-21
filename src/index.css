@@ -1,10 +1,20 @@
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap');
 
-* {
+*,
+*::before,
+*::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
   font-family: 'Inter', sans-serif;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
 }
 
 body {
@@ -13,7 +23,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background: #f8f6f3;
   color: #111;
-  overflow-x: hidden;
 }
 
 a {
@@ -30,7 +39,9 @@ input, textarea, select {
   font-family: 'Inter', sans-serif;
 }
 
-img, video {
+img,
+video,
+svg {
   max-width: 100%;
 }
 
@@ -7228,7 +7239,6 @@ html {
   width: 100%;
   min-height: 100%;
   max-width: 100%;
-  overflow-x: hidden;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
 }
@@ -7251,13 +7261,6 @@ body {
 #glory-main {
   min-height: 100%;
   display: block;
-}
-
-@supports (overflow: clip) {
-  html,
-  body {
-    overflow-x: clip;
-  }
 }
 
 button,
