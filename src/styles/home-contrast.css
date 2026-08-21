@@ -1,4 +1,10 @@
-/* Keep supporting copy readable over photography and dark home-page panels. */
+/* Keep hero copy readable over photography and dark home-page panels. */
+.glory-home-stage-copy h1,
+.glory-home-stage.is-light .glory-home-stage-copy h1 {
+  color: #fff;
+  text-shadow: 0 2px 18px rgba(20, 14, 12, 0.62);
+}
+
 .glory-home-stage-copy p,
 .glory-home-stage.is-light .glory-home-stage-copy p,
 .glory-home-motion-copy p,
