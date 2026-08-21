@@ -113,9 +113,14 @@ const CookieConsent = () => {
       )}
 
       <div className='glory-cookie-actions'>
-        <button type='button' className='glory-cookie-secondary' onClick={() => setExpanded(!expanded)}>
+        <button
+          type='button'
+          className='glory-cookie-secondary glory-cookie-settings-toggle'
+          aria-label={expanded ? 'Hide cookie settings' : 'Open cookie settings'}
+          onClick={() => setExpanded(!expanded)}
+        >
           <FiSliders size={15} />
-          {expanded ? 'Hide' : 'Settings'}
+          <span>{expanded ? 'Hide' : 'Settings'}</span>
         </button>
         <button type='button' className='glory-cookie-secondary' onClick={() => accept('essential')}>
           Essential only
