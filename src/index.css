@@ -9317,30 +9317,6 @@ button {
     padding-right: 16px;
   }
 
-  .glory-home-department-rail {
-    padding: 0 16px 5px 0;
-    display: flex;
-    gap: 15px;
-    overflow-x: auto;
-    scroll-snap-type: x proximity;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .glory-home-department {
-    width: 118px;
-    flex: 0 0 118px;
-    scroll-snap-align: start;
-  }
-
-  .glory-home-department-image {
-    width: 118px;
-  }
-
-  .glory-home-department strong {
-    margin-top: 10px;
-    font-size: 13px;
-  }
-
   .glory-home-product-grid-v3 {
     gap: 10px !important;
   }
@@ -9483,15 +9459,6 @@ button {
 
   .glory-home-section-heading-v3 h2 {
     font-size: 36px;
-  }
-
-  .glory-home-department {
-    width: 108px;
-    flex-basis: 108px;
-  }
-
-  .glory-home-department-image {
-    width: 108px;
   }
 
   .glory-home-seller-v3 h2 {
@@ -11774,29 +11741,6 @@ button {
   .glory-home-stories .glory-home-story,
   .glory-home-stories .glory-home-story-copy {
     min-height: 455px;
-  }
-
-  .glory-footer-links {
-    grid-template-columns: minmax(0, 1fr) !important;
-  }
-}
-
-/* Compact phones need a deliberate composition, not squeezed desktop columns. */
-@media (max-width: 480px) {
-  .glory-home-departments.is-gallery .glory-home-department-rail {
-    grid-template-columns: minmax(0, 1fr) !important;
-  }
-
-  .glory-home-departments.is-gallery .glory-home-department {
-    min-height: 0;
-  }
-
-  .glory-home-departments.is-gallery .glory-home-department-image {
-    height: min(66vw, 300px);
-  }
-
-  .glory-home-departments.is-gallery .glory-home-department small {
-    margin-bottom: 18px;
   }
 
   .glory-footer-links {
