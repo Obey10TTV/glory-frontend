@@ -7978,14 +7978,14 @@ button {
 }
 
 .glory-home-stage.is-light .glory-home-stage-actions .is-secondary {
-  border-color: rgba(23, 21, 20, 0.56);
-  color: #171514;
+  border-color: rgba(255, 255, 255, 0.86);
+  color: #fff;
 }
 
 .glory-home-stage.is-light .glory-home-stage-actions .is-secondary:hover {
-  border-color: #171514;
-  background: #fff;
-  color: #171514;
+  border-color: #fff;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
 }
 
 .glory-home-stage-controls {
