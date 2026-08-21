@@ -404,12 +404,12 @@ test('home page keeps content readable on compact iPhones', async ({ page }) => 
     await page.waitForTimeout(150)
 
     const layout = await page.evaluate(getCompactHomeLayout)
-    expect(layout.departmentColumns, `department columns at ${width}px`).toBe(width <= 359 ? 1 : 2)
-    expect(layout.departmentCardWidth, `department card width at ${width}px`).toBeGreaterThan(120)
+    expect(layout.departmentColumns, `department columns at ${width}px`).toBe(width <= 480 ? 1 : 2)
+    expect(layout.departmentCardWidth, `department card width at ${width}px`).toBeGreaterThan(width <= 480 ? 250 : 120)
     expect(layout.storyColumns, `editorial story columns at ${width}px`).toBe(1)
     expect(layout.sellerColumns, `seller section columns at ${width}px`).toBe(1)
     expect(layout.trustColumns, `trust columns at ${width}px`).toBe(1)
-    expect(layout.footerColumns, `footer columns at ${width}px`).toBeLessThanOrEqual(2)
+    expect(layout.footerColumns, `footer columns at ${width}px`).toBe(width <= 480 ? 1 : 2)
   }
 })
 

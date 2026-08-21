@@ -11780,3 +11780,26 @@ button {
     grid-template-columns: minmax(0, 1fr) !important;
   }
 }
+
+/* Compact phones need a deliberate composition, not squeezed desktop columns. */
+@media (max-width: 480px) {
+  .glory-home-departments.is-gallery .glory-home-department-rail {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .glory-home-departments.is-gallery .glory-home-department {
+    min-height: 0;
+  }
+
+  .glory-home-departments.is-gallery .glory-home-department-image {
+    height: min(66vw, 300px);
+  }
+
+  .glory-home-departments.is-gallery .glory-home-department small {
+    margin-bottom: 18px;
+  }
+
+  .glory-footer-links {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
