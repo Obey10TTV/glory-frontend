@@ -169,7 +169,7 @@ const HomePage = () => {
   const loadProducts = useCallback(async () => {
     setLoading(true)
     try {
-      const { data } = await getProducts({ market: market.code })
+      const { data } = await getProducts({ market: market.code }, { timeout: 8000 })
       setProducts(Array.isArray(data) ? data : (data.items || []))
       setCatalogError('')
     } catch (error) {
