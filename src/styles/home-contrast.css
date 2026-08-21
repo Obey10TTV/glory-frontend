@@ -1,0 +1,9 @@
+/* Keep supporting copy readable over photography and dark home-page panels. */
+.glory-home-stage-copy p,
+.glory-home-stage.is-light .glory-home-stage-copy p,
+.glory-home-motion-copy p,
+.glory-home-seller-v3 p,
+.glory-home-story.is-ink .glory-home-story-copy small {
+  color: #fff;
+  text-shadow: 0 1px 12px rgba(20, 14, 12, 0.56);
+}
