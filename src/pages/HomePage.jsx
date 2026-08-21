@@ -58,7 +58,7 @@ const categoryTiles = [
 
 const marketSectionContent = {
   NG: {
-    departmentLayout: 'gallery',
+    departmentLayout: 'default',
     departmentEyebrow: 'Explore our world',
     departmentTitle: 'Beauty, your way.',
     departmentNames: ['Skincare', 'Makeup', 'Haircare', 'Nails', 'Lashes', 'Fragrance'],
