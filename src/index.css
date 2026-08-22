@@ -8363,6 +8363,7 @@ button {
 .glory-home-uk-gallery-card.is-haircare {
   grid-area: haircare;
   grid-template-columns: minmax(172px, 0.92fr) minmax(0, 1.08fr);
+  border-color: rgba(255, 255, 255, 0.18);
   color: #fff;
   background: #332d2b;
 }
