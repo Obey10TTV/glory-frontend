@@ -306,6 +306,7 @@ const Navbar = () => {
                 aria-label={`Change marketplace. Current marketplace ${market.name}, prices in ${market.currency}`}
               >
                 <MarketFlag market={market} size={20} />
+                <span className='glory-currency-badge-label'>{market.shortName}</span>
                 <FiChevronDown size={13} aria-hidden='true' />
               </button>
             )}
