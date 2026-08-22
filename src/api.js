@@ -8,7 +8,9 @@ const localApiUrl = `http://${localHost}:5000/api`
 const normalizeApiUrl = (url) => (url || '').trim().replace(/\/$/, '')
 const configuredApiUrl = normalizeApiUrl(import.meta.env.VITE_API_URL)
 const useLocalApi = import.meta.env.VITE_USE_LOCAL_API === 'true'
-const baseURL = configuredApiUrl || (useLocalApi ? localApiUrl : productionApiUrl)
+// A local override must win even when a production URL exists in a shell or
+// another env file. This keeps local sign-in and registration on the local API.
+const baseURL = useLocalApi ? localApiUrl : (configuredApiUrl || productionApiUrl)
 
 const API = axios.create({ baseURL, timeout: 20000, withCredentials: true })
 const csrfClient = axios.create({ baseURL, timeout: 20000, withCredentials: true })
