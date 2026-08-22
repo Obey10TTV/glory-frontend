@@ -167,6 +167,11 @@ export const submitHomepageVideoDraft = (data) => API.post('/promotions/video-dr
 export const getMarketplaceConfig = (market) => API.get('/marketplace/config', { params: { market } })
 export const getMarketplaceSellerStatus = () => API.get('/marketplace/seller/status')
 
+// SKIN GUIDE
+export const getSkinGuideStatus = () => API.get('/skin-guide/status')
+export const sendSkinGuideMessage = (data) => API.post('/skin-guide/messages', data)
+export const startSkinGuideClinicianChat = () => API.post('/skin-guide/clinician-handoff')
+
 // UPLOAD
 export const uploadImage = (data) => API.post('/upload', data)
 export const reprocessProductImage = (data) => API.post('/upload/reprocess-product-image', data)
