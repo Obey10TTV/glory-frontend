@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Glory</title>
+  <desc id="desc">A clean black lowercase g on a white background.</desc>
+  <rect width="512" height="512" rx="104" fill="#ffffff"/>
+  <text
+    x="250"
+    y="354"
+    fill="#151414"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-size="390"
+    font-weight="400"
+    text-anchor="middle"
+  >g</text>
+</svg>

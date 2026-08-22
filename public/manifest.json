@@ -3,7 +3,7 @@
   "name": "Glory Beauty Marketplace",
   "icons": [
     {
-      "src": "glory-icon.svg",
+      "src": "glory-favicon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
