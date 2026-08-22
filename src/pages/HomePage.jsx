@@ -56,6 +56,33 @@ const categoryTiles = [
   },
 ]
 
+const ukDepartmentGallery = [
+  {
+    name: 'Skincare',
+    note: 'Thoughtful care for your everyday ritual.',
+    eyebrow: 'The ritual edit',
+    image: '/images/home/uk-beauty-gallery/uk-skincare-ritual.png',
+    imagePosition: 'center 58%',
+    tone: 'feature',
+  },
+  {
+    name: 'Makeup',
+    note: 'Colour, complexion and little details.',
+    eyebrow: 'Colour study',
+    image: '/images/home/uk-beauty-gallery/uk-makeup-colour.png',
+    imagePosition: 'center',
+    tone: 'makeup',
+  },
+  {
+    name: 'Haircare',
+    note: 'Texture-led care from wash day onward.',
+    eyebrow: 'Texture, considered',
+    image: '/images/home/uk-beauty-gallery/uk-haircare-texture.png',
+    imagePosition: 'center 34%',
+    tone: 'haircare',
+  },
+]
+
 const marketSectionContent = {
   NG: {
     departmentLayout: 'default',
@@ -71,7 +98,7 @@ const marketSectionContent = {
     departmentLayout: 'editorial',
     departmentEyebrow: 'The British beauty edit',
     departmentTitle: 'A considered beauty shelf.',
-    departmentNames: ['Skincare', 'Haircare', 'Makeup'],
+    departmentNames: ['Skincare', 'Makeup', 'Haircare'],
     newInEyebrow: 'New to the UK edit',
     newInTitle: 'The latest on the shelf.',
     newInCopy: 'New independent labels, everyday essentials and colour worth a second look.',
@@ -450,30 +477,64 @@ const HomePage = () => {
               </button>
             </div>
 
-            <div className='glory-home-department-rail'>
-              {regionalDepartments.map((category) => (
-                <button
-                  key={category.name}
-                  type='button'
-                  className='glory-home-department'
-                  onClick={() => shopCategory(category.name)}
-                  aria-label={`Shop ${category.name}`}
-                >
-                  <span className='glory-home-department-image'>
-                    <img
-                      src={category.image}
-                      alt=''
-                      loading='lazy'
-                      width='480'
-                      height='480'
-                      style={{ objectPosition: category.imagePosition }}
-                    />
-                  </span>
-                  <strong>{category.name}</strong>
-                  <small>{categoryCounts[category.name] ? `${categoryCounts[category.name]} products` : category.note}</small>
-                </button>
-              ))}
-            </div>
+            {market.code === 'GB' ? (
+              <div className='glory-home-uk-gallery'>
+                {ukDepartmentGallery.map((category) => (
+                  <button
+                    key={category.name}
+                    type='button'
+                    className={`glory-home-uk-gallery-card is-${category.tone}`}
+                    onClick={() => shopCategory(category.name)}
+                    aria-label={`Shop ${category.name}`}
+                  >
+                    <span className='glory-home-uk-gallery-media'>
+                      <img
+                        src={category.image}
+                        alt=''
+                        loading='lazy'
+                        width='1024'
+                        height='1536'
+                        style={{ objectPosition: category.imagePosition }}
+                      />
+                    </span>
+                    <span className='glory-home-uk-gallery-copy'>
+                      <span className='glory-home-uk-gallery-kicker'>{category.eyebrow}</span>
+                      <strong>{category.name}</strong>
+                      <small>{categoryCounts[category.name] ? `${categoryCounts[category.name]} products` : category.note}</small>
+                      <span className='glory-home-uk-gallery-action'>
+                        Shop {category.name}
+                        <FiArrowRight size={16} aria-hidden='true' />
+                      </span>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className='glory-home-department-rail'>
+                {regionalDepartments.map((category) => (
+                  <button
+                    key={category.name}
+                    type='button'
+                    className='glory-home-department'
+                    onClick={() => shopCategory(category.name)}
+                    aria-label={`Shop ${category.name}`}
+                  >
+                    <span className='glory-home-department-image'>
+                      <img
+                        src={category.image}
+                        alt=''
+                        loading='lazy'
+                        width='480'
+                        height='480'
+                        style={{ objectPosition: category.imagePosition }}
+                      />
+                    </span>
+                    <strong>{category.name}</strong>
+                    <small>{categoryCounts[category.name] ? `${categoryCounts[category.name]} products` : category.note}</small>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </section>
 

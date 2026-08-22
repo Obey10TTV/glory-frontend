@@ -8249,16 +8249,18 @@ button {
 }
 
 .glory-home-departments.is-editorial {
-  background: #f0ece8;
+  padding-top: 76px;
+  padding-bottom: 84px;
+  background: #f1eeea;
 }
 
 .glory-home-departments.is-editorial .glory-home-department-rail {
-  grid-template-columns: 1.35fr 0.85fr 0.85fr;
-  gap: 18px;
+  grid-template-columns: 1.42fr repeat(2, minmax(0, 0.9fr));
+  gap: 20px;
 }
 
 .glory-home-departments.is-editorial .glory-home-department {
-  min-height: 370px;
+  min-height: clamp(370px, 32vw, 496px);
   position: relative;
   overflow: hidden;
   border: 1px solid rgba(23, 21, 20, 0.16);
@@ -8269,7 +8271,7 @@ button {
 }
 
 .glory-home-departments.is-editorial .glory-home-department:nth-child(1) {
-  min-height: 440px;
+  min-height: clamp(370px, 32vw, 496px);
 }
 
 .glory-home-departments.is-editorial .glory-home-department-image,
@@ -8292,19 +8294,141 @@ button {
 .glory-home-departments.is-editorial .glory-home-department small {
   position: relative;
   z-index: 1;
-  margin-left: 24px;
-  margin-right: 24px;
+  margin-left: clamp(20px, 1.8vw, 28px);
+  margin-right: clamp(20px, 1.8vw, 28px);
 }
 
 .glory-home-departments.is-editorial .glory-home-department strong {
   margin-top: auto;
-  font-size: 22px;
+  font-size: clamp(20px, 1.55vw, 24px);
+  line-height: 1.05;
 }
 
 .glory-home-departments.is-editorial .glory-home-department small {
-  margin-top: 7px;
-  margin-bottom: 25px;
+  margin-top: 8px;
+  margin-bottom: clamp(22px, 1.8vw, 28px);
   color: rgba(255, 255, 255, 0.82);
+  font-size: 12px;
+}
+
+.glory-home-uk-gallery {
+  display: grid;
+  grid-template-areas:
+    'feature makeup'
+    'feature haircare';
+  grid-template-columns: minmax(0, 1.17fr) minmax(0, 0.83fr);
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  height: clamp(480px, 40vw, 580px);
+  min-height: 0;
+}
+
+.glory-home-uk-gallery-card {
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid rgba(23, 21, 20, 0.13);
+  border-radius: 8px;
+  padding: 0;
+  display: grid;
+  color: var(--glory-home-ink);
+  cursor: pointer;
+  text-align: left;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.glory-home-uk-gallery-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 30px rgba(45, 32, 28, 0.12);
+}
+
+.glory-home-uk-gallery-card:focus-visible {
+  outline: 3px solid var(--glory-home-rose);
+  outline-offset: 3px;
+}
+
+.glory-home-uk-gallery-card.is-feature {
+  grid-area: feature;
+  grid-template-rows: minmax(0, 1fr) auto;
+  background: #dbcfc7;
+}
+
+.glory-home-uk-gallery-card.is-makeup {
+  grid-area: makeup;
+  grid-template-columns: minmax(0, 1.08fr) minmax(172px, 0.92fr);
+  background: #e6d6c5;
+}
+
+.glory-home-uk-gallery-card.is-haircare {
+  grid-area: haircare;
+  grid-template-columns: minmax(172px, 0.92fr) minmax(0, 1.08fr);
+  color: #fff;
+  background: #332d2b;
+}
+
+.glory-home-uk-gallery-media {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  display: block;
+  background: #d4c6bd;
+}
+
+.glory-home-uk-gallery-media img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  transition: transform 320ms ease;
+}
+
+.glory-home-uk-gallery-card:hover .glory-home-uk-gallery-media img {
+  transform: scale(1.035);
+}
+
+.glory-home-uk-gallery-copy {
+  min-width: 0;
+  padding: clamp(22px, 2.4vw, 34px);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.glory-home-uk-gallery-kicker {
+  margin-bottom: 13px;
+  color: var(--glory-home-rose);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.glory-home-uk-gallery-card strong {
+  display: block;
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: clamp(30px, 2.8vw, 48px);
+  font-weight: 400;
+  line-height: 0.95;
+}
+
+.glory-home-uk-gallery-card small {
+  max-width: 25ch;
+  margin-top: 12px;
+  color: currentColor;
+  font-size: 13px;
+  line-height: 1.45;
+  opacity: 0.75;
+}
+
+.glory-home-uk-gallery-action {
+  margin-top: 22px;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .glory-home-departments.is-studio {
@@ -11748,5 +11872,88 @@ button {
 
   .glory-footer-links {
     grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+/* The UK gallery changes composition instead of shrinking the desktop art direction. */
+@media (max-width: 900px) {
+  .glory-home-uk-gallery {
+    height: clamp(460px, 58vw, 540px);
+  }
+
+  .glory-home-uk-gallery-card.is-makeup,
+  .glory-home-uk-gallery-card.is-haircare {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .glory-home-uk-gallery-copy {
+    padding: 22px;
+  }
+
+  .glory-home-uk-gallery-card strong {
+    font-size: clamp(28px, 4vw, 40px);
+  }
+}
+
+@media (max-width: 700px) {
+  .glory-home-departments.is-editorial {
+    padding-top: 60px;
+    padding-bottom: 64px;
+  }
+
+  .glory-home-uk-gallery {
+    grid-template-areas:
+      'feature'
+      'makeup'
+      'haircare';
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto;
+    gap: 14px;
+    height: auto;
+    min-height: 0;
+  }
+
+  .glory-home-uk-gallery-card.is-feature {
+    height: 480px;
+    min-height: 0;
+    grid-template-rows: 292px minmax(0, 1fr);
+  }
+
+  .glory-home-uk-gallery-card.is-makeup,
+  .glory-home-uk-gallery-card.is-haircare {
+    height: 270px;
+    min-height: 270px;
+  }
+
+  .glory-home-uk-gallery-card strong {
+    font-size: clamp(32px, 10vw, 44px);
+  }
+
+  .glory-home-uk-gallery-copy {
+    padding: 23px 21px;
+  }
+
+  .glory-home-uk-gallery-kicker {
+    margin-bottom: 10px;
+  }
+
+  .glory-home-uk-gallery-action {
+    margin-top: 17px;
+  }
+}
+
+@media (max-width: 359px) {
+  .glory-home-uk-gallery-card.is-feature {
+    height: 440px;
+    min-height: 0;
+    grid-template-rows: 258px minmax(0, 1fr);
+  }
+
+  .glory-home-uk-gallery-card.is-makeup,
+  .glory-home-uk-gallery-card.is-haircare {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 200px auto;
+    height: auto;
+    min-height: 386px;
   }
 }
