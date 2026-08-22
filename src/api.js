@@ -169,6 +169,7 @@ export const getMarketplaceSellerStatus = () => API.get('/marketplace/seller/sta
 
 // UPLOAD
 export const uploadImage = (data) => API.post('/upload', data)
+export const reprocessProductImage = (data) => API.post('/upload/reprocess-product-image', data)
 export const uploadSellerDocument = (data) => API.post('/upload/seller-document', data)
 export const uploadPromotionMedia = (data) => API.post('/upload/promotion-media', data)
 
@@ -197,6 +198,7 @@ export const getAdminStats = () => API.get('/admin/stats')
 export const getAllUsers = () => API.get('/admin/users')
 export const getAllOrders = () => API.get('/admin/orders')
 export const getAdminProducts = () => API.get('/admin/products')
+export const backfillProductImages = (data) => API.post('/admin/products/image-processing/backfill', data)
 export const updateProductStatus = (id, data) => API.put(`/admin/products/${id}/status`, data)
 export const deleteUser = (id) => API.delete(`/admin/users/${id}`)
 export const deleteAdminProduct = (id) => API.delete(`/admin/products/${id}`)

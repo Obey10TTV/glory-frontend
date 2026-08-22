@@ -18,6 +18,7 @@ import { getProduct, getReviews, reportListing, reportReview, startConversation 
 import { useUser } from '../context/UserContext'
 import { formatCurrency } from '../utils/currency'
 import { isWishlisted, toggleWishlist } from '../utils/wishlist'
+import { getProductImageBackground, getProductImageUrl, getProductOriginalImageUrl } from '../utils/productImage'
 import { ProductSeo } from '../components/Seo'
 
 const paymentMethodLabels = {
@@ -60,7 +61,7 @@ const ProductDetailPage = () => {
       try {
         const { data } = await getProduct(id)
         setProduct(data)
-        setActiveImage(data.image)
+        setActiveImage(getProductImageUrl(data, 'detail'))
         setSelectedVariant(data.variants?.find(variant => variant.countInStock > 0) || data.variants?.[0] || null)
         const { data: reviewData } = await getReviews(id)
         setReviews(reviewData)
@@ -226,6 +227,16 @@ const ProductDetailPage = () => {
                 width='900'
                 height='900'
                 fetchPriority='high'
+                style={{
+                  objectFit: 'contain',
+                  padding: '6%',
+                  background: getProductImageBackground(product),
+                  filter: 'drop-shadow(0 14px 20px rgba(23, 21, 20, 0.12))'
+                }}
+                onError={(event) => {
+                  const original = getProductOriginalImageUrl(product)
+                  if (event.currentTarget.src !== original) setActiveImage(original)
+                }}
               />
               <button
                 type='button'
@@ -239,18 +250,22 @@ const ProductDetailPage = () => {
 
             {galleryImages.length > 1 && (
               <div className='glory-product-thumbnail-rail' aria-label='Product gallery'>
-                {galleryImages.map((image, index) => (
-                  <button
-                    key={image}
-                    type='button'
-                    className={activeImage === image ? 'active' : ''}
-                    onClick={() => setActiveImage(image)}
-                    aria-label={`View product image ${index + 1}`}
-                    aria-pressed={activeImage === image}
-                  >
-                    <img src={image} alt='' loading='lazy' width='96' height='96' />
-                  </button>
-                ))}
+                {galleryImages.map((image, index) => {
+                  const displayImage = index === 0 ? getProductImageUrl(product, 'thumbnail') : image
+                  const targetImage = index === 0 ? getProductImageUrl(product, 'detail') : image
+                  return (
+                    <button
+                      key={image}
+                      type='button'
+                      className={activeImage === targetImage ? 'active' : ''}
+                      onClick={() => setActiveImage(targetImage)}
+                      aria-label={`View product image ${index + 1}`}
+                      aria-pressed={activeImage === targetImage}
+                    >
+                      <img src={displayImage} alt='' loading='lazy' width='96' height='96' />
+                    </button>
+                  )
+                })}
               </div>
             )}
           </div>

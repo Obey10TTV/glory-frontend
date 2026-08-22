@@ -7,6 +7,7 @@ import Message from '../components/Message'
 import { useUser } from '../context/UserContext'
 import {
   addAdminOrderNote,
+  backfillProductImages,
   deleteAdminProduct,
   deleteUser,
   getAdminAudit,
@@ -99,6 +100,7 @@ const AdminDashboardPage = () => {
   const [orderFilter, setOrderFilter] = useState('all')
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [backfillRunning, setBackfillRunning] = useState(false)
 
   const fetchData = useCallback(async (showLoader = true) => {
     try {
@@ -222,6 +224,20 @@ const AdminDashboardPage = () => {
       await refreshAfter('Product deleted successfully')
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to delete product')
+    }
+  }
+
+  const handleImageBackfill = async () => {
+    if (!window.confirm('Queue up to 25 legacy product images for Glory Optimised processing? Original source URLs are kept.')) return
+    setBackfillRunning(true)
+    setError('')
+    try {
+      const { data } = await backfillProductImages({ limit: 25 })
+      await refreshAfter(`${data.queued} legacy image${data.queued === 1 ? '' : 's'} queued for optimisation${data.skipped ? `; ${data.skipped} skipped` : ''}.`)
+    } catch (err) {
+      setError(err.response?.data?.message || 'Could not queue legacy images for optimisation')
+    } finally {
+      setBackfillRunning(false)
     }
   }
 
@@ -415,7 +431,7 @@ const AdminDashboardPage = () => {
               <OrdersTable orders={filteredOrders} onCancellation={handleCancellation} onDispute={handleDispute} onNote={handleOrderNote} />
             )}
             {activeTab === 'products' && (
-              <ProductsTable products={filteredProducts} onApprove={product => handleProductStatus(product, 'approved')} onReject={product => handleProductStatus(product, 'rejected')} onDelete={handleDeleteProduct} />
+              <ProductsTable products={filteredProducts} onApprove={product => handleProductStatus(product, 'approved')} onReject={product => handleProductStatus(product, 'rejected')} onDelete={handleDeleteProduct} onBackfill={handleImageBackfill} backfillRunning={backfillRunning} />
             )}
             {activeTab === 'reports' && <ReportsTable reports={filteredReports} onReview={handleListingReport} />}
             {activeTab === 'reviews' && <ReviewsTable reviews={filteredReviews} onDecision={handleReviewDecision} />}
@@ -527,9 +543,9 @@ const OrderOperation = ({ order, onCancellation, onDispute, onNote }) => {
   )
 }
 
-const ProductsTable = ({ products, onApprove, onReject, onDelete }) => (
+const ProductsTable = ({ products, onApprove, onReject, onDelete, onBackfill, backfillRunning }) => (
   <section className='glory-dashboard-panel'>
-    <div className='glory-dashboard-panel-header'>Product moderation ({products.length})</div>
+    <div className='glory-dashboard-panel-header'><span>Product moderation ({products.length})</span><button type='button' className='glory-outline-action' onClick={onBackfill} disabled={backfillRunning}>{backfillRunning ? 'Queuing images...' : 'Optimise legacy images'}</button></div>
     <div className='glory-table-wrap'><table className='glory-dashboard-table'>
       <thead><tr>{['Product', 'Seller', 'Price', 'Inventory', 'Quality', 'Status', 'Actions'].map(header => <th key={header}>{header}</th>)}</tr></thead>
       <tbody>{products.map(product => {

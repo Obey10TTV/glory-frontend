@@ -23,6 +23,7 @@ import {
   updateProduct,
   updateSellerProfile,
   uploadImage,
+  reprocessProductImage,
   uploadPromotionMedia,
   uploadSellerDocument,
   submitHomepageVideoDraft,
@@ -52,6 +53,7 @@ import {
 import { formatCurrency, formatMinorCurrency } from '../utils/currency'
 import { categoryProductTypes, productTypesForCategory } from '../utils/catalogTaxonomy'
 import { ACTIVE_MARKETS } from '../data/markets'
+import { PRODUCT_IMAGE_BACKGROUNDS } from '../utils/productImage'
 
 const emptySellerProfile = {
   marketCode: 'GB',
@@ -127,6 +129,20 @@ const emptyListingEvidence = {
   declarationAccepted: false
 }
 
+const emptyImageProcessing = {
+  originalImageUrl: '',
+  sourcePublicId: '',
+  processedImageUrl: '',
+  thumbnailImageUrl: '',
+  cardImageUrl: '',
+  highResolutionImageUrl: '',
+  backgroundRemoved: false,
+  processingStatus: 'not_requested',
+  processingError: '',
+  useProcessedImage: true,
+  presentationBackground: 'white'
+}
+
 const defaultDocumentKinds = {
   business: 'company_registration',
   tax: 'tax_registration',
@@ -198,6 +214,7 @@ const SellerDashboardPage = () => {
   const [countInStock, setCountInStock] = useState('')
   const [lowStockThreshold, setLowStockThreshold] = useState('5')
   const [image, setImage] = useState('')
+  const [imageProcessing, setImageProcessing] = useState({ ...emptyImageProcessing })
   const [images, setImages] = useState([])
   const [variants, setVariants] = useState([])
   const [listingEvidence, setListingEvidence] = useState({ ...emptyListingEvidence })
@@ -461,6 +478,7 @@ const SellerDashboardPage = () => {
     setCountInStock('')
     setLowStockThreshold('5')
     setImage('')
+    setImageProcessing({ ...emptyImageProcessing })
     setImages([])
     setVariants([])
     setListingEvidence({ ...emptyListingEvidence })
@@ -502,6 +520,7 @@ const SellerDashboardPage = () => {
     setCountInStock(String(product.countInStock || 0))
     setLowStockThreshold(String(product.lowStockThreshold ?? 5))
     setImage(product.image || '')
+    setImageProcessing({ ...emptyImageProcessing, ...(product.imageProcessing || {}), originalImageUrl: product.imageProcessing?.originalImageUrl || product.image || '' })
     setImages(product.images || [])
     setVariants((product.variants || []).map(variant => ({
       _id: variant._id,
@@ -544,12 +563,36 @@ const SellerDashboardPage = () => {
     try {
       const formData = new FormData()
       formData.append('image', file)
+      formData.append('purpose', 'product_primary')
+      formData.append('presentationBackground', imageProcessing.presentationBackground)
       const { data } = await uploadImage(formData)
       setImage(data.url)
+      setImageProcessing({ ...emptyImageProcessing, ...(data.imageProcessing || {}), originalImageUrl: data.url })
     } catch (err) {
       setError(err.response?.data?.message || 'Image upload failed')
     } finally {
       setUploading(false)
+    }
+  }
+
+  const handleReprocessImage = async () => {
+    if (!imageProcessing.sourcePublicId || !image) return
+    setError('')
+    setImageProcessing(current => ({ ...current, processingStatus: 'processing', processingError: '' }))
+    try {
+      const { data } = await reprocessProductImage({
+        sourcePublicId: imageProcessing.sourcePublicId,
+        originalImageUrl: image,
+        presentationBackground: imageProcessing.presentationBackground,
+        useProcessedImage: imageProcessing.useProcessedImage
+      })
+      setImageProcessing(current => ({ ...current, ...data.imageProcessing }))
+    } catch (err) {
+      setImageProcessing(current => ({
+        ...current,
+        processingStatus: 'failed',
+        processingError: err.response?.data?.message || 'Glory Optimised could not be prepared.'
+      }))
     }
   }
 
@@ -632,6 +675,7 @@ const SellerDashboardPage = () => {
         countInStock: numericStock,
         lowStockThreshold: numericLowStockThreshold,
         image,
+        imageProcessing,
         images,
         acceptedPaymentMethods: listingPaymentMethods,
         listingEvidence: {
@@ -1751,6 +1795,88 @@ const SellerDashboardPage = () => {
                   )}
                   <input type='file' accept='image/*' onChange={handleImageUpload} />
                 </div>
+                {image && (
+                  <section className='glory-image-processing-panel' aria-label='Glory product image optimisation'>
+                    <div className='glory-image-processing-heading'>
+                      <div>
+                        <strong>Glory Optimised</strong>
+                        <span>
+                          {imageProcessing.processingStatus === 'processing'
+                            ? 'Optimising your product image...'
+                            : imageProcessing.processingStatus === 'failed'
+                              ? 'Your original image is ready to use.'
+                              : 'Your product image is ready.'}
+                        </span>
+                      </div>
+                      <span className={`glory-image-processing-status is-${imageProcessing.processingStatus}`}>
+                        {imageProcessing.processingStatus.replaceAll('_', ' ')}
+                      </span>
+                    </div>
+
+                    <div className='glory-image-processing-compare'>
+                      <figure>
+                        <img src={image} alt='Original product upload' />
+                        <figcaption>Original</figcaption>
+                      </figure>
+                      <figure style={{ background: PRODUCT_IMAGE_BACKGROUNDS[imageProcessing.presentationBackground] }}>
+                        {imageProcessing.processedImageUrl && imageProcessing.processingStatus !== 'failed' && !imageProcessing.processingError ? (
+                          <img
+                            src={imageProcessing.processedImageUrl}
+                            alt='Glory optimised product preview'
+                            onLoad={() => setImageProcessing(current => (
+                              current.processingStatus === 'processing'
+                                ? { ...current, processingStatus: 'completed', backgroundRemoved: true, processingError: '' }
+                                : current
+                            ))}
+                            onError={() => setImageProcessing(current => (
+                              current.processingStatus === 'processing'
+                                ? { ...current, processingError: 'Still processing. Your original will be used until it is ready.' }
+                                : current
+                            ))}
+                          />
+                        ) : <span>Original fallback</span>}
+                        <figcaption>Glory Optimised</figcaption>
+                      </figure>
+                    </div>
+
+                    <div className='glory-image-processing-checks' aria-label='Image processing checks'>
+                      <span className={imageProcessing.backgroundRemoved ? 'is-ready' : ''}>Background removed</span>
+                      <span className={imageProcessing.processingStatus === 'completed' ? 'is-ready' : ''}>Product centred</span>
+                      <span className={imageProcessing.processingStatus === 'completed' ? 'is-ready' : ''}>Image optimised</span>
+                    </div>
+
+                    <div className='glory-image-processing-options'>
+                      <div className='glory-image-processing-choice-group' role='group' aria-label='Primary image preference'>
+                        <button
+                          type='button'
+                          className={imageProcessing.useProcessedImage ? 'is-active' : ''}
+                          onClick={() => setImageProcessing(current => ({ ...current, useProcessedImage: true }))}
+                        >Use Glory Optimised</button>
+                        <button
+                          type='button'
+                          className={!imageProcessing.useProcessedImage ? 'is-active' : ''}
+                          onClick={() => setImageProcessing(current => ({ ...current, useProcessedImage: false }))}
+                        >Use Original</button>
+                        <button type='button' onClick={handleReprocessImage} disabled={!imageProcessing.sourcePublicId || imageProcessing.processingStatus === 'processing'}>Reprocess image</button>
+                      </div>
+                      <div className='glory-image-processing-backgrounds' role='group' aria-label='Product card backdrop'>
+                        <span>Card backdrop</span>
+                        {Object.entries(PRODUCT_IMAGE_BACKGROUNDS).map(([key, color]) => (
+                          <button
+                            key={key}
+                            type='button'
+                            className={imageProcessing.presentationBackground === key ? 'is-active' : ''}
+                            onClick={() => setImageProcessing(current => ({ ...current, presentationBackground: key }))}
+                            aria-label={`${key} product backdrop`}
+                            aria-pressed={imageProcessing.presentationBackground === key}
+                            style={{ '--glory-image-background': color }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    {imageProcessing.processingError && <p className='glory-image-processing-error'>{imageProcessing.processingError}</p>}
+                  </section>
+                )}
               </div>
 
               <div>

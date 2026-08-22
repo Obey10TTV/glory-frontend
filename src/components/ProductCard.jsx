@@ -1,12 +1,20 @@
 import { useNavigate } from 'react-router'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { FiArrowRight, FiHeart, FiStar } from 'react-icons/fi'
 import { formatCurrency } from '../utils/currency'
 import { isWishlisted, toggleWishlist } from '../utils/wishlist'
+import { getProductImageBackground, getProductImageUrl, getProductOriginalImageUrl } from '../utils/productImage'
 
 const ProductCard = ({ product }) => {
   const navigate = useNavigate()
   const [wished, setWished] = useState(() => isWishlisted(product._id))
+  const [imageUrl, setImageUrl] = useState(() => getProductImageUrl(product, 'card'))
+
+  const originalImageUrl = getProductOriginalImageUrl(product)
+
+  useEffect(() => {
+    setImageUrl(getProductImageUrl(product, 'card'))
+  }, [product])
 
   const handleViewListing = (e) => {
     e.stopPropagation()
@@ -42,18 +50,23 @@ const ProductCard = ({ product }) => {
     >
       <div className='glory-product-media' style={{
         width: '100%', aspectRatio: '3/4',
-        background: '#fdf0f5', overflow: 'hidden',
+        background: getProductImageBackground(product), overflow: 'hidden',
         position: 'relative'
       }}>
         <img
-          src={product.image}
+          src={imageUrl}
           alt={product.name}
           loading='lazy'
           width='600'
           height='800'
           style={{
             width: '100%', height: '100%',
-            objectFit: 'cover', display: 'block'
+            objectFit: 'contain', display: 'block',
+            padding: '7%',
+            filter: 'drop-shadow(0 10px 14px rgba(23, 21, 20, 0.12))'
+          }}
+          onError={() => {
+            if (imageUrl !== originalImageUrl) setImageUrl(originalImageUrl)
           }}
         />
         {product.isSponsored && (
