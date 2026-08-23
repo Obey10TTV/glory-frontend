@@ -11636,6 +11636,12 @@ button {
     border-radius: 12px !important;
     box-shadow: 0 18px 42px rgba(79, 45, 31, 0.14) !important;
   }
+
+  /* Registration can grow and scroll; the shorter login form should sit in the visual centre. */
+  .glory-auth-page.glory-login-page {
+    align-items: center !important;
+    justify-content: center !important;
+  }
 }
 
 @media (max-width: 360px) {
