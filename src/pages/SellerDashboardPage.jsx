@@ -7,6 +7,7 @@ import Message from '../components/Message'
 import { useUser } from '../context/UserContext'
 import {
   createProduct,
+  getPromotionAvailability,
   deleteProduct,
   getMyPromotions,
   getMySellerProducts,
@@ -192,6 +193,9 @@ const SellerDashboardPage = () => {
   const [promotions, setPromotions] = useState([])
   const [selectedPromotionListingId, setSelectedPromotionListingId] = useState('')
   const [selectedPromotionPlanCode, setSelectedPromotionPlanCode] = useState('')
+  const [promotionStartDates, setPromotionStartDates] = useState([])
+  const [selectedPromotionStartDate, setSelectedPromotionStartDate] = useState('')
+  const [promotionAvailabilityLoading, setPromotionAvailabilityLoading] = useState(false)
   const [paymentAction, setPaymentAction] = useState('')
   const [documentUploading, setDocumentUploading] = useState('')
   const [documentKinds, setDocumentKinds] = useState(defaultDocumentKinds)
@@ -289,6 +293,36 @@ const SellerDashboardPage = () => {
       setSelectedPromotionListingId(eligibleListings[0]?._id || '')
     }
   }, [products, selectedPromotionListingId, sellerPayments.marketCode])
+
+  useEffect(() => {
+    if (!userIsSeller || !selectedPromotionPlanCode) {
+      setPromotionStartDates([])
+      setSelectedPromotionStartDate('')
+      return undefined
+    }
+
+    let active = true
+    setPromotionAvailabilityLoading(true)
+    getPromotionAvailability({ planCode: selectedPromotionPlanCode })
+      .then(({ data }) => {
+        if (!active) return
+        const startDates = Array.isArray(data?.startDates) ? data.startDates : []
+        setPromotionStartDates(startDates)
+        setSelectedPromotionStartDate(current => startDates.includes(current) ? current : (startDates[0] || ''))
+      })
+      .catch(() => {
+        if (!active) return
+        setPromotionStartDates([])
+        setSelectedPromotionStartDate('')
+      })
+      .finally(() => {
+        if (active) setPromotionAvailabilityLoading(false)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [userIsSeller, selectedPromotionPlanCode, sellerPayments.marketCode])
 
   useEffect(() => {
     if (!userIsSeller) return
@@ -434,6 +468,8 @@ const SellerDashboardPage = () => {
         await refreshPromotions()
         if (data?.promotionStatus === 'active') {
           setSuccess('Your sponsored homepage placement is now active and clearly labelled for shoppers.')
+        } else if (data?.promotionStatus === 'scheduled') {
+          setSuccess('Your homepage campaign is booked. It will go live automatically on its selected start date.')
         } else {
           setError('Your payment was received, but this promotion needs a Trust & Safety review before it can appear.')
         }
@@ -888,6 +924,10 @@ const SellerDashboardPage = () => {
   const handlePromotionMediaUpload = async (event) => {
     const file = event.target.files?.[0]
     if (!file) return
+    if (file.size > 25 * 1024 * 1024) {
+      setError('Campaign videos must be 25 MB or smaller.')
+      return
+    }
     setVideoUploading(true)
     setError('')
     try {
@@ -908,6 +948,18 @@ const SellerDashboardPage = () => {
     if (!plan || !selectedPromotionListingId) {
       setError('Choose an approved, in-stock listing before starting a homepage promotion.')
       return
+    }
+
+    if (!plan.requiresCreative || promotions.some((item) => (
+      item.listing?._id === selectedPromotionListingId
+      && item.planCode === plan.code
+      && item.status === 'approved_for_payment'
+      && item.creativeReviewStatus === 'approved'
+    ))) {
+      if (!selectedPromotionStartDate) {
+        setError('Choose an available campaign start date before checkout.')
+        return
+      }
     }
 
     setPaymentAction('promotion')
@@ -959,11 +1011,14 @@ const SellerDashboardPage = () => {
         listingId: selectedPromotionListingId,
         planCode: plan.code,
         promotionId: approvedDraft?._id,
-        marketCode: sellerPayments.marketCode
+        marketCode: sellerPayments.marketCode,
+        startDate: selectedPromotionStartDate
       })
       if (data.alreadyActive) {
         await refreshPromotions()
-        setSuccess('This listing already has an active sponsored homepage placement.')
+        setSuccess(data.promotion?.status === 'scheduled'
+          ? 'This listing already has a booked homepage campaign.'
+          : 'This listing already has an active sponsored homepage placement.')
         setPaymentAction('')
         return
       }
@@ -1024,11 +1079,16 @@ const SellerDashboardPage = () => {
     && promotion.status === 'active'
     && new Date(promotion.endsAt).getTime() > Date.now()
   ))
+  const scheduledHomepagePromotion = promotions.find((promotion) => (
+    promotion.placement === 'homepage_featured'
+    && promotion.status === 'scheduled'
+    && new Date(promotion.endsAt).getTime() > Date.now()
+  ))
   const selectedVideoPromotion = homepagePromotionPlan?.requiresCreative
     ? promotions.find((promotion) => (
         promotion.listing?._id === selectedPromotionListingId
         && promotion.planCode === homepagePromotionPlan.code
-        && ['pending_review', 'approved_for_payment', 'pending_payment', 'active'].includes(promotion.status)
+        && ['pending_review', 'approved_for_payment', 'pending_payment', 'scheduled', 'active'].includes(promotion.status)
       ))
     : null
   const promotionActionLabel = homepagePromotionPlan?.requiresCreative
@@ -1038,6 +1098,8 @@ const SellerDashboardPage = () => {
         ? 'Pay for approved campaign'
         : selectedVideoPromotion?.status === 'active'
           ? 'Campaign is live'
+          : selectedVideoPromotion?.status === 'scheduled'
+            ? 'Campaign is booked'
           : 'Submit video for review'
     : 'Buy sponsored placement'
   const sellerCanSubmitProducts = Boolean(
@@ -1546,12 +1608,33 @@ const SellerDashboardPage = () => {
                       Live until {new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' }).format(new Date(activeHomepagePromotion.endsAt))}
                     </span>
                   )}
+                  {scheduledHomepagePromotion && (
+                    <span className='glory-commerce-status is-pending'>
+                      Booked for {new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' }).format(new Date(scheduledHomepagePromotion.startsAt))}
+                    </span>
+                  )}
                   {promotableProducts.length > 0 ? (
                     <div className='glory-promotion-options'>
                       <label className='glory-promotion-listing-select'>
                         <span>Campaign</span>
                         <select value={selectedPromotionPlanCode} onChange={(event) => setSelectedPromotionPlanCode(event.target.value)}>
                           {promotionPlans.map(plan => <option key={plan.code} value={plan.code}>{plan.label} · {plan.durationDays} days</option>)}
+                        </select>
+                      </label>
+                      <label className='glory-promotion-listing-select'>
+                        <span>Start date</span>
+                        <select
+                          value={selectedPromotionStartDate}
+                          onChange={(event) => setSelectedPromotionStartDate(event.target.value)}
+                          disabled={promotionAvailabilityLoading || promotionStartDates.length === 0}
+                        >
+                          {promotionAvailabilityLoading && <option value=''>Checking availability...</option>}
+                          {!promotionAvailabilityLoading && promotionStartDates.length === 0 && <option value=''>No dates currently available</option>}
+                          {promotionStartDates.map((date) => (
+                            <option key={date} value={date}>
+                              {new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).format(new Date(`${date}T12:00:00Z`))}
+                            </option>
+                          ))}
                         </select>
                       </label>
                       <label className='glory-promotion-listing-select'>
@@ -1609,11 +1692,11 @@ const SellerDashboardPage = () => {
                           </label>
                           <label className='glory-video-upload'>
                             <FiImage size={18} aria-hidden='true' />
-                            <span>{videoUploading ? 'Uploading securely...' : videoCreative.mediaUrl ? 'Replace campaign video' : 'Upload MP4 or WebM video'}</span>
+                            <span>{videoUploading ? 'Uploading securely...' : videoCreative.mediaUrl ? 'Replace campaign video' : 'Upload MP4 or WebM video (10 sec max)'}</span>
                             <input type='file' accept='video/mp4,video/webm' disabled={videoUploading} onChange={handlePromotionMediaUpload} />
                           </label>
                           {videoCreative.mediaUrl && <video src={videoCreative.mediaUrl} muted controls playsInline preload='metadata' />}
-                          <small>Creative is reviewed before payment. Unsupported claims, unsafe products or unclear sponsorship are rejected without charging you.</small>
+                          <small>Maximum 10 seconds. Creative is reviewed before payment. Unsupported claims, unsafe products or unclear sponsorship are rejected without charging you.</small>
                         </>
                       )}
                     </fieldset>
@@ -1625,7 +1708,8 @@ const SellerDashboardPage = () => {
                       paymentAction !== ''
                       || !sellerCanSubmitProducts
                       || !selectedPromotionListingId
-                      || ['pending_review', 'pending_payment', 'active'].includes(selectedVideoPromotion?.status)
+                      || ['pending_review', 'pending_payment', 'scheduled', 'active'].includes(selectedVideoPromotion?.status)
+                      || ((!homepagePromotionPlan.requiresCreative || selectedVideoPromotion?.status === 'approved_for_payment') && !selectedPromotionStartDate)
                       || (homepagePromotionPlan.requiresCreative
                         && !selectedVideoPromotion
                         && (!videoCreative.mediaUrl || videoCreative.headline.trim().length < 4 || videoCreative.copy.trim().length < 12))

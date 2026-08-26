@@ -1080,7 +1080,7 @@ select:focus-visible,
 
 .glory-promotion-options {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
   width: 100%;
 }
@@ -10466,6 +10466,10 @@ button {
 .glory-promotion-listing-select select:focus-visible {
   outline: 2px solid #8f2648;
   outline-offset: 2px;
+}
+
+@media (max-width: 820px) {
+  .glory-promotion-options { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 1100px) {

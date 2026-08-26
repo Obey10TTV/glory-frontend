@@ -160,6 +160,7 @@ export const reportReview = (reviewId, data) => API.post(`/reviews/${reviewId}/r
 // PROMOTIONS
 export const getPromotionPlans = (params) => API.get('/promotions/plans', { params })
 export const getHomepagePromotions = (params) => API.get('/promotions/homepage', { params })
+export const getPromotionAvailability = (params) => API.get('/promotions/availability', { params })
 export const getMyPromotions = () => API.get('/promotions/mine')
 export const initializeHomepagePromotion = (data) => API.post('/stripe/seller/promotions/homepage', data)
 export const verifyHomepagePromotion = (sessionId) => API.get(`/stripe/seller/promotions/homepage/verify/${sessionId}`)
