@@ -171,6 +171,7 @@ const HomePage = () => {
   const [products, setProducts] = useState([])
   const [sponsoredProducts, setSponsoredProducts] = useState([])
   const [sponsoredVideos, setSponsoredVideos] = useState([])
+  const [sponsoredHero, setSponsoredHero] = useState(null)
   const [loading, setLoading] = useState(true)
   const [catalogError, setCatalogError] = useState('')
   const [arrivalCategory, setArrivalCategory] = useState('All')
@@ -183,15 +184,41 @@ const HomePage = () => {
   const regionalDepartments = useMemo(() => categoryTiles.filter((category) => (
     regionalContent.departmentNames.includes(category.name)
   )), [regionalContent])
-  const heroSlides = useMemo(() => [{
-    ...market.hero,
-    primaryPath: market.hero.primaryPath || '/products',
-    secondaryPath: market.hero.secondaryPath || '/sell-on-glory'
-  }, ...(market.hero.slides || [])], [market])
+  const heroSlides = useMemo(() => {
+    const organicSlides = [{
+      ...market.hero,
+      primaryPath: market.hero.primaryPath || '/products',
+      secondaryPath: market.hero.secondaryPath || '/sell-on-glory'
+    }, ...(market.hero.slides || [])]
+    if (!sponsoredHero?.creative?.mediaUrl || !sponsoredHero.listing) return organicSlides
+
+    const brandName = sponsoredHero.listing.brand
+      || sponsoredHero.listing.seller?.sellerProfile?.brandName
+      || sponsoredHero.listing.seller?.sellerProfile?.storeName
+      || 'this beauty brand'
+    const brandPath = `/products?market=${encodeURIComponent(market.code)}&brand=${encodeURIComponent(brandName)}`
+    const sponsoredSlide = {
+      id: `sponsored-${sponsoredHero.id}`,
+      tone: 'sponsored',
+      eyebrow: `Sponsored · ${brandName}`,
+      title: sponsoredHero.creative.headline || brandName,
+      copy: sponsoredHero.creative.copy || `Discover the latest from ${brandName}.`,
+      media: sponsoredHero.creative.mediaUrl,
+      mediaType: sponsoredHero.creative.type === 'image' ? 'image' : 'video',
+      imagePosition: 'center',
+      primaryLabel: sponsoredHero.creative.ctaLabel || `Shop ${brandName}`,
+      primaryPath: brandPath,
+      secondaryLabel: 'View product',
+      secondaryPath: `/products/${sponsoredHero.listing._id}`
+    }
+
+    // Glory opens the carousel; a single approved sponsor follows the first two organic slides.
+    return [...organicSlides.slice(0, 2), sponsoredSlide, ...organicSlides.slice(2)]
+  }, [market, sponsoredHero])
 
   useEffect(() => {
     setActiveSlide(0)
-  }, [market.code])
+  }, [market.code, sponsoredHero?.id])
 
   const loadProducts = useCallback(async () => {
     setLoading(true)
@@ -215,9 +242,11 @@ const HomePage = () => {
         .filter((item) => item?.listing && item.placement === 'homepage_featured')
         .map((item) => ({ ...item.listing, isSponsored: true, promotionEndsAt: item.endsAt })))
       setSponsoredVideos(items.filter((item) => item?.creative?.type === 'video' && item?.listing))
+      setSponsoredHero(items.find((item) => item?.placement === 'homepage_hero' && item?.creative?.mediaUrl && item?.listing) || null)
     } catch (error) {
       setSponsoredProducts([])
       setSponsoredVideos([])
+      setSponsoredHero(null)
     }
   }, [market.code])
 
@@ -226,7 +255,7 @@ const HomePage = () => {
     loadSponsoredProducts()
   }, [loadProducts, loadSponsoredProducts])
 
-  useEffect(() => setActiveSlide(0), [market.code])
+  useEffect(() => setActiveSlide(0), [market.code, sponsoredHero?.id])
 
   useEffect(() => {
     const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')

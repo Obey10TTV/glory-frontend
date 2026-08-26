@@ -627,10 +627,12 @@ const PromotionsTable = ({ promotions, onDecision }) => (
           <tr key={promotion._id}>
             <td>
               {promotion.creativeMediaUrl
-                ? <video src={promotion.creativeMediaUrl} muted controls playsInline preload='metadata' />
+                ? promotion.creativeType === 'image'
+                  ? <img src={promotion.creativeMediaUrl} alt='Campaign creative' loading='lazy' />
+                  : <video src={promotion.creativeMediaUrl} muted controls playsInline preload='metadata' />
                 : promotion.listing?.image && <img src={promotion.listing.image} alt='' loading='lazy' />}
             </td>
-            <td><strong>{promotion.creativeHeadline || promotion.label}</strong><br /><span className='glory-dashboard-note'>{promotion.creativeCopy || promotion.listing?.name}</span><br /><small>{promotion.planCode.replaceAll('_', ' ')}</small></td>
+            <td><strong>{promotion.creativeHeadline || promotion.label}</strong><br /><span className='glory-dashboard-note'>{promotion.creativeCopy || promotion.listing?.name}</span><br /><small>{promotion.planCode.replaceAll('_', ' ')}</small><br /><small>{promotion.creativeSafetyDeclared ? 'Seller safety declaration received' : 'Safety declaration missing'}</small></td>
             <td>{promotion.seller?.sellerProfile?.brandName || promotion.seller?.sellerProfile?.storeName || promotion.seller?.name}<br /><small>{promotion.seller?.email}</small></td>
             <td><strong>{promotion.marketCode}</strong><br /><small>{promotion.currency}</small></td>
             <td><span className='glory-status-chip'>{promotion.creativeReviewStatus.replaceAll('_', ' ')}</span><br /><small>{promotion.status.replaceAll('_', ' ')}</small></td>

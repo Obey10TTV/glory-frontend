@@ -180,6 +180,7 @@ export const uploadImage = (data) => API.post('/upload', data)
 export const reprocessProductImage = (data) => API.post('/upload/reprocess-product-image', data)
 export const uploadSellerDocument = (data) => API.post('/upload/seller-document', data)
 export const uploadPromotionMedia = (data) => API.post('/upload/promotion-media', data)
+export const uploadPromotionHeroMedia = (data) => API.post('/upload/promotion-hero-media', data)
 
 // PAYMENTS
 export const initializeStripePayment = (data) => API.post('/stripe/initialize', data)

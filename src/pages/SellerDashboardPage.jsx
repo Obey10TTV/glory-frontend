@@ -26,6 +26,7 @@ import {
   uploadImage,
   reprocessProductImage,
   uploadPromotionMedia,
+  uploadPromotionHeroMedia,
   uploadSellerDocument,
   submitHomepageVideoDraft,
   verifySellerActivation,
@@ -223,7 +224,9 @@ const SellerDashboardPage = () => {
   const [variants, setVariants] = useState([])
   const [listingEvidence, setListingEvidence] = useState({ ...emptyListingEvidence })
   const [listingPaymentMethods, setListingPaymentMethods] = useState(['card'])
-  const [videoCreative, setVideoCreative] = useState({ headline: '', copy: '', mediaUrl: '', ctaLabel: 'View product' })
+  const [videoCreative, setVideoCreative] = useState({
+    headline: '', copy: '', mediaUrl: '', mediaType: 'video', ctaLabel: 'View product', safetyDeclaration: false
+  })
   const [videoUploading, setVideoUploading] = useState(false)
 
   const categories = Object.keys(categoryProductTypes)
@@ -933,9 +936,14 @@ const SellerDashboardPage = () => {
     try {
       const formData = new FormData()
       formData.append('media', file)
-      const { data } = await uploadPromotionMedia(formData)
-      setVideoCreative(current => ({ ...current, mediaUrl: data.url }))
-      setSuccess('Campaign video uploaded securely. Add the campaign copy and submit it for review.')
+      const uploadCreative = homepagePromotionPlan?.placement === 'homepage_hero'
+        ? uploadPromotionHeroMedia
+        : uploadPromotionMedia
+      const { data } = await uploadCreative(formData)
+      setVideoCreative(current => ({ ...current, mediaUrl: data.url, mediaType: data.mediaType || 'video' }))
+      setSuccess(homepagePromotionPlan?.placement === 'homepage_hero'
+        ? 'Brand Feature creative uploaded securely. Add the campaign copy and submit it for review.'
+        : 'Campaign video uploaded securely. Add the campaign copy and submit it for review.')
     } catch (err) {
       setError(err.response?.data?.message || 'Campaign media upload failed')
     } finally {
@@ -990,6 +998,8 @@ const SellerDashboardPage = () => {
             creativeHeadline: videoCreative.headline,
             creativeCopy: videoCreative.copy,
             creativeMediaUrl: videoCreative.mediaUrl,
+            creativeMediaType: videoCreative.mediaType,
+            creativeSafetyDeclaration: videoCreative.safetyDeclaration,
             creativeCtaLabel: videoCreative.ctaLabel
           })
           await refreshPromotions()
@@ -1100,7 +1110,7 @@ const SellerDashboardPage = () => {
           ? 'Campaign is live'
           : selectedVideoPromotion?.status === 'scheduled'
             ? 'Campaign is booked'
-          : 'Submit video for review'
+          : `Submit ${homepagePromotionPlan?.placement === 'homepage_hero' ? 'Brand Feature' : 'video'} for review`
     : 'Buy sponsored placement'
   const sellerCanSubmitProducts = Boolean(
     user?.isAdmin
@@ -1599,7 +1609,9 @@ const SellerDashboardPage = () => {
                   </div>
                   <p>
                     {homepagePromotionPlan.requiresCreative
-                      ? `Submit a video for review, then run it as a clearly labelled Sponsored campaign for ${homepagePromotionPlan.durationDays} days.`
+                      ? homepagePromotionPlan.placement === 'homepage_hero'
+                        ? `Upload one 16:9 image or silent video for a single clearly labelled Sponsored slide in Glory's homepage carousel for ${homepagePromotionPlan.durationDays} days.`
+                        : `Submit a video for review, then run it as a clearly labelled Sponsored campaign for ${homepagePromotionPlan.durationDays} days.`
                       : `Feature one approved listing in Glory's Sponsored homepage edit for ${homepagePromotionPlan.durationDays} days.`}
                     {' '}Paid placement never changes your verification status or organic ranking.
                   </p>
@@ -1649,7 +1661,7 @@ const SellerDashboardPage = () => {
                   )}
                   {homepagePromotionPlan.requiresCreative && (
                     <fieldset className='glory-video-campaign-form'>
-                      <legend>Video creative</legend>
+                      <legend>{homepagePromotionPlan.placement === 'homepage_hero' ? 'Brand Feature creative' : 'Video creative'}</legend>
                       {selectedVideoPromotion && (
                         <>
                           <div className={`glory-commerce-status is-${selectedVideoPromotion.creativeReviewStatus}`}>
@@ -1692,11 +1704,33 @@ const SellerDashboardPage = () => {
                           </label>
                           <label className='glory-video-upload'>
                             <FiImage size={18} aria-hidden='true' />
-                            <span>{videoUploading ? 'Uploading securely...' : videoCreative.mediaUrl ? 'Replace campaign video' : 'Upload MP4 or WebM video (10 sec max)'}</span>
-                            <input type='file' accept='video/mp4,video/webm' disabled={videoUploading} onChange={handlePromotionMediaUpload} />
+                            <span>{videoUploading
+                              ? 'Uploading securely...'
+                              : videoCreative.mediaUrl
+                                ? 'Replace campaign creative'
+                                : homepagePromotionPlan.placement === 'homepage_hero'
+                                  ? 'Upload 16:9 image or video (10 sec max)'
+                                  : 'Upload MP4 or WebM video (10 sec max)'}</span>
+                            <input
+                              type='file'
+                              accept={homepagePromotionPlan.placement === 'homepage_hero' ? 'image/jpeg,image/png,image/webp,video/mp4,video/webm' : 'video/mp4,video/webm'}
+                              disabled={videoUploading}
+                              onChange={handlePromotionMediaUpload}
+                            />
                           </label>
-                          {videoCreative.mediaUrl && <video src={videoCreative.mediaUrl} muted controls playsInline preload='metadata' />}
-                          <small>Maximum 10 seconds. Creative is reviewed before payment. Unsupported claims, unsafe products or unclear sponsorship are rejected without charging you.</small>
+                          {videoCreative.mediaUrl && (videoCreative.mediaType === 'image'
+                            ? <img className='glory-hero-creative-preview' src={videoCreative.mediaUrl} alt='Campaign creative preview' />
+                            : <video src={videoCreative.mediaUrl} muted controls playsInline preload='metadata' />)}
+                          {homepagePromotionPlan.placement === 'homepage_hero' && <small>Hero creatives are presented as a fixed 16:9 carousel slide. Keep important text and faces away from the outer edges.</small>}
+                          <label className='glory-creative-safety-declaration'>
+                            <input
+                              type='checkbox'
+                              checked={videoCreative.safetyDeclaration}
+                              onChange={event => setVideoCreative(current => ({ ...current, safetyDeclaration: event.target.checked }))}
+                            />
+                            <span>I confirm this creative contains no nudity, illegal content, prohibited products, deceptive claims or material I do not have permission to use.</span>
+                          </label>
+                          <small>Maximum 10 seconds for video. Every creative is manually reviewed before payment and can be rejected without going live.</small>
                         </>
                       )}
                     </fieldset>
@@ -1712,7 +1746,7 @@ const SellerDashboardPage = () => {
                       || ((!homepagePromotionPlan.requiresCreative || selectedVideoPromotion?.status === 'approved_for_payment') && !selectedPromotionStartDate)
                       || (homepagePromotionPlan.requiresCreative
                         && !selectedVideoPromotion
-                        && (!videoCreative.mediaUrl || videoCreative.headline.trim().length < 4 || videoCreative.copy.trim().length < 12))
+                        && (!videoCreative.mediaUrl || !videoCreative.safetyDeclaration || videoCreative.headline.trim().length < 4 || videoCreative.copy.trim().length < 12))
                     }
                     className='glory-btn'
                   >
