@@ -114,7 +114,11 @@ const LoginPage = () => {
       const data = err.response?.data
       if (data?.requiresEmailVerification) {
         setPendingAuth({ type: 'email', email: data.email, source: 'email' })
-        setSuccess(data.message || 'Verify your email before signing in.')
+        if (data.verificationDeliveryFailed) {
+          setError(data.message)
+        } else {
+          setSuccess(data.message || 'Verify your email before signing in.')
+        }
       } else {
         setError(data?.message || 'Invalid email or password')
       }

@@ -153,7 +153,11 @@ const RegisterPage = () => {
 
       finishLogin(data)
     } catch (err) {
-      setError(err.response?.data?.message || 'Something went wrong')
+      const data = err.response?.data
+      if (data?.requiresEmailVerification && data?.email) {
+        setPendingVerification({ type: 'email', email: data.email, isSeller: data.isSeller })
+      }
+      setError(data?.message || 'Something went wrong')
     } finally {
       setLoading(false)
     }
