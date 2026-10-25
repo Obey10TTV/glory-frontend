@@ -17,6 +17,21 @@ body,
   margin: 0;
 }
 
+/*
+ * Keep precision-touchpad horizontal gestures inside the page. Edge otherwise
+ * lets a small sideways component drag the document or start history navigation.
+ * `clip` avoids creating a new scroll container, so sticky UI keeps working.
+ */
+html,
+body {
+  overflow-x: clip;
+  overscroll-behavior-x: none;
+}
+
+#root {
+  overflow-x: clip;
+}
+
 body {
   font-family: 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
