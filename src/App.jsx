@@ -55,7 +55,6 @@ function AppContent() {
         <Suspense fallback={<div className='glory-route-loader'><Loader /></div>}>
           <Routes>
             <Route path='/' element={<HomePage />} />
-            <Route path='/ng' element={<HomePage />} />
             <Route path='/gb' element={<HomePage />} />
             <Route path='/us' element={<HomePage />} />
             <Route path='/ca' element={<HomePage />} />
@@ -75,8 +74,9 @@ function AppContent() {
             <Route path='/admin' element={<RequireAccess role='admin'><AdminDashboardPage /></RequireAccess>} />
             <Route path='/about' element={<AboutPage />} />
             <Route path='/seller-pricing' element={<SellerPricingPage />} />
+            <Route path='/sell-on-glory' element={<Navigate to='/register?type=seller' replace />} />
             {infoPageRoutes
-              .filter(slug => slug !== 'seller-pricing')
+              .filter(slug => !['seller-pricing', 'sell-on-glory'].includes(slug))
               .map(slug => <Route key={slug} path={`/${slug}`} element={<InfoPage slug={slug} />} />)}
           </Routes>
         </Suspense>

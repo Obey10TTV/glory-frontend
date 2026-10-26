@@ -2,7 +2,6 @@ const { expect, test } = require('@playwright/test')
 
 const publicRoutes = [
   '/',
-  '/ng',
   '/gb',
   '/us',
   '/ca',
@@ -139,15 +138,14 @@ const homepagePromotionPlan = {
 }
 
 const regionalDetails = {
-  NG: { marketName: 'Nigeria', currency: 'NGN', locale: 'en-NG', billingProvider: 'paystack', starterLimit: 10 },
   GB: { marketName: 'United Kingdom', currency: 'GBP', locale: 'en-GB', billingProvider: 'stripe', starterLimit: 5 },
   US: { marketName: 'United States', currency: 'USD', locale: 'en-US', billingProvider: 'stripe', starterLimit: 5 },
   CA: { marketName: 'Canada', currency: 'CAD', locale: 'en-CA', billingProvider: 'stripe', starterLimit: 5 },
 }
 
-const regionalMarketplaceResponse = (marketCode = 'NG') => {
-  const market = regionalDetails[marketCode] || regionalDetails.NG
-  const paidPrices = marketCode === 'NG' ? [750000, 2200000, 6000000] : [5900, 14900, 39900]
+const regionalMarketplaceResponse = (marketCode = 'GB') => {
+  const market = regionalDetails[marketCode] || regionalDetails.GB
+  const paidPrices = [5900, 14900, 39900]
   const sellerPlans = [
     { code: 'starter', label: 'Starter', description: 'Start a verified catalogue.', feeMinor: 0, currency: market.currency, marketCode, billingProvider: market.billingProvider, interval: null, activeListingLimit: market.starterLimit, promotionDiscountBps: 0, features: [`Up to ${market.starterLimit} active listings`] },
     { code: 'studio', label: 'Studio', description: 'For growing beauty businesses.', feeMinor: paidPrices[0], currency: market.currency, marketCode, billingProvider: market.billingProvider, interval: 'month', activeListingLimit: 50, promotionDiscountBps: 1000, features: ['Up to 50 active listings'] },
@@ -155,8 +153,8 @@ const regionalMarketplaceResponse = (marketCode = 'NG') => {
     { code: 'partner', label: 'Brand Partner', description: 'For high-volume brands.', feeMinor: paidPrices[2], currency: market.currency, marketCode, billingProvider: market.billingProvider, interval: 'month', activeListingLimit: 750, promotionDiscountBps: 2500, features: ['Up to 750 active listings'] },
   ]
   const promotionPlans = [
-    { ...homepagePromotionPlan, currency: market.currency, marketCode, billingProvider: market.billingProvider, feeMinor: marketCode === 'NG' ? 500000 : 8900, recommended: true, requiresCreative: false },
-    { code: 'homepage_video_7', placement: 'homepage_video', label: 'Homepage Video', description: 'A reviewed video campaign.', feeMinor: marketCode === 'NG' ? 2500000 : 19900, currency: market.currency, marketCode, billingProvider: market.billingProvider, durationDays: 7, requiresCreative: true },
+    { ...homepagePromotionPlan, currency: market.currency, marketCode, billingProvider: market.billingProvider, feeMinor: 8900, recommended: true, requiresCreative: false },
+    { code: 'homepage_video_7', placement: 'homepage_video', label: 'Homepage Video', description: 'A reviewed video campaign.', feeMinor: 19900, currency: market.currency, marketCode, billingProvider: market.billingProvider, durationDays: 7, requiresCreative: true },
   ]
 
   return {
@@ -257,7 +255,7 @@ const getCompactHomeLayout = () => {
 const mockApiResponse = (requestUrl, profile) => {
   const url = new URL(requestUrl)
   const { pathname, searchParams } = url
-  const marketCode = searchParams.get('market') || profile?.sellerProfile?.marketCode || 'NG'
+  const marketCode = searchParams.get('market') || profile?.sellerProfile?.marketCode || 'GB'
   const marketplace = regionalMarketplaceResponse(marketCode)
 
   if (pathname.endsWith('/users/profile')) return profile
@@ -396,7 +394,7 @@ for (const route of publicRoutes) {
 }
 
 test('home page keeps content readable on compact iPhones', async ({ page }) => {
-  await page.goto('/ng', { waitUntil: 'domcontentloaded' })
+  await page.goto('/gb', { waitUntil: 'domcontentloaded' })
   await page.locator('.glory-home-departments.is-gallery').waitFor()
 
   for (const width of [320, 375, 414]) {

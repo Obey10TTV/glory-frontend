@@ -17,8 +17,6 @@ import {
   initializeSellerActivation,
   initializeSellerSubscription,
   initializeHomepagePromotion,
-  initializePaystackHomepagePromotion,
-  initializePaystackSellerPlan,
   openSellerBillingPortal,
   startSellerIdentityVerification,
   updateProduct,
@@ -32,8 +30,6 @@ import {
   verifySellerActivation,
   verifySellerSubscription,
   verifyHomepagePromotion,
-  verifyPaystackHomepagePromotion,
-  verifyPaystackSellerPlan
 } from '../api'
 import {
   FiCheckCircle,
@@ -158,15 +154,8 @@ const priceGuidance = {
   Fragrance: [18, 180], 'Scented Candles': [16, 85], 'Tools & Accessories': [8, 120]
 }
 
-const nigeriaPriceGuidance = {
-  Skincare: [5000, 45000], Haircare: [4000, 35000], Makeup: [4000, 40000], Nails: [3000, 25000],
-  Lashes: [2500, 20000], 'Body Care': [4000, 30000], 'Body Liquid': [3500, 25000],
-  Fragrance: [8000, 85000], 'Scented Candles': [6000, 40000], 'Tools & Accessories': [3000, 55000]
-}
-
 const getPriceGuidance = (category, currency) => {
   if (!category) return null
-  if (currency === 'NGN') return nigeriaPriceGuidance[category]
   const base = priceGuidance[category]
   if (!base) return null
   const multiplier = currency === 'USD' ? 1.25 : currency === 'CAD' ? 1.65 : 1
@@ -428,14 +417,11 @@ const SellerDashboardPage = () => {
 
   useEffect(() => {
     const sessionId = searchParams.get('session_id')
-    const reference = searchParams.get('reference') || searchParams.get('trxref')
-    if (!userIsSeller || searchParams.get('membership') !== 'success' || (!sessionId && !reference)) return
+    if (!userIsSeller || searchParams.get('membership') !== 'success' || !sessionId) return
 
     let active = true
     setPaymentAction('membership-verify')
-    const verification = reference
-      ? verifyPaystackSellerPlan(reference)
-      : verifySellerSubscription(sessionId)
+    const verification = verifySellerSubscription(sessionId)
     verification
       .then(async ({ data }) => {
         if (!active) return
@@ -457,14 +443,11 @@ const SellerDashboardPage = () => {
 
   useEffect(() => {
     const sessionId = searchParams.get('session_id')
-    const reference = searchParams.get('reference') || searchParams.get('trxref')
-    if (!userIsSeller || searchParams.get('promotion') !== 'success' || (!sessionId && !reference)) return
+    if (!userIsSeller || searchParams.get('promotion') !== 'success' || !sessionId) return
 
     let active = true
     setPaymentAction('promotion-verify')
-    const verification = reference
-      ? verifyPaystackHomepagePromotion(reference)
-      : verifyHomepagePromotion(sessionId)
+    const verification = verifyHomepagePromotion(sessionId)
     verification
       .then(async ({ data }) => {
         if (!active) return
@@ -900,10 +883,7 @@ const SellerDashboardPage = () => {
     setPaymentAction(`membership-${planCode}`)
     setError('')
     try {
-      const checkout = sellerPayments.billingProvider === 'paystack'
-        ? initializePaystackSellerPlan
-        : initializeSellerSubscription
-      const { data } = await checkout({ planCode })
+      const { data } = await initializeSellerSubscription({ planCode })
       if (!data.url) throw new Error('Regional billing is not available yet.')
       window.location.assign(data.url)
     } catch (err) {
@@ -1009,15 +989,12 @@ const SellerDashboardPage = () => {
         }
       }
 
-      const checkout = sellerPayments.billingProvider === 'paystack'
-        ? initializePaystackHomepagePromotion
-        : initializeHomepagePromotion
       const approvedDraft = plan.requiresCreative ? promotions.find((item) => (
         item.listing?._id === selectedPromotionListingId
         && item.planCode === plan.code
         && item.status === 'approved_for_payment'
       )) : null
-      const { data } = await checkout({
+      const { data } = await initializeHomepagePromotion({
         listingId: selectedPromotionListingId,
         planCode: plan.code,
         promotionId: approvedDraft?._id,
@@ -1543,7 +1520,7 @@ const SellerDashboardPage = () => {
                   </div>
                   <div className='glory-seller-plan-price'>
                     <strong>{plan.feeMinor ? formatMinorCurrency(plan.feeMinor, plan.currency) : 'Free'}</strong>
-                    {plan.interval && <span>{sellerPayments.billingProvider === 'paystack' ? '/ 30 days' : '/ month'}</span>}
+                    {plan.interval && <span>/ month</span>}
                   </div>
                   <p>{plan.description}</p>
                   <ul>
@@ -1551,10 +1528,6 @@ const SellerDashboardPage = () => {
                   </ul>
                   {isCurrent && plan.code === 'starter' ? (
                     <button type='button' className='glory-secondary-button' disabled>Current plan</button>
-                  ) : hasPaidPlan && sellerPayments.billingProvider === 'paystack' ? (
-                    <button type='button' className='glory-secondary-button' disabled>
-                      {isCurrent ? 'Active until renewal' : 'Current plan is active'}
-                    </button>
                   ) : hasPaidPlan ? (
                     <button type='button' className={isCurrent ? 'glory-btn' : 'glory-secondary-button'} onClick={handleBillingPortal} disabled={paymentAction !== ''}>
                       {paymentAction === 'membership-portal' ? 'Opening billing...' : isCurrent ? 'Manage billing' : 'Change plan'}
@@ -2197,7 +2170,7 @@ const SellerDashboardPage = () => {
                 </div>
                 <div>
                   <label style={labelStyle}>Country of Origin</label>
-                  <input value={countryOfOrigin} onChange={event => setCountryOfOrigin(event.target.value)} placeholder='e.g. Nigeria, United Kingdom, France' maxLength={100} style={inputStyle} />
+                  <input value={countryOfOrigin} onChange={event => setCountryOfOrigin(event.target.value)} placeholder='e.g. United Kingdom, France, Canada' maxLength={100} style={inputStyle} />
                 </div>
               </div>
 

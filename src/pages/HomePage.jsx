@@ -84,16 +84,6 @@ const ukDepartmentGallery = [
 ]
 
 const marketSectionContent = {
-  NG: {
-    departmentLayout: 'default',
-    departmentEyebrow: 'Explore our world',
-    departmentTitle: 'Beauty, your way.',
-    departmentNames: ['Skincare', 'Makeup', 'Haircare', 'Nails', 'Lashes', 'Fragrance'],
-    newInEyebrow: 'Fresh in Nigeria',
-    newInTitle: 'New names to know.',
-    newInCopy: 'Recently approved Nigerian listings arrive here first, ready for their next customer.',
-    newInLabel: 'View all Nigerian beauty'
-  },
   GB: {
     departmentLayout: 'editorial',
     departmentEyebrow: 'The British beauty edit',
@@ -180,7 +170,7 @@ const HomePage = () => {
   const [reducedMotion, setReducedMotion] = useState(false)
   const heroSwipeStartX = useRef(null)
   const heroActionPath = useRef('')
-  const regionalContent = marketSectionContent[market.code] || marketSectionContent.NG
+  const regionalContent = marketSectionContent[market.code] || marketSectionContent.GB
   const regionalDepartments = useMemo(() => categoryTiles.filter((category) => (
     regionalContent.departmentNames.includes(category.name)
   )), [regionalContent])
@@ -188,7 +178,7 @@ const HomePage = () => {
     const organicSlides = [{
       ...market.hero,
       primaryPath: market.hero.primaryPath || '/products',
-      secondaryPath: market.hero.secondaryPath || '/sell-on-glory'
+      secondaryPath: market.hero.secondaryPath || '/register?type=seller'
     }, ...(market.hero.slides || [])]
     if (!sponsoredHero?.creative?.mediaUrl || !sponsoredHero.listing) return organicSlides
 
@@ -729,7 +719,7 @@ const HomePage = () => {
             </div>
             <div>
               <p>Open a verified storefront, submit products for review and meet shoppers across {market.name} and the wider Glory community.</p>
-              <button type='button' onClick={() => navigate('/sell-on-glory')}>
+              <button type='button' onClick={() => navigate('/register?type=seller')}>
                 Sell on Glory
                 <FiArrowRight size={17} aria-hidden='true' />
               </button>

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router'
+import { Link, useNavigate, useSearchParams } from 'react-router'
 import { useUser } from '../context/UserContext'
 import {
   authenticateWithGoogle,
@@ -24,6 +24,7 @@ const passwordIsStrong = (value) => (
 
 const RegisterPage = () => {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { market } = useMarket()
   const { login } = useUser()
   const [name, setName] = useState('')
@@ -33,7 +34,7 @@ const RegisterPage = () => {
   const [brandName, setBrandName] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [isSeller, setIsSeller] = useState(false)
+  const [isSeller, setIsSeller] = useState(() => searchParams.get('type') === 'seller')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')

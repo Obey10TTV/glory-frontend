@@ -1,59 +1,4 @@
 export const ACTIVE_MARKETS = {
-  NG: {
-    code: 'NG',
-    slug: 'ng',
-    name: 'Nigeria',
-    shortName: 'Nigeria',
-    locale: 'en-NG',
-    currency: 'NGN',
-    currencyName: 'Nigerian naira',
-    flag: '🇳🇬',
-    billingProvider: 'paystack',
-    announcement: "NIGERIA'S BEAUTY MARKETPLACE",
-    deliveryCopy: 'Delivery arranged with each independent seller',
-    hero: {
-      id: 'nigeria-beauty-business',
-      eyebrow: 'Beauty business, built in Nigeria',
-      title: 'Made here. Discovered everywhere.',
-      copy: 'Find independent beauty brands, trusted sellers and products made for every shade, texture and ritual.',
-      mediaType: 'image',
-      media: '/images/home/nigeria-beauty-hero.png',
-      imagePosition: 'center',
-      primaryLabel: 'Shop Nigeria',
-      secondaryLabel: 'Open your store',
-      tone: 'light',
-      slides: [
-        {
-          id: 'nigeria-haircare-edit',
-          eyebrow: 'Texture, celebrated',
-          title: 'Your wash day, your way.',
-          copy: 'Explore oils, treatments and styling essentials from Nigerian beauty businesses that understand textured hair.',
-          mediaType: 'image',
-          media: '/images/home/nigeria-haircare-hero.png',
-          imagePosition: 'center',
-          primaryLabel: 'Shop haircare',
-          primaryPath: '/products?category=Haircare',
-          secondaryLabel: 'Meet sellers',
-          secondaryPath: '/sell-on-glory',
-          tone: 'light'
-        },
-        {
-          id: 'nigeria-beauty-creator',
-          eyebrow: 'Independent and growing',
-          title: 'Beauty business belongs here.',
-          copy: 'Discover new products from founders building thoughtful beauty brands across Nigeria.',
-          mediaType: 'image',
-          media: '/images/home/nigeria-creator-hero.png',
-          imagePosition: 'center',
-          primaryLabel: 'Discover beauty',
-          primaryPath: '/products',
-          secondaryLabel: 'Start selling',
-          secondaryPath: '/sell-on-glory',
-          tone: 'light'
-        }
-      ]
-    }
-  },
   GB: {
     code: 'GB',
     slug: 'gb',
@@ -103,7 +48,7 @@ export const ACTIVE_MARKETS = {
           primaryLabel: 'Shop makeup',
           primaryPath: '/products?category=Makeup',
           secondaryLabel: 'Meet sellers',
-          secondaryPath: '/sell-on-glory',
+          secondaryPath: '/register?type=seller',
           tone: 'dark'
         }
       ]
@@ -158,7 +103,7 @@ export const ACTIVE_MARKETS = {
           primaryLabel: 'Shop makeup',
           primaryPath: '/products?category=Makeup',
           secondaryLabel: 'Start selling',
-          secondaryPath: '/sell-on-glory',
+          secondaryPath: '/register?type=seller',
           tone: 'light'
         }
       ]
@@ -232,7 +177,7 @@ export const COMING_SOON_MARKETS = [
   { code: 'IN', slug: 'india', name: 'India', region: 'Asia Pacific', flag: '🇮🇳' }
 ]
 
-export const DEFAULT_MARKET_CODE = 'NG'
+export const DEFAULT_MARKET_CODE = 'GB'
 export const MARKET_STORAGE_KEY = 'gloryMarketCode'
 
 export const getMarket = (code) => ACTIVE_MARKETS[String(code || '').toUpperCase()] || ACTIVE_MARKETS[DEFAULT_MARKET_CODE]

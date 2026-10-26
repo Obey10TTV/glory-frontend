@@ -29,7 +29,7 @@ const footerGroups = [
   {
     title: 'Sell on Glory',
     links: [
-      { label: 'Become a seller', to: '/sell-on-glory' },
+      { label: 'Become a seller', to: '/register?type=seller' },
       { label: 'Seller resources', to: '/seller-resources' },
       { label: 'Seller agreement', to: '/seller-agreement' },
       { label: 'Pricing', to: '/seller-pricing' },
@@ -78,9 +78,7 @@ const globalPaymentBadges = [
 
 const Footer = () => {
   const { market } = useMarket()
-  const paymentBadges = market.code === 'NG'
-    ? globalPaymentBadges.filter(({ label }) => !['Stripe', 'American Express'].includes(label))
-    : globalPaymentBadges
+  const paymentBadges = globalPaymentBadges
 
   return (
     <footer className='glory-footer-v2'>

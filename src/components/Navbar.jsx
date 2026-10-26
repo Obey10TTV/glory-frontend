@@ -93,7 +93,7 @@ const Navbar = () => {
     FRAGRANCE: '/products?category=Fragrance',
     CANDLES: '/products?category=Scented%20Candles',
     ABOUT: '/about',
-    'SELL ON GLORY': '/sell-on-glory',
+    'SELL ON GLORY': '/register?type=seller',
   }
 
   const getNavPath = (item) => navRoutes[item] || '/products'

@@ -1,5 +1,4 @@
 const localeByCurrency = {
-  NGN: 'en-NG',
   GBP: 'en-GB',
   USD: 'en-US',
   CAD: 'en-CA'
@@ -12,7 +11,7 @@ export const formatCurrency = (value, currency = 'GBP', locale) => {
   return new Intl.NumberFormat(locale || localeByCurrency[normalizedCurrency] || 'en-GB', {
     style: 'currency',
     currency: normalizedCurrency,
-    maximumFractionDigits: normalizedCurrency === 'NGN' && Number.isInteger(amount) ? 0 : 2
+    maximumFractionDigits: 2
   }).format(amount)
 }
 

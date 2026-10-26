@@ -41,9 +41,7 @@ const SellerPricingPage = () => {
     () => config?.promotionPlans?.filter(plan => plan.placement === 'homepage_video') || [],
     [config]
   )
-  const renewalCopy = market.billingProvider === 'paystack'
-    ? 'Paid plans give 30 days of access and renew only when you make another payment.'
-    : 'Paid plans renew monthly until cancelled from your secure billing portal.'
+  const renewalCopy = 'Paid plans renew monthly until cancelled from your secure billing portal.'
 
   return (
     <div className='glory-page glory-pricing-page'>
@@ -57,7 +55,7 @@ const SellerPricingPage = () => {
               Start free, then invest in catalogue capacity and clearly labelled visibility when your beauty business is ready. Glory takes no commission from private buyer-to-seller payments.
             </p>
             <div className='glory-pricing-actions'>
-              <Link to='/register' className='is-primary'>Start selling <FiArrowRight aria-hidden='true' /></Link>
+              <Link to='/register?type=seller' className='is-primary'>Start selling <FiArrowRight aria-hidden='true' /></Link>
               <Link to='/paid-promotion-terms'>Read commercial terms</Link>
             </div>
           </div>
@@ -70,7 +68,7 @@ const SellerPricingPage = () => {
                 <span>Catalogue plans</span>
                 <h2 id='seller-plan-title'>Choose the room you need to grow.</h2>
               </div>
-              <p>{renewalCopy} Secure Glory service payments are handled by {market.billingProvider === 'paystack' ? 'Paystack' : 'Stripe'}.</p>
+              <p>{renewalCopy} Secure Glory service payments are handled by Stripe.</p>
             </div>
 
             {loading && <div className='glory-pricing-state'><Loader /></div>}
@@ -90,7 +88,7 @@ const SellerPricingPage = () => {
                     </div>
                     <strong>
                       {plan.feeMinor === 0 ? 'Free' : formatMinorCurrency(plan.feeMinor, plan.currency, market.locale)}
-                      {plan.feeMinor > 0 && <small>{market.billingProvider === 'paystack' ? ' / 30 days' : ' / month'}</small>}
+                      {plan.feeMinor > 0 && <small> / month</small>}
                     </strong>
                     <p>{plan.description}</p>
                     <ul>
@@ -139,7 +137,7 @@ const SellerPricingPage = () => {
             <article>
               <span>03</span>
               <h2>Grace for new founders</h2>
-              <p>{market.code === 'NG' ? 'Nigeria starts with 10 free active listings so an emerging founder can prove demand before upgrading.' : 'Starter keeps the first catalogue free so a growing founder can prove demand before upgrading.'}</p>
+              <p>Starter keeps the first catalogue free so a growing founder can prove demand before upgrading.</p>
             </article>
           </div>
         </section>

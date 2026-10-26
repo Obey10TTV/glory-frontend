@@ -255,7 +255,7 @@ const CheckoutPage = () => {
                     <datalist id='glory-shipping-countries'>
                       {[
                         'United Kingdom', 'Ireland', 'France', 'Germany', 'Italy',
-                        'Spain', 'Netherlands', 'United States', 'Canada', 'Nigeria',
+                        'Spain', 'Netherlands', 'United States', 'Canada',
                         'Ghana', 'South Africa', 'United Arab Emirates', 'Australia',
                         'New Zealand'
                       ].map(destination => <option key={destination} value={destination} />)}

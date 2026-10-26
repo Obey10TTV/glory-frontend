@@ -72,7 +72,7 @@ export const infoPages = {
     primaryAction: { label: 'Shop products', to: '/products' },
     secondaryAction: { label: 'Marketplace safety', to: '/marketplace-safety' },
     cards: [
-      { title: 'Local marketplaces', text: 'Choose Nigeria, the United Kingdom, the United States or Canada to browse listings in the local currency.' },
+      { title: 'Local marketplaces', text: 'Choose the United Kingdom, the United States or Canada to browse listings in the local currency.' },
       { title: 'Worldwide destinations', text: 'Customers outside a seller\'s home market can ask whether delivery to their destination is available.' },
       { title: 'Delivery costs', text: 'Delivery pricing and terms are set by each seller and should be agreed before payment.' },
     ],
@@ -89,9 +89,9 @@ export const infoPages = {
     title: 'Frequently asked questions.',
     intro: 'Quick answers for shoppers and sellers using Glory.',
     primaryAction: { label: 'Contact support', to: '/contact' },
-    secondaryAction: { label: 'Become a seller', to: '/sell-on-glory' },
+    secondaryAction: { label: 'Become a seller', to: '/register?type=seller' },
     sections: [
-      { title: 'Where is Glory available?', body: 'Glory is being built for Nigeria, the United Kingdom, the United States and Canada, with more regional marketplaces planned. Select a market to see its listings and currency.' },
+      { title: 'Where is Glory available?', body: 'Glory is being built for the United Kingdom, the United States and Canada, with more regional marketplaces planned. Select a market to see its listings and currency.' },
       { title: 'Are products authentic?', body: 'Glory reviews seller identity and listing evidence, but no marketplace can guarantee every private transaction. Check the listing, ask questions and report anything suspicious.' },
       { title: 'Can I sell my beauty brand here?', body: 'Yes. Visit Sell on Glory to learn how sellers can prepare their store profile, packaging evidence and listings.' },
       { title: 'How do payments work?', body: 'Glory does not collect buyer-to-seller payments. Buyers and sellers agree payment and delivery directly, while Glory provides the listing, conversation and safety reporting tools.' },
@@ -209,7 +209,7 @@ export const infoPages = {
     eyebrow: 'Community',
     title: 'Beauty community, built on trust.',
     intro: 'Glory is designed to make shoppers feel seen and sellers feel supported.',
-    primaryAction: { label: 'Join as a seller', to: '/sell-on-glory' },
+    primaryAction: { label: 'Join as a seller', to: '/register?type=seller' },
     secondaryAction: { label: 'Contact us', to: '/contact' },
     cards: [
       { title: 'Inclusive discovery', text: 'Every shade, texture and tradition deserves space in the marketplace.' },
@@ -222,7 +222,7 @@ export const infoPages = {
     eyebrow: 'Seller platform',
     title: 'Turn your beauty brand into a real store.',
     intro: 'Glory gives independent beauty sellers a professional listing space, private buyer conversations and practical trust signals without handling buyer-to-seller money.',
-    primaryAction: { label: 'Create seller account', to: '/register' },
+    primaryAction: { label: 'Create seller account', to: '/register?type=seller' },
     secondaryAction: { label: 'Seller resources', to: '/seller-resources' },
     cards: [
       { title: 'Professional listings', text: 'Move from scattered DMs to a polished catalogue customers can browse anytime.' },
@@ -241,7 +241,7 @@ export const infoPages = {
     eyebrow: 'Resources',
     title: 'Seller resources.',
     intro: 'A practical starting point for listing products, writing descriptions and preparing your store.',
-    primaryAction: { label: 'Create account', to: '/register' },
+    primaryAction: { label: 'Create account', to: '/register?type=seller' },
     secondaryAction: { label: 'Seller FAQ', to: '/seller-faq' },
     cards: [
       { title: 'Product photos', text: 'Use bright, sharp product images that show front, back, labels, texture, shade and batch details where possible.' },
@@ -267,7 +267,7 @@ export const infoPages = {
     eyebrow: 'Seller plans',
     title: 'Serious tools for serious growth.',
     intro: 'Start with a verified catalogue, then pay for the capacity and visibility that helps your beauty business acquire more customers. Glory does not take a commission from private buyer-to-seller payments.',
-    primaryAction: { label: 'Start selling', to: '/register' },
+    primaryAction: { label: 'Start selling', to: '/register?type=seller' },
     secondaryAction: { label: 'Contact sales', to: '/contact' },
     cards: [
       { title: 'Starter · Free', text: 'Up to 5 active listings, buyer enquiries, verified-interaction reviews and standard listing review.' },
@@ -289,7 +289,7 @@ export const infoPages = {
     primaryAction: { label: 'View seller pricing', to: '/seller-pricing' },
     secondaryAction: { label: 'Contact support', to: '/contact' },
     sections: [
-      { title: 'Plans and renewal', body: 'Studio, Scale and Brand Partner are billed in advance through the payment provider shown for the seller\'s marketplace. Stripe plans renew monthly until cancelled. Nigeria plans provide 30 days of access through Paystack and require a new payment to renew. Checkout shows the current price and payment terms before payment.' },
+      { title: 'Plans and renewal', body: 'Studio, Scale and Brand Partner are billed in advance through Stripe and renew monthly until cancelled. Checkout shows the current price and payment terms before payment.' },
       { title: 'Paid visibility', body: 'Homepage Spotlight is a time-limited advertising placement for one approved listing. Paid placements are labelled Sponsored. Payment does not guarantee sales, engagement, listing approval or a trust badge.' },
       { title: 'Eligibility and interruption', body: 'Only approved, in-stock listings may be promoted. Glory may pause an advertisement that becomes unsafe, misleading, unavailable or non-compliant. The final terms must specify replacement time or refund treatment when Glory causes a material interruption.' },
       { title: 'Price changes', body: 'Glory may change prices prospectively with clear notice. A change does not alter a promotion already purchased or a subscription period already paid for.' },
@@ -301,7 +301,7 @@ export const infoPages = {
     eyebrow: 'Seller FAQs',
     title: 'Seller questions, answered.',
     intro: 'A quick guide for beauty founders preparing to sell on Glory.',
-    primaryAction: { label: 'Create seller account', to: '/register' },
+    primaryAction: { label: 'Create seller account', to: '/register?type=seller' },
     secondaryAction: { label: 'Seller resources', to: '/seller-resources' },
     sections: [
       { title: 'Do I need an existing website?', body: 'No. Glory is designed to give sellers a storefront and product catalogue inside the marketplace.' },
@@ -315,7 +315,7 @@ export const infoPages = {
     eyebrow: 'Success stories',
     title: 'Seller stories will live here.',
     intro: 'As Glory grows, this page will feature independent beauty founders, launch stories and customer-loved products.',
-    primaryAction: { label: 'Become a seller', to: '/sell-on-glory' },
+    primaryAction: { label: 'Become a seller', to: '/register?type=seller' },
     secondaryAction: { label: 'Read the blog', to: '/blog' },
     cards: [
       { title: 'Launch stories', text: 'How sellers moved from manual DMs to a real storefront.' },
@@ -335,7 +335,7 @@ export const infoPages = {
       { title: 'How information is used', body: 'Information is used to provide accounts, review listings, support sellers, prevent fraud, investigate reports and improve the marketplace experience.' },
       { title: 'Hosted identity verification', body: 'Seller identity checks are completed on Stripe Identity\'s hosted service. Glory stores the verification session reference, status and relevant timestamps, not passport or driving-licence images. Stripe processes identity-document and selfie information under its own security and privacy controls. Sellers who cannot use the hosted check can contact support about a proportionate alternative.' },
       { title: 'Identity retention and deletion', body: 'Glory requests provider redaction as part of an approved account-deletion workflow when there is no legal, fraud-prevention or dispute reason to retain the verification record. Exact retention periods and lawful bases must be recorded in Glory\'s approved DPIA and retention schedule before launch.' },
-      { title: 'Legal review', body: 'This page is not final legal language. Privacy terms, lawful bases and retention rules must be reviewed for every launch market, including Nigeria\'s data-protection framework, UK GDPR and applicable Canadian and United States requirements.' },
+      { title: 'Legal review', body: 'This page is not final legal language. Privacy terms, lawful bases and retention rules must be reviewed for every launch market, including UK GDPR and applicable Canadian and United States requirements.' },
     ],
   },
   terms: {

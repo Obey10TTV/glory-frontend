@@ -232,8 +232,9 @@ test('anonymous visitor can follow primary CTAs and reaches OTP-gated seller sig
 
   await expect(page.getByRole('heading', { name: 'Beauty, in all your glory.' })).toBeVisible()
   await page.getByRole('button', { name: 'Start selling' }).click()
-  await expect(page).toHaveURL(/\/sell-on-glory$/)
-  await expect(page.getByRole('heading', { name: 'Turn your beauty brand into a real store.' })).toBeVisible()
+  await expect(page).toHaveURL(/\/register\?type=seller$/)
+  await expect(page.getByPlaceholder('e.g. Glow Lab Beauty')).toBeVisible()
+  await expect(page.getByRole('button', { name: /Sell Start my store/ })).toHaveCSS('background-color', 'rgb(17, 17, 17)')
 
   await page.goto('/register')
   await expect(page.getByRole('button', { name: 'Sign up with Google' })).toBeVisible()

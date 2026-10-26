@@ -80,7 +80,7 @@ const AboutPage = () => {
             <p className='glory-about-eyebrow'>One marketplace, local context</p>
             <h2 id='glory-regions-title'>Built once. Shaped for each market.</h2>
             <p>
-              Nigeria, the United Kingdom, the United States and Canada share one trusted Glory account system.
+              The United Kingdom, the United States and Canada share one trusted Glory account system.
               Products, pricing, seller services and campaigns are presented in the selected market&apos;s currency.
             </p>
           </div>
@@ -120,7 +120,7 @@ const AboutPage = () => {
             <h2 id='about-cta-title'>Discover beauty or build your brand.</h2>
             <p>Explore Glory {market.name}, or create a verified storefront for your next chapter.</p>
             <div className='glory-about-cta-actions'>
-              <button onClick={() => navigate('/register')} className='glory-btn glory-about-cta-primary'>Start selling</button>
+              <button onClick={() => navigate('/register?type=seller')} className='glory-btn glory-about-cta-primary'>Start selling</button>
               <button onClick={() => navigate('/products')} className='glory-about-cta-secondary'>Shop beauty</button>
             </div>
           </div>

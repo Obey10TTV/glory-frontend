@@ -59,7 +59,7 @@ const SeoManager = () => {
   const location = useLocation()
   const { market } = useMarket()
   useEffect(() => {
-    const marketHome = ['/', '/ng', '/gb', '/us', '/ca'].includes(location.pathname)
+    const marketHome = ['/', '/gb', '/us', '/ca'].includes(location.pathname)
     const basePath = marketHome ? '/' : (location.pathname.startsWith('/brands/') ? '/products' : location.pathname)
     const basePage = pages[basePath] || (location.pathname.startsWith('/products/')
       ? { title: 'Beauty Product | Glory', description: defaults.description }

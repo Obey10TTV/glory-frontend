@@ -17,7 +17,6 @@ import { useMarket } from '../context/MarketContext'
 import { formatCurrency } from '../utils/currency'
 
 const priceBreaks = {
-  NGN: [10000, 25000, 50000],
   GBP: [25, 50, 100],
   USD: [30, 60, 120],
   CAD: [40, 80, 160]

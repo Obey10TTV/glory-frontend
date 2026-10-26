@@ -195,12 +195,6 @@ export const initializeSellerSubscription = (data) => API.post('/stripe/seller/s
 export const verifySellerSubscription = (sessionId) => API.get(`/stripe/seller/subscription/verify/${sessionId}`)
 export const openSellerBillingPortal = () => API.post('/stripe/seller/subscription/portal')
 export const initializeSellerPayouts = () => API.post('/stripe/connect/onboard')
-export const initializePayment = (data) => API.post('/paystack/initialize', data)
-export const verifyPayment = (reference) => API.get(`/paystack/verify/${reference}`)
-export const initializePaystackSellerPlan = (data) => API.post('/paystack/seller/plan', data)
-export const verifyPaystackSellerPlan = (reference) => API.get(`/paystack/seller/plan/verify/${reference}`)
-export const initializePaystackHomepagePromotion = (data) => API.post('/paystack/seller/promotions/homepage', data)
-export const verifyPaystackHomepagePromotion = (reference) => API.get(`/paystack/seller/promotions/homepage/verify/${reference}`)
 
 // ADMIN
 export const getAdminStats = () => API.get('/admin/stats')
