@@ -37,7 +37,7 @@ export const categoryProductTypes = Object.freeze({
     'Other Home Fragrance'
   ],
   'Tools & Accessories': [
-    'Brush', 'Applicator', 'Beauty Device', 'Storage', 'Hair Tool', 'Other Tool'
+    'Brush', 'Comb', 'Applicator', 'Beauty Device', 'Storage', 'Hair Tool', 'Other Tool'
   ]
 })
 

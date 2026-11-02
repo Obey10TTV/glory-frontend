@@ -128,6 +128,10 @@ const Navbar = () => {
     }
   }
   const getMegaMenuPath = (category, link) => {
+    const toolProductTypes = { Brushes: 'Brush', Combs: 'Comb' }
+    if (toolProductTypes[link]) {
+      return `/products?category=${encodeURIComponent('Tools & Accessories')}&productType=${encodeURIComponent(toolProductTypes[link])}`
+    }
     const productType = megaProductTypes[category]?.[link]
     return productType
       ? `${getNavPath(category)}&productType=${encodeURIComponent(productType)}`
@@ -155,7 +159,7 @@ const Navbar = () => {
       cols: [
         { title: 'FACE', links: ['Foundation', 'Concealer', 'Blush', 'Highlighter', 'Setting Powder', 'Primer'] },
         { title: 'EYES & LIPS', links: ['Lipstick', 'Lip Gloss', 'Mascara', 'Eyeshadow', 'Eyeliner', 'Brow Products'] },
-        { title: 'TOOLS', links: ['Brushes', 'Sponges', 'Lashes', 'Nails', 'Nail Art', 'Accessories'] }
+        { title: 'TOOLS', links: ['Brushes', 'Combs', 'Sponges', 'Lashes', 'Nails', 'Accessories'] }
       ],
       featured: { title: 'New Arrivals', sub: 'Fresh makeup drops this week', link: '/products?category=Makeup' }
     }
