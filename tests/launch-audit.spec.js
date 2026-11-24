@@ -132,14 +132,15 @@ const installMocks = async (page, options = {}) => {
       return send({ message: 'Catalogue unavailable' }, 503)
     }
     if (pathname === '/api/products') {
+      const listings = options.listings || [listing]
       if (url.searchParams.get('meta') === 'true') {
         return send({
-          items: [listing],
-          pagination: { page: 1, pages: 1, total: 1 },
+          items: listings,
+          pagination: { page: 1, pages: 1, total: listings.length },
           facets: { categories: ['Haircare'], brands: ['Launch Beauty'], productTypes: ['Conditioner'] },
         })
       }
-      return send([listing])
+      return send(listings)
     }
     if (pathname === `/api/products/${listing._id}`) return send(listing)
     if (pathname.endsWith('/products/mine')) return send(profile?.sellerProfile?.verificationStatus === 'verified' ? [listing] : [])
@@ -223,6 +224,31 @@ test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem('gloryCookieConsent', JSON.stringify({ essential: true, analytics: false, marketing: false }))
   })
+})
+
+test('UK latest arrivals wrap into full cards on desktop and phones', async ({ page }) => {
+  const listings = Array.from({ length: 8 }, (_, index) => ({
+    ...listing,
+    _id: `arrival-${index}`,
+    name: `New conditioner ${index + 1}`,
+  }))
+  await installMocks(page, { listings })
+  const arrivals = page.getByRole('region', { name: 'The latest on the shelf.' })
+  const cards = arrivals.locator('.glory-product-card')
+
+  for (const [width, columns] of [[1280, 3], [375, 2]]) {
+    await page.setViewportSize({ width, height: 780 })
+    await page.goto('/gb')
+    await expect(cards).toHaveCount(8)
+    const boxes = await cards.evaluateAll((items) => items.map((item) => {
+      const rect = item.getBoundingClientRect()
+      return { x: rect.x, y: rect.y, width: rect.width }
+    }))
+    expect(boxes.every((box) => box.width > 120 && box.x + box.width <= width)).toBe(true)
+    expect(boxes[columns].y).toBeGreaterThan(boxes[0].y)
+    await expect(cards.first().locator('.glory-product-card-name')).toHaveCSS('font-size', '16px')
+    await expect(cards.first().locator('.glory-product-image-frame')).toHaveCSS('overflow', 'hidden')
+  }
 })
 
 test('anonymous visitor can follow primary CTAs and reaches OTP-gated seller signup', async ({ page }) => {

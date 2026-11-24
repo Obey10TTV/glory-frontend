@@ -8619,10 +8619,6 @@ button {
 .glory-home-new-in.is-us .glory-home-filter-v3 button.is-active { background: #9f254f; border-color: #9f254f; }
 .glory-home-new-in.is-ca .glory-home-filter-v3 button.is-active { background: #285661; border-color: #285661; }
 
-.glory-home-new-in.is-gb .glory-home-product-grid-v3 { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
-.glory-home-new-in.is-us .glory-home-product-grid-v3 { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
-.glory-home-new-in.is-ca .glory-home-product-grid-v3 { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
-
 .glory-home-filter-v3 {
   margin: -4px 0 28px;
   padding: 0 0 3px;
@@ -11776,11 +11772,6 @@ button {
     grid-row: span 2;
   }
 
-  .glory-home-new-in.is-gb .glory-home-product-grid-v3,
-  .glory-home-new-in.is-us .glory-home-product-grid-v3,
-  .glory-home-new-in.is-ca .glory-home-product-grid-v3 {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  }
 }
 
 /* Phone layouts are compositions in their own right, not compressed desktop grids. */

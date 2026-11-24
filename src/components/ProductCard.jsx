@@ -50,25 +50,28 @@ const ProductCard = ({ product }) => {
     >
       <div className='glory-product-media' style={{
         width: '100%', aspectRatio: '3/4',
-        background: getProductImageBackground(product), overflow: 'hidden',
+        '--glory-product-image-background': getProductImageBackground(product),
+        overflow: 'hidden',
         position: 'relative'
       }}>
-        <img
-          src={imageUrl}
-          alt={product.name}
-          loading='lazy'
-          width='600'
-          height='800'
-          style={{
-            width: '100%', height: '100%',
-            objectFit: 'contain', display: 'block',
-            padding: '7%',
-            filter: 'drop-shadow(0 10px 14px rgba(23, 21, 20, 0.12))'
-          }}
-          onError={() => {
-            if (imageUrl !== originalImageUrl) setImageUrl(originalImageUrl)
-          }}
-        />
+        <div className='glory-product-image-frame'>
+          <img
+            src={imageUrl}
+            alt={product.name}
+            loading='lazy'
+            width='600'
+            height='800'
+            style={{
+              width: '100%', height: '100%',
+              objectFit: 'contain', display: 'block',
+              padding: '5%',
+              filter: 'drop-shadow(0 10px 14px rgba(23, 21, 20, 0.12))'
+            }}
+            onError={() => {
+              if (imageUrl !== originalImageUrl) setImageUrl(originalImageUrl)
+            }}
+          />
+        </div>
         {product.isSponsored && (
           <span className='glory-product-sponsored-badge'>Sponsored</span>
         )}
@@ -123,21 +126,21 @@ const ProductCard = ({ product }) => {
           }}
           className='glory-product-brand-link'
           style={{
-          fontSize: '9px', color: '#aaa',
+          fontSize: '12px', color: '#635852',
           letterSpacing: '0.08em', marginBottom: '3px',
           fontWeight: '600', textTransform: 'uppercase'
         }}>
           {product.brand}
         </button>
         <div className='glory-product-card-name' style={{
-          fontSize: '13px', color: '#111',
+          fontSize: '16px', color: '#111',
           fontWeight: '500', marginBottom: '2px',
           lineHeight: '1.35'
         }}>
           {product.name}
         </div>
         <div className='glory-product-card-category' style={{
-          fontSize: '11px', color: '#999',
+          fontSize: '13px', color: '#635852',
           marginBottom: '8px'
         }}>
           {product.category}
@@ -147,11 +150,11 @@ const ProductCard = ({ product }) => {
           justifyContent: 'space-between'
         }}>
           <div className='glory-product-card-prices' style={{ display: 'flex', alignItems: 'baseline', gap: '6px', flexWrap: 'wrap' }}>
-            <strong style={{ fontSize: '14px', fontWeight: '700', color: '#111' }}>
+            <strong style={{ fontSize: '16px', fontWeight: '700', color: '#111' }}>
               {formatCurrency(product.price, product.currency)}
             </strong>
             {product.compareAtPrice > product.price && (
-              <span style={{ fontSize: '11px', color: '#aaa', textDecoration: 'line-through' }}>
+              <span style={{ fontSize: '13px', color: '#635852', textDecoration: 'line-through' }}>
                 {formatCurrency(product.compareAtPrice, product.currency)}
               </span>
             )}
@@ -159,7 +162,7 @@ const ProductCard = ({ product }) => {
           {Number(product.numReviews || 0) > 0 ? (
             <div style={{
               display: 'inline-flex', alignItems: 'center', gap: '4px',
-              fontSize: '11px', color: '#68615d'
+              fontSize: '13px', color: '#68615d'
             }}>
               <FiStar size={11} fill='currentColor' aria-hidden='true' />
               <span>{Number(product.rating || 0).toFixed(1)}</span>
@@ -167,7 +170,7 @@ const ProductCard = ({ product }) => {
             </div>
           ) : (
             <div style={{
-              fontSize: '10px', color: '#8f2648',
+              fontSize: '12px', color: '#8f2648',
               fontWeight: '700', textTransform: 'uppercase'
             }}>
               New

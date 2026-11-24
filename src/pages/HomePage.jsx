@@ -333,7 +333,7 @@ const HomePage = () => {
     navigate(`/products?category=${encodeURIComponent(category)}`)
   }
 
-  const renderCatalogState = (items, emptyCopy) => {
+  const renderCatalogState = (items, emptyCopy, className = 'glory-product-grid glory-home-product-grid-v3') => {
     if (loading) return <Loader />
 
     if (catalogError) {
@@ -362,7 +362,7 @@ const HomePage = () => {
     }
 
     return (
-      <div className='glory-product-grid glory-home-product-grid-v3'>
+      <div className={className}>
         {items.map((product) => <ProductCard key={product._id} product={product} />)}
       </div>
     )
@@ -588,7 +588,13 @@ const HomePage = () => {
               </div>
             )}
 
-            {renderCatalogState(latestProducts, 'New arrivals are being prepared.')}
+            {renderCatalogState(
+              latestProducts,
+              arrivalCategory === 'All'
+                ? `New listings for ${market.name} are being prepared.`
+                : `No new ${arrivalCategory.toLowerCase()} listings in this market yet.`,
+              'glory-home-arrivals-grid'
+            )}
           </div>
         </section>
 

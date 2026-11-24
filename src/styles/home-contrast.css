@@ -13,3 +13,70 @@
   color: #fff;
   text-shadow: 0 1px 12px rgba(20, 14, 12, 0.56);
 }
+
+/* Arrivals wrap into rows. Sponsored listings retain their horizontal rail. */
+.glory-home-arrivals-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(12px, 2vw, 20px);
+}
+
+@media (min-width: 901px) {
+  .glory-home-new-in.is-us .glory-home-arrivals-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.glory-home-arrivals-grid > .glory-product-card {
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .glory-home-new-in .glory-home-arrivals-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.glory-product-card .glory-product-media {
+  background: var(--glory-product-image-background, #fff) !important;
+}
+
+.glory-product-image-frame {
+  position: absolute;
+  inset: 5%;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.glory-home-uk-gallery-media,
+.glory-home-department-image,
+.glory-home-story {
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+.glory-home-v3 .glory-home-kicker,
+.glory-home-v3 .glory-home-uk-gallery-kicker {
+  font-size: 0.8125rem;
+}
+
+.glory-home-v3 .glory-home-section-heading-v3 p,
+.glory-home-v3 .glory-home-stage-copy p,
+.glory-home-v3 .glory-home-motion-copy p,
+.glory-home-v3 .glory-home-seller-v3 p {
+  font-size: clamp(1rem, 1.3vw, 1.125rem);
+}
+
+.glory-home-v3 .glory-home-filter-v3 button,
+.glory-home-v3 .glory-home-text-link,
+.glory-product-card .glory-product-cta {
+  font-size: 0.875rem !important;
+}
+
+.glory-product-card .glory-product-card-name {
+  font-size: 1rem !important;
+}
+
+.glory-product-card .glory-product-card-category {
+  font-size: 0.8125rem !important;
+}
