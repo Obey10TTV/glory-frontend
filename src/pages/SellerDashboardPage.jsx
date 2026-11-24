@@ -1428,7 +1428,7 @@ const SellerDashboardPage = () => {
               <div className='glory-seller-documents-heading'>
                 <div>
                   <strong>Private business evidence</strong>
-                  <span>Accepted files: PDF, JPG, PNG, or WebP up to 8 MB. These fields never accept passports, National Insurance numbers or bank-account details.</span>
+                  <span>Upload a PDF, JPG, PNG or WebP up to 8 MB. PDFs must be unlocked and have 10 pages or fewer. Leave out passports, National Insurance numbers and bank-account details.</span>
                 </div>
                 <FiShield size={20} />
               </div>
