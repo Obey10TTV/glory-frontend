@@ -25,6 +25,7 @@ const unauthenticatedPaths = [
   '/users/2fa/verify-login'
 ]
 let csrfPromise
+let refreshPromise
 
 const getCsrfToken = async (force = false) => {
   if (!force) {
@@ -78,10 +79,7 @@ API.interceptors.response.use(
     if (canRefresh) {
       original._gloryRetried = true
       try {
-        const csrfToken = await getCsrfToken()
-        await csrfClient.post('/users/refresh', {}, {
-          headers: { 'X-CSRF-Token': csrfToken }
-        })
+        await refreshSession()
         return API(original)
       } catch (refreshError) {
         localStorage.removeItem('gloryUser')
@@ -99,7 +97,12 @@ export const getAuthOptions = () => API.get('/users/auth-options')
 export const authenticateWithGoogle = (data) => API.post('/users/google', data)
 export const linkGoogleAccount = (data) => API.post('/users/google/link', data)
 export const logoutUser = () => API.post('/users/logout')
-export const refreshSession = () => API.post('/users/refresh')
+export const refreshSession = () => {
+  if (!refreshPromise) {
+    refreshPromise = API.post('/users/refresh').finally(() => { refreshPromise = null })
+  }
+  return refreshPromise
+}
 export const verifyEmailOtp = (data) => API.post('/users/verify-email', data)
 export const resendVerificationOtp = (data) => API.post('/users/resend-verification', data)
 export const verifyLoginTwoFactor = (data) => API.post('/users/2fa/verify-login', data)
