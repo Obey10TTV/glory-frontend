@@ -248,7 +248,33 @@ test('UK latest arrivals wrap into full cards on desktop and phones', async ({ p
     expect(boxes[columns].y).toBeGreaterThan(boxes[0].y)
     await expect(cards.first().locator('.glory-product-card-name')).toHaveCSS('font-size', '16px')
     await expect(cards.first().locator('.glory-product-image-frame')).toHaveCSS('overflow', 'hidden')
+    await expect(cards.first().locator('.glory-product-media')).toHaveCSS('background-color', 'rgb(255, 255, 255)')
+    await expect(cards.first().getByText('Product photo unavailable')).toBeVisible()
   }
+})
+
+test('regional heroes start with WebP images and play the film only when selected', async ({ page }) => {
+  await installMocks(page)
+  await page.setViewportSize({ width: 390, height: 830 })
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  for (const [region, asset] of [['gb', 'uk-ritual'], ['us', 'us-makeup'], ['ca', 'canada-ritual']]) {
+    await page.goto(`/${region}`)
+    const stage = page.locator('.glory-home-stage')
+    const active = stage.locator('img.is-active')
+    await expect.poll(() => active.evaluate(image => image.complete ? image.currentSrc : '')).toContain(`${asset}-hero-mobile.webp`)
+    await expect(stage.locator('.glory-home-stage-actions .is-secondary')).toHaveCSS('background-color', 'rgb(113, 28, 68)')
+    await expect(stage.locator('video')).toHaveCount(0)
+  }
+
+  const stage = page.locator('.glory-home-stage')
+  await stage.getByRole('tab', { name: /Find a scent that feels like you/ }).click()
+  await expect(stage.locator('img.is-active')).toHaveAttribute('src', '/images/home/fragrance-film-poster.webp')
+  await expect(stage.locator('video')).toHaveCount(0)
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  const film = stage.locator('video.is-active')
+  await expect.poll(() => film.evaluate(video => video.currentTime)).toBeGreaterThan(0)
+  await stage.getByRole('button', { name: 'Pause hero motion' }).click()
+  await expect(stage.locator('video')).toHaveCount(0)
 })
 
 test('anonymous visitor can follow primary CTAs and reaches OTP-gated seller signup', async ({ page }) => {

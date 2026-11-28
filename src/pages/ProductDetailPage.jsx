@@ -14,6 +14,7 @@ import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import Loader from '../components/Loader'
 import Message from '../components/Message'
+import ProductPhotoPlaceholder from '../components/ProductPhotoPlaceholder'
 import { getProduct, getReviews, reportListing, reportReview, startConversation } from '../api'
 import { useUser } from '../context/UserContext'
 import { formatCurrency } from '../utils/currency'
@@ -221,8 +222,8 @@ const ProductDetailPage = () => {
         <section className='glory-product-stage'>
           <div className='glory-product-gallery'>
             <div className='glory-product-primary-image'>
-              <img
-                src={activeImage || product.image}
+              {activeImage ? <img
+                src={activeImage}
                 alt={product.name}
                 width='900'
                 height='900'
@@ -235,9 +236,9 @@ const ProductDetailPage = () => {
                 }}
                 onError={(event) => {
                   const original = getProductOriginalImageUrl(product)
-                  if (event.currentTarget.src !== original) setActiveImage(original)
+                  setActiveImage(event.currentTarget.src !== original ? original : '')
                 }}
-              />
+              /> : <ProductPhotoPlaceholder />}
               <button
                 type='button'
                 className={`glory-product-wishlist ${wished ? 'is-active' : ''}`}
@@ -251,8 +252,8 @@ const ProductDetailPage = () => {
             {galleryImages.length > 1 && (
               <div className='glory-product-thumbnail-rail' aria-label='Product gallery'>
                 {galleryImages.map((image, index) => {
-                  const displayImage = index === 0 ? getProductImageUrl(product, 'thumbnail') : image
-                  const targetImage = index === 0 ? getProductImageUrl(product, 'detail') : image
+                  const displayImage = image === product.image ? getProductImageUrl(product, 'thumbnail') : image
+                  const targetImage = image === product.image ? getProductImageUrl(product, 'detail') : image
                   return (
                     <button
                       key={image}

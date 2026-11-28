@@ -5,6 +5,8 @@ import {
   FiArrowRight,
   FiCheckCircle,
   FiHeart,
+  FiPause,
+  FiPlay,
   FiRefreshCw,
   FiShield,
   FiShoppingBag,
@@ -154,6 +156,63 @@ const getProductTime = (product) => {
   return Number.isNaN(time) ? 0 : time
 }
 
+const HeroSlideMedia = ({ slide, isActive, playMotion, onReady }) => {
+  const className = `glory-home-stage-image ${isActive ? 'is-active' : ''}`
+  const style = { objectPosition: slide.imagePosition, '--glory-stage-mobile-position': slide.mobilePosition }
+  if (slide.mediaType === 'video' && playMotion) {
+    return (
+      <video className={className} style={style} poster={slide.poster} muted loop playsInline autoPlay preload='none' aria-hidden='true'>
+        <source src={slide.media} type='video/mp4' />
+      </video>
+    )
+  }
+
+  const photo = slide.mediaType === 'video' ? slide.poster : slide.media
+  if (!photo) return null
+  const mobilePhoto = photo.startsWith('/images/home/') && photo.endsWith('-hero.webp')
+    ? photo.replace(/\.webp$/, '-mobile.webp')
+    : null
+  return (
+    <picture>
+      {mobilePhoto && <source media='(max-width: 760px)' srcSet={mobilePhoto} />}
+      <img
+        className={className}
+        src={photo}
+        alt=''
+        aria-hidden='true'
+        width='1440'
+        height='720'
+        style={style}
+        fetchPriority={isActive ? 'high' : 'low'}
+        onLoad={onReady}
+        onError={onReady}
+      />
+    </picture>
+  )
+}
+
+const SkincareFilm = ({ poster, reducedMotion }) => {
+  const mediaRef = useRef(null)
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    if (reducedMotion || !mediaRef.current || typeof IntersectionObserver === 'undefined') return undefined
+    const observer = new IntersectionObserver(([entry]) => setVisible(entry.isIntersecting))
+    observer.observe(mediaRef.current)
+    return () => observer.disconnect()
+  }, [reducedMotion])
+
+  return (
+    <div className='glory-home-motion-media' ref={mediaRef}>
+      {visible && !reducedMotion ? (
+        <video muted loop playsInline autoPlay preload='none' poster={poster} aria-label='A woman practising a skincare ritual'>
+          <source src='https://videos.pexels.com/video-files/8154464/8154464-sd_960_506_25fps.mp4' type='video/mp4' />
+        </video>
+      ) : <img src={poster} alt='' loading='lazy' width='1440' height='720' />}
+    </div>
+  )
+}
+
 const HomePage = () => {
   const navigate = useNavigate()
   const { market } = useMarket()
@@ -165,8 +224,10 @@ const HomePage = () => {
   const [catalogError, setCatalogError] = useState('')
   const [arrivalCategory, setArrivalCategory] = useState('All')
   const [activeSlide, setActiveSlide] = useState(0)
+  const [readyHeroMedia, setReadyHeroMedia] = useState(() => new Set())
   const [heroPaused, setHeroPaused] = useState(false)
-  const [reducedMotion, setReducedMotion] = useState(false)
+  const [heroMotionPaused, setHeroMotionPaused] = useState(false)
+  const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches)
   const heroSwipeStartX = useRef(null)
   const heroActionPath = useRef('')
   const regionalContent = marketSectionContent[market.code] || marketSectionContent.GB
@@ -178,7 +239,21 @@ const HomePage = () => {
       ...market.hero,
       primaryPath: market.hero.primaryPath || '/products',
       secondaryPath: market.hero.secondaryPath || '/register?type=seller'
-    }, ...(market.hero.slides || [])]
+    }, ...(market.hero.slides || []), {
+      id: `${market.slug}-fragrance-film`,
+      eyebrow: `Glory fragrance · ${market.name}`,
+      title: 'Find a scent that feels like you.',
+      copy: 'Explore personal fragrance from independent beauty sellers, from everyday favourites to something for a special occasion.',
+      media: `/images/home/${market.slug}-fragrance-film.mp4`,
+      poster: '/images/home/fragrance-film-poster.webp',
+      mediaType: 'video',
+      imagePosition: '70% center',
+      primaryLabel: 'Explore fragrance',
+      primaryPath: '/products?category=Fragrance',
+      secondaryLabel: 'Start selling',
+      secondaryPath: '/register?type=seller',
+      tone: 'dark'
+    }]
     if (!sponsoredHero?.creative?.mediaUrl || !sponsoredHero.listing) return organicSlides
 
     const brandName = sponsoredHero.listing.brand
@@ -194,6 +269,7 @@ const HomePage = () => {
       copy: sponsoredHero.creative.copy || `Discover the latest from ${brandName}.`,
       media: sponsoredHero.creative.mediaUrl,
       mediaType: sponsoredHero.creative.type === 'image' ? 'image' : 'video',
+      poster: market.hero.media,
       imagePosition: 'center',
       primaryLabel: sponsoredHero.creative.ctaLabel || `Shop ${brandName}`,
       primaryPath: brandPath,
@@ -204,6 +280,13 @@ const HomePage = () => {
     // Glory opens the carousel; a single approved sponsor follows the first two organic slides.
     return [...organicSlides.slice(0, 2), sponsoredSlide, ...organicSlides.slice(2)]
   }, [market, sponsoredHero])
+  const nextHeroSlide = (activeSlide + 1) % heroSlides.length
+  const activeIsVideo = heroSlides[activeSlide]?.mediaType === 'video'
+  const activeHeroReady = activeIsVideo || readyHeroMedia.has(heroSlides[activeSlide]?.media)
+  const nextHeroReady = heroSlides[nextHeroSlide]?.mediaType === 'video' || readyHeroMedia.has(heroSlides[nextHeroSlide]?.media)
+  const noteHeroMediaReady = (media) => {
+    setReadyHeroMedia(current => current.has(media) ? current : new Set([...current, media]))
+  }
 
   useEffect(() => {
     setActiveSlide(0)
@@ -244,8 +327,6 @@ const HomePage = () => {
     loadSponsoredProducts()
   }, [loadProducts, loadSponsoredProducts])
 
-  useEffect(() => setActiveSlide(0), [market.code, sponsoredHero?.id])
-
   useEffect(() => {
     const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
     const updateMotionPreference = () => setReducedMotion(motionQuery.matches)
@@ -256,15 +337,15 @@ const HomePage = () => {
 
   const moveHeroSlide = useCallback((direction) => {
     setActiveSlide((current) => (current + direction + heroSlides.length) % heroSlides.length)
-  }, [])
+  }, [heroSlides.length])
 
   useEffect(() => {
-    if (heroPaused || reducedMotion) return undefined
-    const interval = window.setInterval(() => {
+    if (heroPaused || heroMotionPaused || reducedMotion || !activeHeroReady || !nextHeroReady) return undefined
+    const timer = window.setTimeout(() => {
       moveHeroSlide(1)
-    }, 2000)
-    return () => window.clearInterval(interval)
-  }, [heroPaused, moveHeroSlide, reducedMotion])
+    }, activeIsVideo ? 6500 : 1650)
+    return () => window.clearTimeout(timer)
+  }, [activeSlide, activeHeroReady, activeIsVideo, heroPaused, heroMotionPaused, moveHeroSlide, nextHeroReady, reducedMotion])
 
   const handleHeroPointerDown = (event) => {
     heroSwipeStartX.current = event.clientX
@@ -375,7 +456,7 @@ const HomePage = () => {
 
       <main>
         <section
-          className={`glory-home-stage is-${selectedHero.tone}`}
+          className={`glory-home-stage is-${selectedHero.tone}${selectedHero.groupComposition ? ' is-group' : ''}`}
           aria-roledescription='carousel'
           aria-label='Featured Glory beauty collections'
           onMouseEnter={() => setHeroPaused(true)}
@@ -390,33 +471,20 @@ const HomePage = () => {
         >
           <div className='glory-home-shell-v3'>
             <div className='glory-home-stage-frame'>
-              {heroSlides.map((slide, index) => slide.mediaType === 'video' ? (
-                <video
-                  key={slide.id}
-                  className={`glory-home-stage-image ${index === activeSlide ? 'is-active' : ''}`}
-                  muted
-                  loop
-                  playsInline
-                  autoPlay={index === activeSlide && !reducedMotion}
-                  preload={index === 0 ? 'auto' : 'metadata'}
-                  aria-hidden={index !== activeSlide}
-                  style={{ objectPosition: slide.imagePosition }}
-                >
-                  <source src={slide.media} type='video/mp4' />
-                </video>
-              ) : (
-                <img
-                  key={slide.id}
-                  className={`glory-home-stage-image ${index === activeSlide ? 'is-active' : ''}`}
-                  src={slide.media}
-                  alt=''
-                  aria-hidden={index !== activeSlide}
-                  width='1672'
-                  height='940'
-                  style={{ objectPosition: slide.imagePosition }}
-                  fetchPriority={index === 0 ? 'high' : 'auto'}
-                />
-              ))}
+              {heroSlides.map((slide, index) => {
+                const isActive = index === activeSlide
+                const isNext = index === nextHeroSlide && activeHeroReady && !heroMotionPaused && !reducedMotion
+                if (!isActive && (slide.mediaType === 'video' || (!isNext && !readyHeroMedia.has(slide.media)))) return null
+                return (
+                  <HeroSlideMedia
+                    key={slide.id}
+                    slide={slide}
+                    isActive={isActive}
+                    playMotion={!heroMotionPaused && !reducedMotion}
+                    onReady={() => noteHeroMediaReady(slide.media)}
+                  />
+                )
+              })}
 
               <div className='glory-home-stage-copy'>
                 <span className='glory-home-kicker'>{selectedHero.eyebrow}</span>
@@ -462,6 +530,16 @@ const HomePage = () => {
                   >
                     <FiArrowRight size={18} aria-hidden='true' />
                   </button>
+                  {!reducedMotion && (
+                    <button
+                      type='button'
+                      className='glory-home-round-button'
+                      aria-label={heroMotionPaused ? 'Resume hero motion' : 'Pause hero motion'}
+                      onClick={() => setHeroMotionPaused(paused => !paused)}
+                    >
+                      {heroMotionPaused ? <FiPlay size={17} aria-hidden='true' /> : <FiPause size={17} aria-hidden='true' />}
+                    </button>
+                  )}
                 </div>
 
                 <div className='glory-home-stage-dots' role='tablist' aria-label='Choose featured collection'>
@@ -675,18 +753,7 @@ const HomePage = () => {
 
         <section className='glory-home-motion' aria-labelledby='glory-motion-title'>
           <div className='glory-home-motion-frame'>
-            <div className='glory-home-motion-media'>
-              <video
-                muted
-                loop
-                playsInline
-                autoPlay={!reducedMotion}
-                preload='metadata'
-                aria-label='A woman practising a skincare ritual'
-              >
-                <source src='https://videos.pexels.com/video-files/8154464/8154464-sd_960_506_25fps.mp4' type='video/mp4' />
-              </video>
-            </div>
+            <SkincareFilm poster={market.hero.media} reducedMotion={reducedMotion} />
             <div className='glory-home-motion-copy'>
               <span className='glory-home-kicker'>Glory in motion</span>
               <h2 id='glory-motion-title'>Take your time with it.</h2>

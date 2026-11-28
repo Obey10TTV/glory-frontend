@@ -1910,7 +1910,7 @@ const SellerDashboardPage = () => {
                           {imageProcessing.processingStatus === 'processing'
                             ? 'Optimising your product image...'
                             : imageProcessing.processingStatus === 'failed'
-                              ? 'Your original image is ready to use.'
+                              ? 'Your original is available in the listing gallery. Try another photo for the product card.'
                               : 'Your product image is ready.'}
                         </span>
                       </div>
@@ -1936,7 +1936,7 @@ const SellerDashboardPage = () => {
                             ))}
                             onError={() => setImageProcessing(current => (
                               current.processingStatus === 'processing'
-                                ? { ...current, processingError: 'Still processing. Your original will be used until it is ready.' }
+                                ? { ...current, processingError: 'The product card will show the cutout when it is ready.' }
                                 : current
                             ))}
                           />
@@ -1952,21 +1952,21 @@ const SellerDashboardPage = () => {
                     </div>
 
                     <div className='glory-image-processing-options'>
-                      <div className='glory-image-processing-choice-group' role='group' aria-label='Primary image preference'>
+                      <div className='glory-image-processing-choice-group' role='group' aria-label='Listing gallery image preference'>
                         <button
                           type='button'
                           className={imageProcessing.useProcessedImage ? 'is-active' : ''}
                           onClick={() => setImageProcessing(current => ({ ...current, useProcessedImage: true }))}
-                        >Use Glory Optimised</button>
+                        >Use cutout in gallery</button>
                         <button
                           type='button'
                           className={!imageProcessing.useProcessedImage ? 'is-active' : ''}
                           onClick={() => setImageProcessing(current => ({ ...current, useProcessedImage: false }))}
-                        >Use Original</button>
+                        >Use original in gallery</button>
                         <button type='button' onClick={handleReprocessImage} disabled={!imageProcessing.sourcePublicId || imageProcessing.processingStatus === 'processing'}>Reprocess image</button>
                       </div>
-                      <div className='glory-image-processing-backgrounds' role='group' aria-label='Product card backdrop'>
-                        <span>Card backdrop</span>
+                      <div className='glory-image-processing-backgrounds' role='group' aria-label='Listing gallery backdrop'>
+                        <span>Gallery backdrop</span>
                         {Object.entries(PRODUCT_IMAGE_BACKGROUNDS).map(([key, color]) => (
                           <button
                             key={key}
@@ -2095,7 +2095,7 @@ const SellerDashboardPage = () => {
                     checked={listingEvidence.packagingPhotosConfirmed}
                     onChange={event => setListingEvidence(current => ({ ...current, packagingPhotosConfirmed: event.target.checked }))}
                   />
-                  <span>I confirm the photos show the packaging, labels and batch or lot code clearly.</span>
+                  <span>I confirm these are photos of the exact product, shade and size I sell. The gallery shows its packaging, labels and batch or lot code clearly.</span>
                 </label>
                 <label className='glory-listing-evidence-check'>
                   <input

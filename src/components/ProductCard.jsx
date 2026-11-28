@@ -3,17 +3,16 @@ import { useEffect, useState } from 'react'
 import { FiArrowRight, FiHeart, FiStar } from 'react-icons/fi'
 import { formatCurrency } from '../utils/currency'
 import { isWishlisted, toggleWishlist } from '../utils/wishlist'
-import { getProductImageBackground, getProductImageUrl, getProductOriginalImageUrl } from '../utils/productImage'
+import { getProductCardImageUrl } from '../utils/productImage'
+import ProductPhotoPlaceholder from './ProductPhotoPlaceholder'
 
 const ProductCard = ({ product }) => {
   const navigate = useNavigate()
   const [wished, setWished] = useState(() => isWishlisted(product._id))
-  const [imageUrl, setImageUrl] = useState(() => getProductImageUrl(product, 'card'))
-
-  const originalImageUrl = getProductOriginalImageUrl(product)
+  const [imageUrl, setImageUrl] = useState(() => getProductCardImageUrl(product))
 
   useEffect(() => {
-    setImageUrl(getProductImageUrl(product, 'card'))
+    setImageUrl(getProductCardImageUrl(product))
   }, [product])
 
   const handleViewListing = (e) => {
@@ -50,12 +49,11 @@ const ProductCard = ({ product }) => {
     >
       <div className='glory-product-media' style={{
         width: '100%', aspectRatio: '3/4',
-        '--glory-product-image-background': getProductImageBackground(product),
         overflow: 'hidden',
         position: 'relative'
       }}>
         <div className='glory-product-image-frame'>
-          <img
+          {imageUrl ? <img
             src={imageUrl}
             alt={product.name}
             loading='lazy'
@@ -63,14 +61,10 @@ const ProductCard = ({ product }) => {
             height='800'
             style={{
               width: '100%', height: '100%',
-              objectFit: 'contain', display: 'block',
-              padding: '5%',
-              filter: 'drop-shadow(0 10px 14px rgba(23, 21, 20, 0.12))'
+              objectFit: 'contain', display: 'block'
             }}
-            onError={() => {
-              if (imageUrl !== originalImageUrl) setImageUrl(originalImageUrl)
-            }}
-          />
+            onError={() => setImageUrl('')}
+          /> : <ProductPhotoPlaceholder />}
         </div>
         {product.isSponsored && (
           <span className='glory-product-sponsored-badge'>Sponsored</span>

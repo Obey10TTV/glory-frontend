@@ -177,7 +177,6 @@ export const getMarketplaceSellerStatus = () => API.get('/marketplace/seller/sta
 
 // SKIN GUIDE
 export const getSkinGuideStatus = () => API.get('/skin-guide/status')
-export const sendSkinGuideMessage = (data) => API.post('/skin-guide/messages', data)
 export const startSkinGuideClinicianChat = () => API.post('/skin-guide/clinician-handoff')
 
 // UPLOAD

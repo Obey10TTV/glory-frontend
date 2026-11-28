@@ -99,17 +99,24 @@ const InfoPage = ({ slug }) => {
                     <span>{String(index + 1).padStart(2, '0')}</span>
                     <h2>{section.title}</h2>
                   </div>
-                  {section.body && <p>{section.body}</p>}
-                  {section.items?.length > 0 && (
-                    <ul>
-                      {section.items.map((item) => (
-                        <li key={item}>
-                          <FiCheckCircle size={17} aria-hidden='true' />
-                          <span>{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+                  <div className='glory-info-section-answer'>
+                    {section.body && <p>{section.body}</p>}
+                    {section.items?.length > 0 && (
+                      <ul>
+                        {section.items.map((item) => (
+                          <li key={item}>
+                            <FiCheckCircle size={17} aria-hidden='true' />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    {section.links?.length > 0 && (
+                      <div className='glory-info-section-links'>
+                        {section.links.map(link => <Link key={link.to} to={link.to}>{link.label} <FiArrowRight size={14} aria-hidden='true' /></Link>)}
+                      </div>
+                    )}
+                  </div>
                 </article>
               ))}
             </div>

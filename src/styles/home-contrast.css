@@ -38,7 +38,7 @@
 }
 
 .glory-product-card .glory-product-media {
-  background: var(--glory-product-image-background, #fff) !important;
+  background: #fff !important;
 }
 
 .glory-product-image-frame {
@@ -46,6 +46,20 @@
   inset: 5%;
   border-radius: 10px;
   overflow: hidden;
+}
+
+.glory-product-photo-placeholder {
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 9px;
+  min-height: 100%;
+  padding: 16px;
+  background: #fff;
+  color: #60535b;
+  font-size: 13px;
+  line-height: 1.4;
+  text-align: center;
 }
 
 .glory-home-uk-gallery-media,

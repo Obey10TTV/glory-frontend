@@ -16,7 +16,7 @@ const isProcessedImageAvailable = (product) => {
 
 export const getProductImageUrl = (product, size = 'card') => {
   const processing = product?.imageProcessing
-  if (!isProcessedImageAvailable(product)) return product?.image || ''
+  if (!isProcessedImageAvailable(product)) return product?.image || product?.images?.[0] || ''
 
   if (size === 'thumbnail') return processing.thumbnailImageUrl || processing.processedImageUrl
   if (size === 'detail') return processing.processedImageUrl || processing.highResolutionImageUrl
@@ -24,8 +24,14 @@ export const getProductImageUrl = (product, size = 'card') => {
   return processing.cardImageUrl || processing.processedImageUrl
 }
 
+export const getProductCardImageUrl = (product) => {
+  const processing = product?.imageProcessing
+  if (!processing || ['failed', 'not_requested'].includes(processing.processingStatus)) return ''
+  return processing.cardImageUrl || processing.processedImageUrl || ''
+}
+
 export const getProductOriginalImageUrl = (product) => (
-  product?.imageProcessing?.originalImageUrl || product?.image || ''
+  product?.imageProcessing?.originalImageUrl || product?.image || product?.images?.[0] || ''
 )
 
 export const getProductImageBackground = (product) => (

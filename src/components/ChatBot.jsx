@@ -1,17 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
-import { FiArrowUpRight, FiSend, FiUser, FiX } from 'react-icons/fi'
+import { FiArrowUpRight, FiSend, FiX } from 'react-icons/fi'
 import { RiMessage3Line } from 'react-icons/ri'
 import { FaWhatsapp } from 'react-icons/fa'
 import { MdOutlineLocalHospital, MdOutlineMailOutline } from 'react-icons/md'
 import {
   getSkinGuideStatus,
-  sendSkinGuideMessage,
   startSkinGuideClinicianChat
 } from '../api'
 
 const initialMessage = {
   role: 'assistant',
-  content: 'Hi, I am Glory Skin Guide. I can help you explore skincare routines, ingredients and when it is worth speaking to a professional. I do not diagnose conditions or replace medical care.'
+  content: 'Glory Skin Guide is preparing its skincare question service. You can find urgent-help guidance or check whether clinician chat is available.'
 }
 
 const getErrorMessage = (error, fallback) => error?.response?.data?.message || fallback
@@ -56,7 +55,7 @@ const ChatBot = () => {
     setMessages((previous) => [...previous, { role: 'assistant', content }])
   }
 
-  const handleSend = async () => {
+  const handleSend = () => {
     const message = input.trim()
     if (!message || loading) return
 
@@ -65,28 +64,7 @@ const ChatBot = () => {
       addAssistantMessage(`I'm glad you reached out. ${urgentHelp} Glory support cannot provide emergency care.`)
       return
     }
-    setMessages((previous) => [...previous, { role: 'user', content: message }])
-
-    if (!guideStatus?.available) {
-      addAssistantMessage('Glory Skin Guide is in a limited, safety-reviewed beta and is not accepting questions yet. You can browse skincare or speak to a skincare professional when clinician chat is available.')
-      return
-    }
-
-    setLoading(true)
-    try {
-      const { data } = await sendSkinGuideMessage({ message })
-      addAssistantMessage(data.message || 'Skin Guide is unavailable right now.')
-      if (typeof data.remaining === 'number') {
-        setGuideStatus((current) => current ? {
-          ...current,
-          usage: { ...current.usage, messagesRemaining: data.remaining }
-        } : current)
-      }
-    } catch (error) {
-      addAssistantMessage(getErrorMessage(error, 'Skin Guide is unavailable right now.'))
-    } finally {
-      setLoading(false)
-    }
+    addAssistantMessage('Skin Guide is not accepting questions yet. Browse skincare or use Talk to a person if clinician chat is available.')
   }
 
   const handleClinicianChat = async () => {
@@ -184,7 +162,6 @@ const ChatBot = () => {
                     <p style={{ margin: 0, maxWidth: '78%', overflowWrap: 'anywhere', whiteSpace: 'pre-wrap', background: message.role === 'user' ? '#171314' : '#f7f5f5', color: message.role === 'user' ? '#fff' : '#252021', padding: '10px 13px', borderRadius: message.role === 'user' ? '14px 14px 4px 14px' : '14px 14px 14px 4px', fontSize: '13px', lineHeight: 1.55 }}>
                       {message.content}
                     </p>
-                    {message.role === 'user' && <span style={{ width: '28px', height: '28px', background: '#171314', borderRadius: '50%', display: 'grid', placeItems: 'center', flexShrink: 0 }}><FiUser size={14} color='#fff' /></span>}
                   </div>
                 ))}
                 {loading && <p style={{ margin: 0, color: '#71696c', fontSize: '12px' }}>Preparing a secure response...</p>}

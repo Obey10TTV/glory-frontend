@@ -9,6 +9,7 @@ import MarketSelector from './MarketSelector'
 import { useMarket } from '../context/MarketContext'
 import { formatCurrency } from '../utils/currency'
 import { getWishlistIds } from '../utils/wishlist'
+import { getProductCardImageUrl } from '../utils/productImage'
 
 const Navbar = () => {
   const { user, logout } = useUser()
@@ -199,13 +200,16 @@ const Navbar = () => {
           }}>Change marketplace</button>
         </>
       )}
-      {searchResults?.items.map((product) => (
-        <Link key={product._id} className='glory-search-suggestion' to={`/products/${product._id}`} onClick={finishSearch}>
-          {product.image && <img src={product.image} alt='' width={42} height={42} />}
-          <span><strong>{product.name}</strong><small>{[product.brand, product.category].filter(Boolean).join(' · ')}</small></span>
-          <b>{formatCurrency(product.price, product.currency || market.currency, market.locale)}</b>
-        </Link>
-      ))}
+      {searchResults?.items.map((product) => {
+        const photo = getProductCardImageUrl(product)
+        return (
+          <Link key={product._id} className='glory-search-suggestion' to={`/products/${product._id}`} onClick={finishSearch}>
+            {photo && <img src={photo} alt='' width={42} height={42} />}
+            <span><strong>{product.name}</strong><small>{[product.brand, product.category].filter(Boolean).join(' · ')}</small></span>
+            <b>{formatCurrency(product.price, product.currency || market.currency, market.locale)}</b>
+          </Link>
+        )
+      })}
       <Link className='glory-search-more' to={searchPath} onClick={finishSearch}>See all results for “{searchTerm}”</Link>
     </div>
   )
