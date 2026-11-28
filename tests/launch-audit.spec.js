@@ -263,6 +263,7 @@ test('anonymous visitor can follow primary CTAs and reaches OTP-gated seller sig
   await expect(page.getByRole('button', { name: /Sell Start my store/ })).toHaveCSS('background-color', 'rgb(17, 17, 17)')
 
   await page.goto('/register')
+  await expect(page.getByRole('link', { name: 'Privacy Policy', exact: true })).toHaveAttribute('href', '/privacy')
   await expect(page.getByRole('button', { name: 'Sign up with Google' })).toBeVisible()
   await page.getByRole('button', { name: /Sell Start my store/ }).click()
   await page.getByPlaceholder('e.g. Glow Lab Beauty').fill('New Seller Studio')
@@ -274,6 +275,45 @@ test('anonymous visitor can follow primary CTAs and reaches OTP-gated seller sig
 
   await expect(page.getByText('Email OTP required')).toBeVisible()
   await expect(page.getByPlaceholder('000000')).toBeVisible()
+})
+
+test('Skin Guide responds locally to a self-harm disclosure', async ({ page }) => {
+  await page.addInitScript(profile => localStorage.setItem('gloryUser', JSON.stringify(profile)), buyer)
+  await installMocks(page, { profile: buyer })
+  await page.route('**/api/skin-guide/status', route => route.fulfill({ json: { available: true } }))
+  const submittedQuestions = []
+  page.on('request', request => {
+    if (request.url().endsWith('/api/skin-guide/messages')) submittedQuestions.push(request)
+  })
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Open Glory support' }).click()
+  await page.getByRole('textbox', { name: 'Skin Guide question' }).fill('I want to hurt myself')
+  await page.getByRole('button', { name: 'Send question' }).click()
+  await expect(page.getByText(/call your local emergency services now/i).last()).toBeVisible()
+  await expect(page.getByText('I want to hurt myself', { exact: true })).toHaveCount(0)
+  expect(submittedQuestions).toHaveLength(0)
+})
+
+test('paid sellers can open the cancellation flow directly', async ({ page }) => {
+  const verifiedSeller = makeSeller()
+  await page.addInitScript(profile => localStorage.setItem('gloryUser', JSON.stringify(profile)), verifiedSeller)
+  await installMocks(page, { profile: verifiedSeller })
+  await page.route('**/api/marketplace/seller/status', route => route.fulfill({ json: {
+    ...sellerStatus,
+    membership: { ...sellerStatus.membership, planCode: 'studio', requestedPlanCode: 'studio' }
+  } }))
+  await page.route('**/api/stripe/seller/subscription/portal', route => route.fulfill({
+    json: { url: '/seller?billing=mock' }
+  }))
+  await page.goto('/seller')
+  const cancelButton = page.getByRole('button', { name: 'Cancel paid plan' })
+  await expect(cancelButton).toBeVisible()
+  const [request] = await Promise.all([
+    page.waitForRequest(request => request.url().endsWith('/api/stripe/seller/subscription/portal')),
+    cancelButton.click()
+  ])
+  expect(request.postDataJSON()).toEqual({ action: 'cancel' })
+  await expect(page).toHaveURL(/\/seller\?billing=mock$/)
 })
 
 test('catalogue filters, search and product deep links stay functional', async ({ page }) => {

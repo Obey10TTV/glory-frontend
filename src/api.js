@@ -196,7 +196,7 @@ export const initializeSellerActivation = () => API.post('/stripe/seller/activat
 export const verifySellerActivation = (sessionId) => API.get(`/stripe/seller/activation/verify/${sessionId}`)
 export const initializeSellerSubscription = (data) => API.post('/stripe/seller/subscription', data)
 export const verifySellerSubscription = (sessionId) => API.get(`/stripe/seller/subscription/verify/${sessionId}`)
-export const openSellerBillingPortal = () => API.post('/stripe/seller/subscription/portal')
+export const openSellerBillingPortal = (action) => API.post('/stripe/seller/subscription/portal', { action })
 export const initializeSellerPayouts = () => API.post('/stripe/connect/onboard')
 
 // ADMIN

@@ -892,11 +892,11 @@ const SellerDashboardPage = () => {
     }
   }
 
-  const handleBillingPortal = async () => {
-    setPaymentAction('membership-portal')
+  const handleBillingPortal = async (action) => {
+    setPaymentAction(action === 'cancel' ? 'membership-cancel' : 'membership-portal')
     setError('')
     try {
-      const { data } = await openSellerBillingPortal()
+      const { data } = await openSellerBillingPortal(action)
       window.location.assign(data.url)
     } catch (err) {
       setError(err.response?.data?.message || 'Could not open seller billing')
@@ -1503,6 +1503,21 @@ const SellerDashboardPage = () => {
             <FiTrendingUp size={19} />
           </div>
 
+          {sellerPayments.membership.requestedPlanCode !== 'starter' &&
+            ['active', 'past_due'].includes(sellerPayments.membership.status) && (
+              <div className='glory-dashboard-panel-header'>
+                {sellerPayments.membership.cancelAtPeriodEnd ? (
+                  <p>Your paid plan is scheduled to end{sellerPayments.membership.currentPeriodEnd
+                    ? ` on ${new Date(sellerPayments.membership.currentPeriodEnd).toLocaleDateString()}`
+                    : ' at the end of your billing period'}.</p>
+                ) : (
+                  <button type='button' className='glory-secondary-button' onClick={() => handleBillingPortal('cancel')} disabled={paymentAction !== ''}>
+                    {paymentAction === 'membership-cancel' ? 'Opening cancellation…' : 'Cancel paid plan'}
+                  </button>
+                )}
+              </div>
+            )}
+
           <div className='glory-seller-plan-grid' aria-label='Seller plans'>
             {sellerPlans.map(plan => {
               const isCurrent = activeSellerPlanCode === plan.code
@@ -1529,7 +1544,7 @@ const SellerDashboardPage = () => {
                   {isCurrent && plan.code === 'starter' ? (
                     <button type='button' className='glory-secondary-button' disabled>Current plan</button>
                   ) : hasPaidPlan ? (
-                    <button type='button' className={isCurrent ? 'glory-btn' : 'glory-secondary-button'} onClick={handleBillingPortal} disabled={paymentAction !== ''}>
+                    <button type='button' className={isCurrent ? 'glory-btn' : 'glory-secondary-button'} onClick={() => handleBillingPortal()} disabled={paymentAction !== ''}>
                       {paymentAction === 'membership-portal' ? 'Opening billing...' : isCurrent ? 'Manage billing' : 'Change plan'}
                     </button>
                   ) : plan.code === 'starter' ? (

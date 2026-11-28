@@ -377,6 +377,9 @@ const RegisterPage = () => {
               </div>
             )}
 
+            <p className='glory-form-help'>
+              Read the <Link to='/privacy'>Privacy Policy</Link> to learn how Glory uses your account and seller information.
+            </p>
             <GoogleSignInButton
               text='signup_with'
               disabled={loading || (isSeller && brandName.trim().length < 2)}

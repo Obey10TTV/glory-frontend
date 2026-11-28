@@ -125,7 +125,6 @@ const categoryOrder = [
   'Fragrance',
   'Body Care',
   'Body Liquid',
-  'Scented Candles',
   'Tools & Accessories',
 ]
 

@@ -16,6 +16,9 @@ const initialMessage = {
 
 const getErrorMessage = (error, fallback) => error?.response?.data?.message || fallback
 
+const urgentHelp = 'If you or someone else may be in immediate danger or has already been hurt, call your local emergency services now. If you can, tell someone you trust and ask them to stay with you.'
+const crisisLanguage = /\b(?:suicid(?:e|al)|self[\s-]*harm|(?:kill|hurt|harm)\s+(?:myself|yourself|themselves)|(?:end|take)\s+(?:my|your|their)\s+(?:own\s+)?life|(?:want|wish)\s+to\s+die|don['’]?t\s+want\s+to\s+(?:live|be\s+alive))\b/i
+
 const ChatBot = () => {
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState([initialMessage])
@@ -57,8 +60,12 @@ const ChatBot = () => {
     const message = input.trim()
     if (!message || loading) return
 
-    setMessages((previous) => [...previous, { role: 'user', content: message }])
     setInput('')
+    if (crisisLanguage.test(message)) {
+      addAssistantMessage(`I'm glad you reached out. ${urgentHelp} Glory support cannot provide emergency care.`)
+      return
+    }
+    setMessages((previous) => [...previous, { role: 'user', content: message }])
 
     if (!guideStatus?.available) {
       addAssistantMessage('Glory Skin Guide is in a limited, safety-reviewed beta and is not accepting questions yet. You can browse skincare or speak to a skincare professional when clinician chat is available.')
@@ -160,11 +167,16 @@ const ChatBot = () => {
             ))}
           </nav>
 
+          <div style={{ padding: '10px 16px', background: '#fbf4f6', borderBottom: '1px solid #f0e1e6', color: '#5d434b', fontSize: '12px', lineHeight: 1.45 }}>
+            <details>
+              <summary>Urgent help</summary>
+              {urgentHelp}
+              <p>For a severe skin reaction or another urgent medical concern, seek urgent medical care.</p>
+            </details>
+          </div>
+
           {activeTab === 'guide' && (
             <>
-              <div style={{ padding: '10px 16px', background: '#fbf4f6', borderBottom: '1px solid #f0e1e6', color: '#5d434b', fontSize: '11px', lineHeight: 1.45 }}>
-                Education only. For urgent symptoms, severe reactions or a changing mole, seek urgent medical advice.
-              </div>
               <div aria-live='polite' style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {messages.map((message, index) => (
                   <div key={`${message.role}-${index}`} style={{ display: 'flex', justifyContent: message.role === 'user' ? 'flex-end' : 'flex-start', gap: '8px', alignItems: 'flex-end' }}>

@@ -32,10 +32,6 @@ export const categoryProductTypes = Object.freeze({
     'Eau de Parfum', 'Eau de Toilette', 'Perfume Oil',
     'Fragrance Mist', 'Gift Set', 'Other Fragrance'
   ],
-  'Scented Candles': [
-    'Jar Candle', 'Pillar Candle', 'Wax Melt', 'Candle Gift Set',
-    'Other Home Fragrance'
-  ],
   'Tools & Accessories': [
     'Brush', 'Comb', 'Applicator', 'Beauty Device', 'Storage', 'Hair Tool', 'Other Tool'
   ]
