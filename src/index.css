@@ -10835,7 +10835,7 @@ button {
   align-items: center;
   padding: 30px 36px;
   border-bottom: 1px solid var(--market-line);
-  background: linear-gradient(90deg, #f6e6e9 12%, #f6e6e9 36%, #f6e6e9e8 47%, #f6e6e900 75%), #f6e6e9 url('/images/home/market-selector.webp') center 48% / cover no-repeat;
+  background: linear-gradient(90deg, #f6e6e9 12%, #f6e6e9 36%, #f6e6e9e8 47%, #f6e6e900 75%), #f6e6e9 url('/images/home/market-selector.webp') center 16% / cover no-repeat;
 }
 
 .glory-market-dialog-header h2 {
@@ -10975,7 +10975,7 @@ button {
     min-height: 150px;
     padding: 22px 66px 22px 20px;
     background-image: linear-gradient(90deg, #f6e6e9 10%, #f6e6e9ed 44%, #f6e6e999 66%, #f6e6e91a 100%), url('/images/home/market-selector.webp');
-    background-position: center, 66% center;
+    background-position: center, 66% 30%;
   }
   .glory-market-dialog-header h2 { max-width: 280px; font-size: clamp(27px, 7vw, 38px); }
   .glory-market-dialog-header p { max-width: 235px; font-size: 13px; }

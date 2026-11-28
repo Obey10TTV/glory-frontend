@@ -348,6 +348,7 @@ test('marketplace picker keeps circular country flags and works on desktop and m
     await expect(dialog).toBeVisible()
     const usa = dialog.getByRole('button', { name: /United States/ })
     const flag = usa.locator('img')
+    await expect.poll(() => flag.evaluate(image => image.complete && image.naturalWidth > 0)).toBe(true)
     await expect(flag).toHaveCSS('border-radius', '50%')
     const flagBounds = await flag.boundingBox()
     expect(flagBounds.width).toBe(flagBounds.height)
