@@ -11053,6 +11053,7 @@ button {
   font-weight: 600;
   line-height: 0.94;
   letter-spacing: 0;
+  text-wrap: balance;
 }
 
 .glory-pricing-hero p {
@@ -11132,6 +11133,7 @@ button {
   color: #655e5a;
   font-size: 14px;
   line-height: 1.75;
+  text-wrap: pretty;
 }
 
 .glory-pricing-grid {
