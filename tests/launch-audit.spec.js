@@ -386,6 +386,34 @@ test('one-letter navbar search shows suggestions and keeps the query on the resu
   await expect(page.getByText('No matches in United States.')).toBeVisible()
 })
 
+test('public help, policy and seller pages load their editorial art without overflowing', async ({ page }) => {
+  await installMocks(page)
+  for (const [route, image] of [
+    ['/faq', 'shopping-help'],
+    ['/seller-faq', 'seller-studio'],
+    ['/paid-promotion-terms', 'paid-visibility'],
+    ['/privacy', 'trust-and-privacy']
+  ]) {
+    await page.setViewportSize({ width: route === '/faq' ? 375 : 1440, height: 820 })
+    await page.goto(route)
+    const picture = page.locator('.glory-info-hero-art')
+    await expect(picture).toHaveAttribute('src', `/images/editorial/${image}.webp`)
+    await expect.poll(() => picture.evaluate(element => element.complete && element.naturalWidth > 0)).toBe(true)
+    const box = await picture.boundingBox()
+    expect(box.x + box.width).toBeLessThanOrEqual(page.viewportSize().width)
+  }
+
+  await page.goto('/seller-pricing')
+  for (const [selector, asset] of [
+    ['.glory-pricing-hero .glory-pricing-shell', 'seller-studio'],
+    ['.glory-pricing-visibility .glory-pricing-heading', 'paid-visibility']
+  ]) {
+    await expect.poll(() => page.locator(selector).evaluate(element => getComputedStyle(element, '::after').backgroundImage)).toContain(`${asset}.webp`)
+    const response = await page.request.get(`/images/editorial/${asset}.webp`)
+    expect(response.headers()['content-type']).toContain('image/webp')
+  }
+})
+
 test('buyer can review only from a mutually confirmed interaction', async ({ page }) => {
   await page.addInitScript(profile => localStorage.setItem('gloryUser', JSON.stringify(profile)), buyer)
   await installMocks(page, { profile: buyer })

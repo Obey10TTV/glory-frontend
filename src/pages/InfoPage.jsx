@@ -4,6 +4,16 @@ import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import { infoPages } from '../data/infoPages'
 
+const trustPages = new Set(['marketplace-safety', 'reviews-policy', 'seller-agreement', 'privacy', 'terms', 'cookies', 'security', 'accessibility'])
+const sellerPages = new Set(['sell-on-glory', 'seller-resources', 'seller-faq', 'success-stories', 'affiliates', 'careers'])
+
+const getEditorialArt = (slug) => {
+  if (slug === 'paid-promotion-terms') return 'paid-visibility'
+  if (trustPages.has(slug)) return 'trust-and-privacy'
+  if (sellerPages.has(slug)) return 'seller-studio'
+  return 'shopping-help'
+}
+
 const InfoPage = ({ slug }) => {
   const page = infoPages[slug]
   const isSellerLanding = slug === 'sell-on-glory'
@@ -18,27 +28,25 @@ const InfoPage = ({ slug }) => {
       <Navbar />
 
       <main>
-        <section className={`glory-info-hero-v2 ${isSellerLanding ? 'has-image' : ''}`}>
-          {isSellerLanding && (
-            <>
-              <img
-                src='/images/home/seller-founder.jpg'
-                alt='Independent beauty founder preparing products for her store'
-                width='1672'
-                height='940'
-                fetchPriority='high'
-              />
-              <span className='glory-info-hero-wash' />
-            </>
-          )}
-          <div className='glory-info-shell glory-info-hero-content'>
-            <span className='glory-info-eyebrow'>{page.eyebrow || page.group}</span>
-            <h1>{page.title}</h1>
-            <p>{page.intro}</p>
-            <div className='glory-info-actions'>
-              <InfoAction action={page.primaryAction} primary />
-              <InfoAction action={page.secondaryAction} />
+        <section className='glory-info-hero-v2'>
+          <div className='glory-info-shell glory-info-hero-layout'>
+            <div className='glory-info-hero-content'>
+              <span className='glory-info-eyebrow'>{page.eyebrow || page.group}</span>
+              <h1>{page.title}</h1>
+              <p>{page.intro}</p>
+              <div className='glory-info-actions'>
+                <InfoAction action={page.primaryAction} primary />
+                <InfoAction action={page.secondaryAction} />
+              </div>
             </div>
+            <img
+              className='glory-info-hero-art'
+              src={`/images/editorial/${getEditorialArt(slug)}.webp`}
+              alt=''
+              width='960'
+              height='720'
+              fetchPriority='high'
+            />
           </div>
         </section>
 
