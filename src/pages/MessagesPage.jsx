@@ -4,7 +4,7 @@ import { FiAlertTriangle, FiArrowLeft, FiCheck, FiMessageCircle, FiSend, FiShiel
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import Loader from '../components/Loader'
-import { addReview, closeConversation, confirmConversationTransaction, getConversations, sendConversationMessage } from '../api'
+import { addReview, closeConversation, confirmConversationTransaction, getConversations, reportPaymentFraud, sendConversationMessage } from '../api'
 import { useUser } from '../context/UserContext'
 
 const formatTimestamp = (value) => {
@@ -94,9 +94,11 @@ const MessagesPage = () => {
 
   const confirmTransaction = async () => {
     if (!activeConversation) return
+    const isSeller = activeConversation.participantRole === 'seller'
+    if (isSeller && !window.confirm('Confirm that the exchange is complete and you received full payment. For electronic payments, confirm you checked your own bank or payment account and the money is available. Wait if payment is pending or has disappeared.')) return
     setConfirming(true)
     try {
-      const { data } = await confirmConversationTransaction(activeConversation._id)
+      const { data } = await confirmConversationTransaction(activeConversation._id, { paymentChecked: isSeller })
       setConversations(current => current.map(item => item._id === data._id ? data : item))
       setError('')
     } catch (requestError) {
@@ -152,7 +154,7 @@ const MessagesPage = () => {
 
         <div className='glory-marketplace-safety-note' role='note'>
           <FiShield size={19} aria-hidden='true' />
-          <p><strong>Stay safe.</strong> Glory hosts this conversation and listing only. Do not send card details, passwords or one-time codes. Inspect items and agree payment safely with the seller.</p>
+          <p><strong>Check payment before handing over goods.</strong> For electronic payments, open your own bank or payment app and check that the full amount is available. Treat alerts, screenshots and pending payments as unconfirmed. If funds disappear, contact your bank or payment provider and report it here. Glory cannot verify direct payments.</p>
         </div>
 
         {error && (
@@ -242,6 +244,8 @@ const MessagesPage = () => {
                 )}
               </section>
 
+              {activeConversation && <PaymentFraudReport key={activeConversation._id} conversationId={activeConversation._id} />}
+
               {activeConversation?.participantRole === 'buyer' && transactionConfirmed && (
                 <section className='glory-conversation-review' aria-labelledby='conversation-review-title'>
                   {activeConversation.review ? (
@@ -295,6 +299,46 @@ const MessagesPage = () => {
       </main>
       <Footer />
     </div>
+  )
+}
+
+const PaymentFraudReport = ({ conversationId }) => {
+  const [detail, setDetail] = useState('')
+  const [sending, setSending] = useState(false)
+  const [reference, setReference] = useState('')
+  const [error, setError] = useState('')
+
+  const submit = async (event) => {
+    event.preventDefault()
+    if (sending || detail.trim().length < 10) return
+    setSending(true)
+    setError('')
+    try {
+      const { data } = await reportPaymentFraud(conversationId, detail.trim())
+      setReference(data.reference)
+      setDetail('')
+    } catch (requestError) {
+      setError(requestError.response?.data?.message || 'Unable to submit your report. Please try again.')
+    } finally {
+      setSending(false)
+    }
+  }
+
+  return (
+    <details className='glory-conversation-review'>
+      <summary>Report suspected payment fraud</summary>
+      {reference ? (
+        <p role='status'>Report sent to Glory Trust &amp; Safety. Reference {reference}.</p>
+      ) : (
+        <form onSubmit={submit}>
+          <label htmlFor='payment-fraud-detail'>What happened?</label>
+          <small>Include the amount, date and what changed. Leave out bank or card numbers, passwords and security codes.</small>
+          <textarea id='payment-fraud-detail' value={detail} onChange={event => setDetail(event.target.value)} minLength={10} maxLength={1200} rows={3} required />
+          {error && <p role='alert'>{error}</p>}
+          <button type='submit' disabled={sending || detail.trim().length < 10}>{sending ? 'Sending…' : 'Send confidential report'}</button>
+        </form>
+      )}
+    </details>
   )
 }
 

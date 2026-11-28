@@ -18,6 +18,7 @@ import {
   getAdminStats,
   getAllOrders,
   getAllUsers,
+  getFraudCaseEvidence,
   getSellerDocumentUrl,
   makeSeller,
   resolveCancellation,
@@ -136,7 +137,7 @@ const AdminDashboardPage = () => {
   }
 
   const handleDeleteUser = async (id) => {
-    if (!window.confirm('Delete this account? Accounts with order history must use the privacy workflow.')) return
+    if (!window.confirm('Delete this account? Seller accounts, open fraud cases and accounts with order history require privacy review.')) return
     try {
       await deleteUser(id)
       await refreshAfter('User deleted successfully')
@@ -321,7 +322,7 @@ const AdminDashboardPage = () => {
   ].some(value => String(value || '').toLowerCase().includes(term))), [auditLogs, term])
   const filteredReports = useMemo(() => reports.filter(report => !term || [
     report.reason, report.detail, report.status, report.listing?.name,
-    report.seller?.name, report.seller?.email, report.reporter?.name, report.reporter?.email
+    report.seller?.name, report.seller?.email, report.reporter?.name, report.reporter?.email, report.reportedAccount, report._id
   ].some(value => String(value || '').toLowerCase().includes(term))), [reports, term])
   const filteredReviews = useMemo(() => reviews.filter(review => !term || [
     review.reviewerName, review.comment, review.status, review.listing?.name,
@@ -352,7 +353,8 @@ const AdminDashboardPage = () => {
     } else if (activeTab === 'reports') {
       downloadCsv(`glory-listing-reports-${date}.csv`, [
         ['Date', 'Listing', 'Seller', 'Reporter', 'Reason', 'Status', 'Detail'],
-        ...filteredReports.map(report => [report.createdAt, report.listing?.name, report.seller?.email, report.reporter?.email, report.reason, report.status, report.detail])
+        ...filteredReports.filter(report => !['payment_fraud', 'counterfeit', 'suspected_scam'].includes(report.reason))
+          .map(report => [report.createdAt, report.listing?.name, report.seller?.email, report.reporter?.email, report.reason, report.status, report.detail])
       ])
     } else if (activeTab === 'reviews') {
       downloadCsv(`glory-reviews-${date}.csv`, [
@@ -567,22 +569,30 @@ const ProductsTable = ({ products, onApprove, onReject, onDelete, onBackfill, ba
 
 const ReportsTable = ({ reports, onReview }) => (
   <section className='glory-dashboard-panel'>
-    <div className='glory-dashboard-panel-header'><FiFlag /> Listing reports ({reports.length})</div>
-    {reports.length === 0 ? <div className='glory-admin-empty'>No listing reports match this view.</div> : (
+    <div className='glory-dashboard-panel-header'><FiFlag /> Trust &amp; Safety reports ({reports.length})</div>
+    {reports.length === 0 ? <div className='glory-admin-empty'>No reports match this view.</div> : (
       <div className='glory-table-wrap'><table className='glory-dashboard-table'>
         <thead><tr>{['Listing', 'Report', 'Seller', 'Reporter', 'SLA', 'Status', 'Actions'].map(header => <th key={header}>{header}</th>)}</tr></thead>
         <tbody>{reports.map(report => (
           <tr key={report._id}>
             <td><div className='glory-dashboard-product-cell'>{report.listing?.image && <img src={report.listing.image} alt='' loading='lazy' width='48' height='48' />}<div><strong>{report.listing?.name || 'Removed listing'}</strong><span>{report.listing?.brand || report.listing?.category || 'Listing unavailable'}</span></div></div></td>
-            <td><strong>{report.reason.replaceAll('_', ' ')}</strong><br /><span className='glory-dashboard-note'>{report.detail || 'No additional detail.'}</span></td>
+            <td>
+              <strong>{report.reason.replaceAll('_', ' ')}</strong><br />
+              <span className='glory-dashboard-note'>{report.detail || 'No additional detail.'}</span>
+              {report.reportedRole && <p><small>Reported {report.reportedRole} · {report.reportedAccount}</small></p>}
+              {['payment_fraud', 'counterfeit', 'suspected_scam'].includes(report.reason) && <FraudCaseEvidence id={report._id} />}
+            </td>
             <td>{report.seller?.sellerProfile?.storeName || report.seller?.name || 'Unknown seller'}<br /><small>{report.seller?.email || ''}</small></td>
             <td>{report.reporter?.name || 'Confidential reporter'}<br /><small>{report.reporter?.email || ''}</small></td>
             <td><span className={`glory-priority-chip is-${report.priority || 'standard'}`}>{report.priority || 'standard'}</span><br /><small className={String(report.slaState).includes('breached') ? 'glory-sla-breached' : ''}>{report.slaState === 'closed' ? 'Closed' : `${String(report.slaState || 'on_track').replaceAll('_', ' ')} · ${report.triageDueAt ? new Date(report.triageDueAt).toLocaleString('en-GB') : 'legacy report'}`}</small></td>
-            <td><span className='glory-status-chip'>{report.status.replaceAll('_', ' ')}</span></td>
+            <td><span className='glory-status-chip'>{report.status.replaceAll('_', ' ')}</span>
+              {report.evidenceReviewAt && <p><small>Retention review due {new Date(report.evidenceReviewAt).toLocaleDateString()}</small></p>}
+            </td>
             <td><div className='glory-table-actions'>
               {report.status === 'received' && <button type='button' className='neutral' onClick={() => onReview(report._id, 'in_review')} aria-label='Mark report under review'><FiClock /></button>}
-              {!['actioned', 'dismissed'].includes(report.status) && <button type='button' className='warning' onClick={() => onReview(report._id, 'actioned', 'pause')} aria-label='Pause listing for review'><FiAlertTriangle /></button>}
-              {!['actioned', 'dismissed'].includes(report.status) && <button type='button' className='danger' onClick={() => onReview(report._id, 'actioned', 'remove')} aria-label='Remove listing'><FiTrash2 /></button>}
+              {!['actioned', 'dismissed'].includes(report.status) && report.reportedRole !== 'buyer' && <button type='button' className='warning' onClick={() => onReview(report._id, 'in_review', 'pause')} aria-label='Pause listing for review'><FiAlertTriangle /></button>}
+              {!['actioned', 'dismissed'].includes(report.status) && report.reportedRole !== 'buyer' && <button type='button' className='danger' onClick={() => onReview(report._id, 'actioned', 'remove')} aria-label='Remove listing'><FiTrash2 /></button>}
+              {report.reportedRole && !['actioned', 'dismissed'].includes(report.status) && <button type='button' className='neutral' onClick={() => onReview(report._id, 'actioned')} aria-label='Resolve fraud case'>Resolve</button>}
               {!['actioned', 'dismissed'].includes(report.status) && <button type='button' className='success' onClick={() => onReview(report._id, 'dismissed')} aria-label='Dismiss report'><FiCheckCircle /></button>}
             </div></td>
           </tr>
@@ -591,6 +601,44 @@ const ReportsTable = ({ reports, onReview }) => (
     )}
   </section>
 )
+
+const FraudCaseEvidence = ({ id }) => {
+  const [evidence, setEvidence] = useState(null)
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  const load = async () => {
+    setLoading(true)
+    setError('')
+    try {
+      const { data } = await getFraudCaseEvidence(id)
+      setEvidence(data)
+    } catch (requestError) {
+      setError(requestError.response?.data?.message || 'Could not load case evidence.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div>
+      {evidence ? (
+        <>
+          <button type='button' onClick={() => setEvidence(null)}>Hide evidence</button>
+          <p>Seller ID {evidence.sellerId}{evidence.storeName && ` · ${evidence.storeName}`}</p>
+          {evidence.verification?.status && <p>Verification {evidence.verification.status}{evidence.verification.reference && ` · ${evidence.verification.reference}`}</p>}
+          {evidence.listing?.name && <p>Listing at time of report · {evidence.listing.name}</p>}
+          {evidence.conversation?.messages?.map((message, index) => (
+            <p key={index}><small>{new Date(message.sentAt).toLocaleString()} · {String(message.sender) === evidence.sellerId ? 'Seller' : 'Buyer'}</small><br />{message.body}</p>
+          ))}
+        </>
+      ) : (
+        <button type='button' onClick={load} disabled={loading}>{loading ? 'Loading…' : 'View restricted evidence'}</button>
+      )}
+      {error && <small role='alert'>{error}</small>}
+    </div>
+  )
+}
 
 const ReviewsTable = ({ reviews, onDecision }) => (
   <section className='glory-dashboard-panel'>

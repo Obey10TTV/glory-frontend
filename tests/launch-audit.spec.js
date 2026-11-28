@@ -347,6 +347,36 @@ test('buyer can review only from a mutually confirmed interaction', async ({ pag
   await expect(page.getByText('Review pending')).toBeVisible()
 })
 
+test('seller can report a missing payment and decline transaction confirmation', async ({ page }) => {
+  const profile = makeSeller()
+  await page.addInitScript(user => localStorage.setItem('gloryUser', JSON.stringify(user)), profile)
+  await installMocks(page, { profile })
+  await page.route('**/api/conversations', route => route.fulfill({ json: [{
+    _id: 'payment-thread', listing, buyer, seller: profile, participantRole: 'seller',
+    status: 'open', transactionStatus: 'buyer_confirmed', messages: []
+  }] }))
+  const confirmationRequests = []
+  page.on('request', request => {
+    if (request.url().endsWith('/transaction-confirmation')) confirmationRequests.push(request)
+  })
+  await page.route('**/api/reports/conversations/payment-thread/payment-fraud', route => {
+    expect(route.request().postDataJSON()).toEqual({ detail: 'I checked my account and the payment disappeared.' })
+    return route.fulfill({ status: 201, json: { reference: 'test-case' } })
+  })
+  await page.goto('/messages?thread=payment-thread')
+  await expect(page.getByText('Check payment before handing over goods.')).toBeVisible()
+  page.once('dialog', async dialog => {
+    expect(dialog.message()).toContain('checked your own bank')
+    await dialog.dismiss()
+  })
+  await page.getByRole('button', { name: 'Confirm completed transaction' }).click()
+  await page.getByText('Report suspected payment fraud', { exact: true }).click()
+  await page.getByLabel('What happened?').fill('I checked my account and the payment disappeared.')
+  await page.getByRole('button', { name: 'Send confidential report' }).click()
+  await expect(page.getByText(/Reference test-case/)).toBeVisible()
+  expect(confirmationRequests).toHaveLength(0)
+})
+
 test('unverified seller is gated while verified seller sees plans and cancelled checkout state', async ({ page }) => {
   const unverifiedSeller = makeSeller({ verified: false })
   await page.addInitScript(profile => localStorage.setItem('gloryUser', JSON.stringify(profile)), unverifiedSeller)

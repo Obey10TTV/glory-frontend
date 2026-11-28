@@ -135,10 +135,11 @@ export const getConversation = (id) => API.get(`/conversations/${id}`)
 export const startConversation = (data) => API.post('/conversations', data)
 export const sendConversationMessage = (id, data) => API.post(`/conversations/${id}/messages`, data)
 export const closeConversation = (id) => API.patch(`/conversations/${id}/close`)
-export const confirmConversationTransaction = (id) => API.post(`/conversations/${id}/transaction-confirmation`)
+export const confirmConversationTransaction = (id, data) => API.post(`/conversations/${id}/transaction-confirmation`, data)
 
 // TRUST & SAFETY
 export const reportListing = (id, data) => API.post(`/reports/listings/${id}`, data)
+export const reportPaymentFraud = (id, detail) => API.post(`/reports/conversations/${id}/payment-fraud`, { detail })
 export const getMyListingReports = () => API.get('/reports/mine')
 
 // ORDERS
@@ -218,6 +219,7 @@ export const addAdminOrderNote = (orderId, data) => API.post(`/admin/orders/${or
 export const getAdminAudit = (params) => API.get('/admin/audit', { params })
 export const getAdminListingReports = (params) => API.get('/reports/admin', { params })
 export const updateListingReport = (id, data) => API.put(`/reports/admin/${id}`, data)
+export const getFraudCaseEvidence = (id) => API.get(`/reports/admin/${id}/evidence`)
 export const getAdminReviews = (params) => API.get('/reviews/admin', { params })
 export const updateAdminReview = (id, data) => API.put(`/reviews/admin/${id}`, data)
 export const getAdminPromotions = (params) => API.get('/admin/promotions', { params })
