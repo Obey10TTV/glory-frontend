@@ -456,7 +456,7 @@ const HomePage = () => {
 
       <main>
         <section
-          className={`glory-home-stage is-${selectedHero.tone}${selectedHero.groupComposition ? ' is-group' : ''}`}
+          className={`glory-home-stage is-${selectedHero.tone}${selectedHero.groupComposition ? ' is-group' : ''}${selectedHero.wallPlaque ? ' has-plaque' : ''}`}
           aria-roledescription='carousel'
           aria-label='Featured Glory beauty collections'
           onMouseEnter={() => setHeroPaused(true)}

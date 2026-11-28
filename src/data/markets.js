@@ -19,6 +19,7 @@ export const ACTIVE_MARKETS = {
       mediaType: 'image',
       media: '/images/home/uk-ritual-hero.webp',
       imagePosition: 'center',
+      wallPlaque: true,
       primaryLabel: 'Shop the UK edit',
       secondaryLabel: 'Start selling',
       tone: 'dark',

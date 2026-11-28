@@ -7931,6 +7931,25 @@ button {
 
 .glory-home-stage.is-group .glory-home-stage-copy { justify-content: flex-end; }
 
+@media (min-width: 761px) {
+  .glory-home-stage.has-plaque .glory-home-stage-copy { padding-top: 158px; }
+}
+
+@media (max-width: 760px) {
+  .glory-home-stage.is-group { --glory-group-art-height: clamp(190px, 64vw, 340px); }
+  .glory-home-stage.is-group .glory-home-stage-frame { min-height: 0; background: #291c23; }
+  .glory-home-stage.is-group .glory-home-stage-image { height: var(--glory-group-art-height); }
+  .glory-home-stage.is-group .glory-home-stage-frame::after {
+    height: var(--glory-group-art-height);
+    background: linear-gradient(180deg, transparent 70%, #291c23);
+  }
+  .glory-home-stage.is-group .glory-home-stage-copy {
+    min-height: 0;
+    padding-top: calc(var(--glory-group-art-height) + 14px);
+    padding-bottom: 79px;
+  }
+}
+
 .glory-home-stage-image {
   position: absolute;
   z-index: -2;
