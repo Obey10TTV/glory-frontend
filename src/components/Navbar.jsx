@@ -2,7 +2,7 @@ import { Link, useNavigate } from 'react-router'
 import { useUser } from '../context/UserContext'
 import { useState, useEffect, useRef } from 'react'
 import { FiUser, FiHeart, FiX, FiChevronDown, FiMenu, FiMessageCircle, FiSearch } from 'react-icons/fi'
-import { getProducts } from '../api'
+import { getProductSuggestions } from '../api'
 import useIsMobile from '../hooks/useIsMobile'
 import MarketFlag from './MarketFlag'
 import MarketSelector from './MarketSelector'
@@ -19,14 +19,17 @@ const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false)
   const [activeDrop, setActiveDrop] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
-  const [searchResults, setSearchResults] = useState([])
-  const [allProducts, setAllProducts] = useState([])
+  const [searchResult, setSearchResult] = useState(null)
+  const [searchOpen, setSearchOpen] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [mobileDepartmentOpen, setMobileDepartmentOpen] = useState(null)
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
   const [wishlistCount, setWishlistCount] = useState(() => getWishlistIds().length)
   const [marketSelectorOpen, setMarketSelectorOpen] = useState(false)
   const searchRef = useRef(null)
+  const searchTerm = searchQuery.trim().slice(0, 100)
+  const searchKey = `${market.code}:${searchTerm}`
+  const searchResults = searchResult?.key === searchKey ? searchResult : null
 
   useEffect(() => {
     const updateWishlistCount = () => setWishlistCount(getWishlistIds().length)
@@ -35,29 +38,31 @@ const Navbar = () => {
   }, [])
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    if (!searchOpen || !searchTerm) return undefined
+    const controller = new AbortController()
+    const timer = window.setTimeout(async () => {
       try {
-        const { data } = await getProducts({ market: market.code })
-        setAllProducts(Array.isArray(data) ? data : (data.items || []))
+        const { data } = await getProductSuggestions({ market: market.code, q: searchTerm }, controller.signal)
+        const items = Array.isArray(data.items) ? data.items : []
+        if (!controller.signal.aborted) setSearchResult({ key: searchKey, items })
       } catch {
-        setAllProducts([])
+        if (!controller.signal.aborted) setSearchResult({ key: searchKey, items: [], failed: true })
       }
+    }, 160)
+    return () => {
+      window.clearTimeout(timer)
+      controller.abort()
     }
-    fetchProducts()
-  }, [market.code])
+  }, [market.code, searchKey, searchOpen, searchTerm])
 
   useEffect(() => {
-    if (searchQuery.trim() === '') {
-      setSearchResults([])
-      return
+    if (!searchOpen) return undefined
+    const dismiss = (event) => {
+      if (!searchRef.current?.contains(event.target)) setSearchOpen(false)
     }
-    const results = allProducts.filter(p =>
-      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.category.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-    setSearchResults(results.slice(0, 6))
-  }, [searchQuery, allProducts])
+    document.addEventListener('pointerdown', dismiss)
+    return () => document.removeEventListener('pointerdown', dismiss)
+  }, [searchOpen])
 
   useEffect(() => {
     if (!isMobile) {
@@ -165,75 +170,44 @@ const Navbar = () => {
     }
   }
 
-  const renderSearchResults = () => (
-    <>
-      {searchResults.length > 0 && (
-        <div style={{
-          position: 'absolute', top: '100%', left: 0, right: 0,
-          background: '#fff', border: '1px solid #e5e5e5',
-          borderTop: 'none', zIndex: 999,
-          boxShadow: '0 8px 24px rgba(0,0,0,0.1)'
-        }}>
-          {searchResults.map((product, i) => (
-            <div
-              key={product._id}
-              onClick={() => {
-                navigate(`/products/${product._id}`)
-                setSearchQuery('')
-                setMobileSearchOpen(false)
-              }}
-              style={{
-                display: 'flex', alignItems: 'center',
-                gap: '14px', padding: '12px 16px',
-                cursor: 'pointer', borderBottom: i < searchResults.length - 1 ? '1px solid #f5f5f5' : 'none',
-                transition: 'background 0.15s'
-              }}
-              onMouseEnter={e => e.currentTarget.style.background = '#f9f9f9'}
-              onMouseLeave={e => e.currentTarget.style.background = '#fff'}
-            >
-              <img
-                src={product.image}
-                alt={product.name}
-                style={{
-                  width: '44px', height: '44px',
-                  objectFit: 'cover', borderRadius: '4px',
-                  background: '#f5f5f5', flexShrink: 0
-                }}
-              />
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '13px', fontWeight: '600', color: '#111' }}>
-                  {product.name}
-                </div>
-                <div
-                  className='glory-search-meta'
-                  data-meta={`${product.brand} - ${product.category}`}
-                  style={{ fontSize: '11px', color: '#888', marginTop: '2px' }}
-                >
-                  {product.brand} · {product.category}
-                </div>
-              </div>
-              <div style={{ fontSize: '14px', fontWeight: '700', color: '#111' }}>
-                {formatCurrency(product.price, product.currency || market.currency, market.locale)}
-              </div>
-            </div>
-          ))}
-          <div
-            className='glory-search-all'
-            data-label={`SEE ALL RESULTS FOR "${searchQuery.toUpperCase()}" ->`}
-            onClick={() => { navigate('/products'); setSearchQuery(''); setMobileSearchOpen(false) }}
-            style={{
-              padding: '12px 16px', fontSize: '12px',
-              color: '#111', fontWeight: '700',
-              cursor: 'pointer', background: '#f9f9f9',
-              textAlign: 'center', letterSpacing: '0.05em',
-              borderTop: '1px solid #e5e5e5'
-            }}
-          >
-            SEE ALL RESULTS FOR "{searchQuery.toUpperCase()}" →
-          </div>
-        </div>
+  const searchPath = `/products?${new URLSearchParams({ q: searchTerm })}`
+  const finishSearch = () => {
+    setSearchQuery('')
+    setSearchOpen(false)
+    setMobileSearchOpen(false)
+  }
+  const handleSearchKey = (event) => {
+    if (event.key === 'Escape') {
+      setSearchOpen(false)
+    } else if (event.key === 'Enter' && searchTerm) {
+      event.preventDefault()
+      navigate(searchPath)
+      finishSearch()
+    }
+  }
+
+  const renderSearchResults = () => searchOpen && searchTerm && (
+    <div className='glory-search-suggestions' id='glory-search-suggestions' aria-label='Product suggestions'>
+      {!searchResults && <p role='status'>Searching {market.name}…</p>}
+      {searchResults?.failed && <p role='status'>Suggestions are temporarily unavailable.</p>}
+      {searchResults && !searchResults.failed && !searchResults.items.length && (
+        <>
+          <p role='status'>No matches in {market.name}.</p>
+          <button className='glory-search-change-market' type='button' onClick={() => {
+            setSearchOpen(false)
+            setMarketSelectorOpen(true)
+          }}>Change marketplace</button>
+        </>
       )}
-    </>
+      {searchResults?.items.map((product) => (
+        <Link key={product._id} className='glory-search-suggestion' to={`/products/${product._id}`} onClick={finishSearch}>
+          {product.image && <img src={product.image} alt='' width={42} height={42} />}
+          <span><strong>{product.name}</strong><small>{[product.brand, product.category].filter(Boolean).join(' · ')}</small></span>
+          <b>{formatCurrency(product.price, product.currency || market.currency, market.locale)}</b>
+        </Link>
+      ))}
+      <Link className='glory-search-more' to={searchPath} onClick={finishSearch}>See all results for “{searchTerm}”</Link>
+    </div>
   )
 
   return (
@@ -308,9 +282,11 @@ const Navbar = () => {
                 className='glory-currency-badge'
                 onClick={() => setMarketSelectorOpen(true)}
                 aria-label={`Change marketplace. Current marketplace ${market.name}, prices in ${market.currency}`}
+                aria-haspopup='dialog'
+                aria-expanded={marketSelectorOpen}
               >
                 <MarketFlag market={market} size={20} />
-                <span className='glory-currency-badge-label'>{market.shortName}</span>
+                <span className='glory-currency-badge-label'>{market.code === 'US' ? 'US' : market.shortName}</span>
                 <FiChevronDown size={13} aria-hidden='true' />
               </button>
             )}
@@ -318,7 +294,7 @@ const Navbar = () => {
 
           {/* DESKTOP SEARCH BAR */}
           {!isMobile && (
-            <div className='glory-navbar-search' style={{ flex: 1, maxWidth: '600px', position: 'relative' }}>
+            <div ref={searchRef} className='glory-navbar-search' style={{ flex: 1, maxWidth: '600px', position: 'relative' }}>
               <div style={{
                 display: 'flex', alignItems: 'center',
                 background: '#f5f5f5', borderRadius: '999px',
@@ -330,9 +306,12 @@ const Navbar = () => {
                   <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
                 </svg>
                 <input
-                  ref={searchRef}
                   value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
+                  onFocus={() => setSearchOpen(true)}
+                  onChange={event => { setSearchQuery(event.target.value); setSearchOpen(true) }}
+                  onKeyDown={handleSearchKey}
+                  aria-label='Search products'
+                  maxLength={100}
                   placeholder="Search for products, brands, categories..."
                   style={{
                     flex: 1, border: 'none', outline: 'none',
@@ -342,7 +321,7 @@ const Navbar = () => {
                   }}
                 />
                 {searchQuery && (
-                  <button onClick={() => setSearchQuery('')} style={{
+                  <button type='button' aria-label='Clear search' onClick={() => setSearchQuery('')} style={{
                     background: 'none', border: 'none',
                     cursor: 'pointer', color: '#888',
                     display: 'flex', alignItems: 'center'
@@ -494,7 +473,7 @@ const Navbar = () => {
 
         {/* MOBILE SEARCH ROW */}
         {isMobile && mobileSearchOpen && (
-          <div className='glory-navbar-mobile-search' style={{ padding: '0 16px 14px', position: 'relative' }}>
+          <div ref={searchRef} className='glory-navbar-mobile-search' style={{ padding: '0 16px 14px', position: 'relative' }}>
             <div style={{
               display: 'flex', alignItems: 'center',
               background: '#f5f5f5', borderRadius: '999px',
@@ -506,7 +485,11 @@ const Navbar = () => {
               <input
                 autoFocus
                 value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
+                onFocus={() => setSearchOpen(true)}
+                onChange={event => { setSearchQuery(event.target.value); setSearchOpen(true) }}
+                onKeyDown={handleSearchKey}
+                aria-label='Search products'
+                maxLength={100}
                 placeholder="Search products..."
                 style={{
                   flex: 1, border: 'none', outline: 'none',
@@ -516,7 +499,7 @@ const Navbar = () => {
                 }}
               />
               {searchQuery && (
-                <button onClick={() => setSearchQuery('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#888', display: 'flex' }}>
+                <button type='button' aria-label='Clear search' onClick={() => setSearchQuery('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#888', display: 'flex' }}>
                   <FiX size={15} />
                 </button>
               )}
@@ -779,6 +762,7 @@ const Navbar = () => {
             <button
               type='button'
               className='glory-drawer-location'
+              aria-haspopup='dialog'
               onClick={() => {
                 setDrawerOpen(false)
                 setMarketSelectorOpen(true)

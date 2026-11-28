@@ -123,6 +123,7 @@ export const cancelAccountDeletion = () => API.delete('/users/privacy/deletion-r
 
 // PRODUCTS
 export const getProducts = (params, config = {}) => API.get('/products', { params, ...config })
+export const getProductSuggestions = (params, signal) => API.get('/products/suggestions', { params, signal })
 export const getMySellerProducts = () => API.get('/products/mine')
 export const getProduct = (id) => API.get(`/products/${id}`)
 export const createProduct = (data) => API.post('/products', data)

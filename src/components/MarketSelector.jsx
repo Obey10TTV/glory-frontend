@@ -36,8 +36,9 @@ const MarketSelector = ({ open, onClose }) => {
       }
     }
     window.addEventListener('keydown', handleKeyDown)
-    window.setTimeout(() => dialogRef.current?.querySelector('input')?.focus(), 0)
+    const initialFocus = window.setTimeout(() => dialogRef.current?.querySelector('button')?.focus(), 0)
     return () => {
+      window.clearTimeout(initialFocus)
       document.body.style.overflow = previousOverflow
       window.removeEventListener('keydown', handleKeyDown)
       previouslyFocused?.focus?.()
@@ -45,7 +46,8 @@ const MarketSelector = ({ open, onClose }) => {
   }, [open])
 
   const normalizedQuery = query.trim().toLowerCase()
-  const liveMarkets = markets.filter((item) => item.name.toLowerCase().includes(normalizedQuery))
+  const liveMarkets = markets.filter((item) => [item.name, item.shortName, item.code, item.currency]
+    .some(value => value?.toLowerCase().includes(normalizedQuery)))
   const comingByRegion = useMemo(() => COMING_SOON_MARKETS
     .filter((item) => item.name.toLowerCase().includes(normalizedQuery))
     .reduce((groups, item) => {
@@ -75,12 +77,12 @@ const MarketSelector = ({ open, onClose }) => {
         role='dialog'
         aria-modal='true'
         aria-labelledby='glory-market-title'
+        aria-describedby='glory-market-description'
       >
         <header className='glory-market-dialog-header'>
           <div>
-            <span>Glory worldwide</span>
             <h2 id='glory-market-title'>Choose your marketplace</h2>
-            <p>Products, pricing and seller services change with your selected region.</p>
+            <p id='glory-market-description'>Browse local beauty listings and prices in your currency.</p>
           </div>
           <button type='button' className='glory-market-close' onClick={onClose} aria-label='Close country selector'>
             <FiX size={22} aria-hidden='true' />
@@ -90,14 +92,13 @@ const MarketSelector = ({ open, onClose }) => {
         <label className='glory-market-search'>
           <FiSearch size={18} aria-hidden='true' />
           <span className='sr-only'>Search countries</span>
-          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder='Search countries' />
+          <input type='search' value={query} onChange={(event) => setQuery(event.target.value)} placeholder='Search countries' />
         </label>
 
         <div className='glory-market-dialog-body'>
-          <section className='glory-market-live' aria-labelledby='glory-live-markets'>
+          {liveMarkets.length > 0 && <section className='glory-market-live' aria-labelledby='glory-live-markets'>
             <div className='glory-market-section-title'>
-              <h3 id='glory-live-markets'>Shop Glory now</h3>
-              <span>{liveMarkets.length} marketplaces</span>
+              <h3 id='glory-live-markets'>Available now</h3>
             </div>
             <div className='glory-market-live-grid'>
               {liveMarkets.map((item) => (
@@ -106,19 +107,21 @@ const MarketSelector = ({ open, onClose }) => {
                   key={item.code}
                   className={item.code === market.code ? 'is-current' : ''}
                   onClick={() => chooseLiveMarket(item.code)}
+                  aria-current={item.code === market.code ? 'true' : undefined}
                 >
-                  <MarketFlag market={item} size={27} />
-                  <span><strong>{item.name}</strong><small>{item.currency} - {item.currencyName}</small></span>
-                  {item.code === market.code ? <FiCheck size={19} aria-label='Current marketplace' /> : <FiArrowRight size={18} aria-hidden='true' />}
+                  <MarketFlag market={item} size={36} />
+                  <span className='glory-market-option-copy'><strong>{item.name}</strong><small>{item.currency} · {item.currencyName}</small></span>
+                  <span className='glory-market-option-icon' aria-hidden='true'>
+                    {item.code === market.code ? <FiCheck size={17} /> : <FiArrowRight size={17} />}
+                  </span>
                 </button>
               ))}
             </div>
-          </section>
+          </section>}
 
-          <section className='glory-market-coming' aria-labelledby='glory-coming-markets'>
+          {Object.keys(comingByRegion).length > 0 && <section className='glory-market-coming' aria-labelledby='glory-coming-markets'>
             <div className='glory-market-section-title'>
-              <h3 id='glory-coming-markets'>Coming next</h3>
-              <span>Register your interest</span>
+              <h3 id='glory-coming-markets'>Coming soon</h3>
             </div>
             <div className='glory-market-coming-groups'>
               {Object.entries(comingByRegion).map(([region, items]) => (
@@ -126,15 +129,15 @@ const MarketSelector = ({ open, onClose }) => {
                   <h4>{region}</h4>
                   {items.map((item) => (
                     <button type='button' key={item.code} onClick={() => chooseComingMarket(item.slug)}>
-                      <MarketFlag market={item} size={22} />
+                      <MarketFlag market={item} size={25} />
                       <span>{item.name}</span>
-                      <small>Coming soon</small>
+                      <FiArrowRight size={15} aria-hidden='true' />
                     </button>
                   ))}
                 </div>
               ))}
             </div>
-          </section>
+          </section>}
           {liveMarkets.length === 0 && Object.keys(comingByRegion).length === 0 && (
             <p className='glory-market-empty' role='status'>No Glory marketplace matches that search yet.</p>
           )}

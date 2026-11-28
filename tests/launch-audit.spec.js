@@ -333,6 +333,58 @@ test('catalogue filters, search and product deep links stay functional', async (
   await expect(page.getByRole('button', { name: /Report listing/i })).toBeVisible()
 })
 
+test('marketplace picker keeps circular country flags and works on desktop and mobile', async ({ page }) => {
+  await installMocks(page)
+  for (const width of [1440, 375]) {
+    await page.setViewportSize({ width, height: 820 })
+    await page.goto('/gb')
+    if (width > 1024) {
+      await page.getByRole('button', { name: /Change marketplace. Current marketplace United Kingdom/ }).click()
+    } else {
+      await page.getByRole('button', { name: 'Open navigation menu' }).click()
+      await page.getByRole('button', { name: /United Kingdom.*Change marketplace/ }).click()
+    }
+    const dialog = page.getByRole('dialog', { name: 'Choose your marketplace' })
+    await expect(dialog).toBeVisible()
+    const usa = dialog.getByRole('button', { name: /United States/ })
+    const flag = usa.locator('img')
+    await expect(flag).toHaveCSS('border-radius', '50%')
+    const flagBounds = await flag.boundingBox()
+    expect(flagBounds.width).toBe(flagBounds.height)
+    const dialogBounds = await dialog.boundingBox()
+    expect(dialogBounds.x).toBeGreaterThanOrEqual(0)
+    expect(dialogBounds.x + dialogBounds.width).toBeLessThanOrEqual(width)
+    await dialog.getByRole('searchbox', { name: 'Search countries' }).fill('USD')
+    await expect(dialog.getByRole('button', { name: /United Kingdom/ })).toHaveCount(0)
+    await usa.click()
+    await expect(page).toHaveURL(/\/us$/)
+    await expect(dialog).toHaveCount(0)
+  }
+})
+
+test('one-letter navbar search shows suggestions and keeps the query on the results page', async ({ page }) => {
+  await installMocks(page)
+  await page.route('**/api/products/suggestions?*', route => {
+    const params = new URL(route.request().url()).searchParams
+    expect(params.get('q')).toBe('a')
+    return route.fulfill({ json: {
+      items: params.get('market') === 'GB' ? [{ ...listing, name: 'Aloe Cleanser' }] : []
+    } })
+  })
+  await page.setViewportSize({ width: 1440, height: 820 })
+  await page.goto('/gb')
+  const search = page.getByRole('textbox', { name: 'Search products', exact: true })
+  await search.fill('a')
+  await expect(page.getByRole('link', { name: /Aloe Cleanser/ })).toBeVisible()
+  await search.press('Enter')
+  await expect(page).toHaveURL(/\/products\?q=a$/)
+  await page.setViewportSize({ width: 375, height: 820 })
+  await page.goto('/us')
+  await page.getByRole('button', { name: 'Open search' }).click()
+  await search.fill('a')
+  await expect(page.getByText('No matches in United States.')).toBeVisible()
+})
+
 test('buyer can review only from a mutually confirmed interaction', async ({ page }) => {
   await page.addInitScript(profile => localStorage.setItem('gloryUser', JSON.stringify(profile)), buyer)
   await installMocks(page, { profile: buyer })

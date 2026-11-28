@@ -1427,20 +1427,10 @@ select:focus-visible,
   display: none !important;
 }
 
-.glory-search-meta,
-.glory-search-all,
 .glory-mega-shop {
   font-size: 0 !important;
 }
 
-.glory-search-meta::before,
-.glory-search-all::before,
-.glory-mega-shop::before {
-  content: attr(data-meta);
-  font-size: 11px;
-}
-
-.glory-search-all::before,
 .glory-mega-shop::before {
   content: attr(data-label);
 }
@@ -1448,6 +1438,45 @@ select:focus-visible,
 .glory-mega-shop::before {
   font-size: 11px;
 }
+
+.glory-search-suggestions {
+  position: absolute;
+  z-index: 999;
+  top: calc(100% + 5px);
+  inset-inline: 0;
+  max-height: min(480px, 70dvh);
+  overflow: auto;
+  border: 1px solid #e9dfe3;
+  border-radius: 15px;
+  background: #fff;
+  box-shadow: 0 12px 30px #40222f24;
+  color: #271c20;
+}
+
+.glory-navbar-mobile-search .glory-search-suggestions { inset-inline: 16px; top: calc(100% - 7px); }
+.glory-search-suggestions > p { margin: 0; padding: 16px; font-size: 14px; }
+.glory-search-change-market { margin: 0 14px 12px; min-height: 44px; padding: 0 12px; border: 1px solid #e9dfe3; border-radius: 9px; background: #fff8fa; color: #842b51; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.glory-search-change-market:focus-visible { outline: 2px solid #842b51; outline-offset: 2px; }
+
+.glory-search-suggestion {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  min-height: 52px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.glory-search-suggestion img { flex: none; border-radius: 8px; object-fit: cover; background: #f9f2f4; }
+.glory-search-suggestion span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.glory-search-suggestion strong, .glory-search-suggestion small { display: block; }
+.glory-search-suggestion strong, .glory-search-suggestion b { font-size: 14px; }
+.glory-search-suggestion small { margin-top: 4px; color: #705f65; font-size: 12px; }
+.glory-search-suggestion b { white-space: nowrap; }
+.glory-search-more { display: block; padding: 14px; border-top: 1px solid #efe7ea; color: #8a294c; font-size: 14px; font-weight: 700; text-decoration: none; overflow-wrap: anywhere; }
+.glory-search-suggestion:hover, .glory-search-more:hover { background: #fcf3f6; }
+.glory-search-suggestion:focus-visible, .glory-search-more:focus-visible { outline: 2px solid #8a294c; outline-offset: -2px; }
 
 .glory-chat-button {
   min-width: 56px !important;
@@ -10699,17 +10728,16 @@ button {
 }
 
 .glory-currency-badge {
-  min-height: 38px;
-  padding: 5px 10px 5px 7px;
-  border: 1px solid #e2dedf;
+  min-height: 44px;
+  padding: 6px 10px;
+  border: 1px solid #eee2e6;
   border-radius: 999px;
-  background: #fff;
-  color: #242022;
+  background: #fcf7f8;
+  color: #3e2730;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  box-shadow: 0 1px 2px rgba(31, 26, 28, 0.05);
+  gap: 7px;
   cursor: pointer;
   transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
 }
@@ -10719,12 +10747,12 @@ button {
   border-color: #a12858;
   background: #fffafb;
   box-shadow: 0 3px 10px rgba(53, 37, 43, 0.1);
-  outline: none;
 }
 
+.glory-currency-badge:focus-visible { outline: 2px solid #9b365f; outline-offset: 2px; }
+
 .glory-currency-badge-label {
-  min-width: 24px;
-  font: 800 11px/1 'Inter', sans-serif;
+  font: 700 12px/1 'Inter', sans-serif;
   letter-spacing: 0.02em;
   text-align: left;
 }
@@ -10734,10 +10762,12 @@ button {
   flex: 0 0 auto;
   overflow: hidden;
   object-fit: cover;
-  border: 1px solid rgba(23, 21, 20, 0.12);
-  border-radius: 3px;
+  border: 1px solid #47303924;
+  border-radius: 50%;
+  background: #fff;
 }
 
+.glory-market-flag[data-market='US'] { object-position: 20% center; }
 .glory-drawer-location {
   width: 100%;
   min-height: 70px;
@@ -10773,182 +10803,192 @@ button {
   position: fixed;
   inset: 0;
   z-index: 4000;
-  padding: 28px;
-  background: rgba(20, 17, 18, 0.7);
   display: grid;
   place-items: center;
+  padding: 24px;
+  background: #23131acc;
   overscroll-behavior: contain;
 }
 
 .glory-market-dialog {
-  width: min(1080px, 100%);
-  max-height: min(820px, calc(100dvh - 56px));
-  overflow: hidden;
-  border-radius: 8px;
-  background: #fff;
-  color: #201c1e;
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.24);
+  --market-ink: #302128;
+  --market-muted: #6b535d;
+  --market-accent: #842b51;
+  --market-line: #ecdee4;
+  width: min(880px, 100%);
+  max-height: min(840px, calc(100dvh - 48px));
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #fff9;
+  border-radius: 24px;
+  background: #fffdfc;
+  color: var(--market-ink);
+  box-shadow: 0 26px 95px #1a061f55;
 }
 
 .glory-market-dialog-header {
-  padding: 32px 36px 22px;
-  border-bottom: 1px solid #ece9ea;
+  position: relative;
+  flex: none;
+  min-height: 190px;
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 24px;
-}
-
-.glory-market-dialog-header > div > span,
-.glory-market-section-title span {
-  color: #a12858;
-  font: 800 11px/1.2 'Inter', sans-serif;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  align-items: center;
+  padding: 30px 36px;
+  border-bottom: 1px solid var(--market-line);
+  background: linear-gradient(90deg, #f6e6e9 12%, #f6e6e9 36%, #f6e6e9e8 47%, #f6e6e900 75%), #f6e6e9 url('/images/home/market-selector.webp') center 48% / cover no-repeat;
 }
 
 .glory-market-dialog-header h2 {
-  margin: 7px 0 7px;
-  color: #161315;
-  font: 700 clamp(28px, 4vw, 42px)/1.05 'Playfair Display', Georgia, serif;
-  letter-spacing: 0;
+  max-width: 360px;
+  margin: 0 0 10px;
+  font: 700 clamp(30px, 5vw, 46px)/1.06 'Playfair Display', Georgia, serif;
 }
 
 .glory-market-dialog-header p {
-  max-width: 620px;
+  max-width: 300px;
   margin: 0;
-  color: #686164;
-  font: 400 14px/1.6 'Inter', sans-serif;
+  color: var(--market-muted);
+  font: 500 14px/1.55 'Inter', sans-serif;
 }
 
 .glory-market-close {
+  position: absolute;
+  top: 15px;
+  right: 15px;
   width: 44px;
   height: 44px;
-  flex: 0 0 44px;
-  border: 1px solid #ddd8da;
-  border-radius: 50%;
-  background: #fff;
-  color: #211d1f;
   display: grid;
   place-items: center;
+  border: 1px solid var(--market-line);
+  border-radius: 50%;
+  background: #fffdfc;
+  color: var(--market-ink);
   cursor: pointer;
 }
 
-.glory-market-close:hover,
-.glory-market-close:focus-visible { background: #f2eff0; outline: 2px solid #1b1819; outline-offset: 2px; }
+.glory-market-close:hover { background: #faeef3; }
+.glory-market-dialog button:focus-visible { outline: 2px solid var(--market-accent); outline-offset: 2px; }
 
 .glory-market-search {
-  min-height: 48px;
-  margin: 20px 36px 0;
+  flex: none;
+  min-height: 49px;
+  margin: 20px 32px 0;
   padding: 0 15px;
-  border: 1px solid #d9d4d6;
-  border-radius: 4px;
-  background: #faf9f9;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 11px;
+  border: 1px solid var(--market-line);
+  border-radius: 13px;
+  background: #fbf4f6;
+  color: var(--market-muted);
 }
 
-.glory-market-search:focus-within { border-color: #1c181a; box-shadow: 0 0 0 2px rgba(28, 24, 26, 0.1); }
-.glory-market-search input { width: 100%; border: 0; outline: 0; background: transparent; color: #201c1e; font: 400 14px/1 'Inter', sans-serif; }
+.glory-market-search:focus-within { outline: 2px solid var(--market-accent); outline-offset: 2px; }
+.glory-market-search svg { flex: none; }
+.glory-market-search input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--market-ink); font: 400 16px/1.4 'Inter', sans-serif; }
+.glory-market-search input::placeholder { color: var(--market-muted); }
 
 .glory-market-dialog-body {
-  padding: 25px 36px 36px;
+  min-height: 0;
+  padding: 24px 32px 30px;
   overflow: auto;
+  overscroll-behavior: contain;
   display: grid;
-  gap: 32px;
+  gap: 25px;
 }
 
-.glory-market-section-title {
-  margin-bottom: 14px;
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.glory-market-section-title h3 {
-  margin: 0;
-  font: 750 16px/1.2 'Inter', sans-serif;
-  letter-spacing: 0;
-}
-
-.glory-market-section-title span { color: #777073; font-size: 9px; }
+.glory-market-section-title { margin-bottom: 12px; }
+.glory-market-section-title h3 { margin: 0; font: 700 15px/1.25 'Inter', sans-serif; }
 
 .glory-market-live-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
 }
 
 .glory-market-live-grid button {
   min-height: 74px;
-  padding: 12px 15px;
-  border: 1px solid #ddd8da;
-  border-radius: 4px;
-  background: #fff;
-  color: #211d1f;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 11px;
+  padding: 10px 12px;
+  border: 1px solid var(--market-line);
+  border-radius: 14px;
+  background: #fff;
+  color: var(--market-ink);
   text-align: left;
   cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease;
 }
 
-.glory-market-live-grid button:hover,
-.glory-market-live-grid button:focus-visible { border-color: #1e1a1c; background: #faf8f9; outline: none; }
-.glory-market-live-grid button.is-current { border-color: #a12858; box-shadow: inset 3px 0 #a12858; }
-.glory-market-live-grid button > span:nth-child(2) { min-width: 0; flex: 1; display: grid; gap: 4px; }
-.glory-market-live-grid strong { font: 700 14px/1.25 'Inter', sans-serif; }
-.glory-market-live-grid small { color: #777073; font: 400 11px/1.3 'Inter', sans-serif; }
+.glory-market-live-grid button:hover { background: #fff5f8; border-color: #c592a8; }
+.glory-market-live-grid button.is-current { border-color: #ba7393; background: #faedf2; }
+.glory-market-option-copy { flex: 1; min-width: 0; display: grid; gap: 4px; }
+.glory-market-option-copy strong { font: 700 14px/1.25 'Inter', sans-serif; }
+.glory-market-option-copy small { color: var(--market-muted); font: 400 12px/1.35 'Inter', sans-serif; }
 
-.glory-market-coming-groups {
+.glory-market-option-icon {
+  flex: none;
+  width: 26px;
+  height: 26px;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 24px;
+  place-items: center;
+  color: var(--market-accent);
+  border-radius: 50%;
 }
+
+.glory-market-live-grid .is-current .glory-market-option-icon { background: var(--market-accent); color: white; }
+
+.glory-market-coming { padding-top: 18px; border-top: 1px solid var(--market-line); }
+.glory-market-coming-groups { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
 
 .glory-market-coming-groups h4 {
-  margin: 0 0 8px;
-  color: #777073;
-  font: 800 10px/1.2 'Inter', sans-serif;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  margin: 0 0 4px;
+  color: var(--market-muted);
+  font: 700 12px/1.4 'Inter', sans-serif;
 }
 
 .glory-market-coming-groups button {
   width: 100%;
-  min-height: 44px;
-  padding: 7px 0;
+  min-height: 45px;
+  padding: 6px;
   border: 0;
-  border-bottom: 1px solid #efeced;
+  border-radius: 9px;
   background: transparent;
-  color: #272224;
-  display: grid;
-  grid-template-columns: 26px minmax(0, 1fr);
+  color: var(--market-ink);
+  display: flex;
   align-items: center;
-  column-gap: 7px;
+  gap: 8px;
   text-align: left;
   cursor: pointer;
 }
 
-.glory-market-coming-groups button:hover span:nth-child(2),
-.glory-market-coming-groups button:focus-visible span:nth-child(2) { text-decoration: underline; }
-.glory-market-coming-groups button:focus-visible { outline: 2px solid #1c181a; outline-offset: 2px; }
-.glory-market-coming-groups button > span:nth-child(2) { font: 600 12px/1.3 'Inter', sans-serif; }
-.glory-market-coming-groups button small { grid-column: 2; color: #8a8285; font-size: 9px; }
-.glory-market-coming-flag { font-size: 19px; }
+.glory-market-coming-groups button span { flex: 1; font: 600 13px/1.3 'Inter', sans-serif; }
+.glory-market-coming-groups button svg { flex: none; color: var(--market-accent); }
+.glory-market-coming-groups button:hover { background: #fcf0f4; }
+.glory-market-empty { margin: 0; padding: 18px 0; color: var(--market-muted); font-size: 14px; }
 
-.glory-market-empty {
-  margin: 0;
-  padding: 24px;
-  border: 1px solid #e2dddf;
-  border-radius: 4px;
-  color: #655e61;
-  font-size: 13px;
-  text-align: center;
+@media (max-width: 760px) {
+  .glory-market-overlay { padding: 0; place-items: end stretch; }
+  .glory-market-dialog { width: 100%; max-height: 93dvh; border-radius: 22px 22px 0 0; }
+  .glory-market-dialog-header {
+    min-height: 150px;
+    padding: 22px 66px 22px 20px;
+    background-image: linear-gradient(90deg, #f6e6e9 10%, #f6e6e9ed 44%, #f6e6e999 66%, #f6e6e91a 100%), url('/images/home/market-selector.webp');
+    background-position: center, 66% center;
+  }
+  .glory-market-dialog-header h2 { max-width: 280px; font-size: clamp(27px, 7vw, 38px); }
+  .glory-market-dialog-header p { max-width: 235px; font-size: 13px; }
+  .glory-market-search { margin: 16px 18px 0; }
+  .glory-market-dialog-body { padding: 19px 18px max(24px, env(safe-area-inset-bottom)); }
+  .glory-market-live-grid { grid-template-columns: 1fr; }
+  .glory-market-live-grid button { min-height: 61px; }
+  .glory-market-coming-groups { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-height: 510px) {
+  .glory-market-dialog-header { min-height: 0; padding-block: 13px; }
+  .glory-market-dialog-header h2 { font-size: 27px; }
 }
 
 .glory-coming-page {
@@ -10971,24 +11011,7 @@ button {
 .glory-coming-page-actions button.is-primary { background: #201c1e; color: #fff; }
 
 @media (max-width: 760px) {
-  .glory-market-overlay { padding: 0; place-items: end stretch; }
-  .glory-market-dialog { width: 100%; max-height: 94dvh; border-radius: 8px 8px 0 0; }
-  .glory-market-dialog-header { padding: 24px 20px 18px; }
-  .glory-market-dialog-header h2 { font-size: 30px; }
-  .glory-market-dialog-header p { font-size: 12px; }
-  .glory-market-search { margin: 16px 20px 0; }
-  .glory-market-dialog-body { padding: 22px 20px 28px; }
-  .glory-market-live-grid { grid-template-columns: 1fr; }
-  .glory-market-coming-groups { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 18px; }
   .glory-coming-page { padding: 64px 20px; }
-}
-
-@media (max-width: 359px) {
-  .glory-market-dialog-header { padding-inline: 16px; }
-  .glory-market-dialog-header h2 { font-size: 27px; }
-  .glory-market-search { margin-inline: 16px; }
-  .glory-market-dialog-body { padding-inline: 16px; }
-  .glory-market-coming-groups { grid-template-columns: 1fr; }
 }
 
 /* Regional seller pricing */
